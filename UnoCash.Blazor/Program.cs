@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Blazor.Hosting;
 
-namespace UnoCash
+namespace UnoCash.Blazor
 {
     public class Program
     {
