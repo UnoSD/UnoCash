@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UnoCash.Blazor
+namespace UnoCash.Core
 {
     public class Expense
     {

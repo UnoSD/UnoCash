@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +6,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using UnoCash.Core;
 
 namespace UnoCash.Api
 {
@@ -22,7 +22,11 @@ namespace UnoCash.Api
 
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 
+            var expense = JsonConvert.DeserializeObject<Expense>(requestBody);
+
             log.LogWarning(requestBody);
+
+            log.LogWarning(expense.Description);
 
             return new OkObjectResult("Hello");
         }

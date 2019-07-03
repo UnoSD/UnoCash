@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnoCash.Api", "UnoCash.Api\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnoCash.Blazor", "UnoCash.Blazor\UnoCash.Blazor.csproj", "{7D3BA400-8D4E-4FCE-81F9-9E9BED1714FE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnoCash.Core", "UnoCash.Core\UnoCash.Core.csproj", "{0B027628-02A3-4B20-AE94-E3065105D443}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{7D3BA400-8D4E-4FCE-81F9-9E9BED1714FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D3BA400-8D4E-4FCE-81F9-9E9BED1714FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D3BA400-8D4E-4FCE-81F9-9E9BED1714FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B027628-02A3-4B20-AE94-E3065105D443}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B027628-02A3-4B20-AE94-E3065105D443}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B027628-02A3-4B20-AE94-E3065105D443}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B027628-02A3-4B20-AE94-E3065105D443}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
