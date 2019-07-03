@@ -1,0 +1,140 @@
+﻿@page "/edit/{Id:int}"
+
+@using System.Globalization
+@using System.Text
+@using System.Text.Json.Serialization
+@inject HttpClient Http
+
+@if (Id == 0)
+{
+    <h1>Add an expense</h1>
+}
+else
+{
+    <h1>Edit the expense @Id</h1>
+}
+
+<BlazorForm OnSubmit="@AddOrUpdate">
+
+    <FormGroup>
+        <BlazorLabel For="Date">Date</BlazorLabel>
+        @*<input Id="Date" @bind="_expense.Date" @bind:format="yyyy-MM-dd" />*@
+        <BlazorInput Id="Date"
+                     InputType="InputType.Date"
+                     @bind-Value="DateBinder" />
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Amount">Amount</BlazorLabel>
+        @*<BlazorInput Id="Amount"
+            InputType="InputType.Number"
+            Value="@_expense.Amount.ToString(CultureInfo.InvariantCulture)"
+            @onchange="@(e => _expense.Amount = decimal.Parse(e.Value.ToString()))" />*@
+        <BlazorInput Id="Amount"
+                     InputType="InputType.Number"
+                     @bind-Value="AmountBinder"
+                     step=".01" />
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Account">Account</BlazorLabel>
+        <BlazorInput Id="Account"
+                     InputType="InputType.Select"
+                     @bind-Value="_expense.Account">
+            <option>Current</option>
+            <option>ISA</option>
+            <option>Wallet</option>
+        </BlazorInput>
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Type">Type</BlazorLabel>
+        <BlazorInput Id="Type"
+                     InputType="InputType.Select"
+                     @bind-Value="_expense.Type">
+            <option>Regular</option>
+            <option>Internal transfer</option>
+            <option>Scheduled</option>
+        </BlazorInput>
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Status">Status</BlazorLabel>
+        <BlazorInput Id="Status"
+                     InputType="InputType.Select"
+                     @bind-Value="_expense.Status">
+            <option>New</option>
+            <option>Pending</option>
+            <option>Reconciled</option>
+        </BlazorInput>
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Description">Description</BlazorLabel>
+        <BlazorInput Id="Description"
+                     InputType="InputType.TextArea"
+                     @bind-Value="_expense.Description"
+                     Rows="4" />
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Receipt">Upload a receipt</BlazorLabel>
+        <BlazorInput Id="Receipt"
+                     InputType="InputType.File" />
+    </FormGroup>
+   
+    <BlazorButton Color="Color.Primary"
+                  ButtonType="ButtonType.Submit">@(Id == 0 ? "Add" : "Update")</BlazorButton>
+
+    <BlazorButton Color="Color.Secondary">Split</BlazorButton>
+
+</BlazorForm>
+
+@functions
+{ 
+    [Parameter]
+    int Id { get; set; }
+
+    readonly Expense _expense = new Expense
+    {
+        Date = DateTime.Today,
+        Amount = 99,
+        Account = "Current",
+        Type = "Regular",
+        Status = "New",
+        Description = ""
+    };
+
+    string AmountBinder
+    {
+        get => _expense.Amount.ToString(CultureInfo.InvariantCulture);
+        set => _expense.Amount = decimal.TryParse(value, out var result) ? result : 0;
+    }
+
+    string DateBinder
+    {
+        get => _expense.Date.ToString("yyyy-MM-dd");
+        set => _expense.Date = DateTime.TryParse(value, out var result) ? result : DateTime.Today;
+    }
+
+    static HttpRequestMessage CreatePatchRequest(Expense expense) => 
+        new HttpRequestMessage(new HttpMethod("PATCH"), "http://localhost:7071/api/UpdateExpense")
+        {
+            Content = new StringContent(JsonSerializer.ToString(expense), Encoding.UTF8, "application/json")
+        };
+
+    Task AddOrUpdate()
+    {
+        //var data = JsInterop.GetFileData("Receipt");
+        //var response = await Http.PostAsync("/api/upload",new ByteArrayContent(Convert.FromBase64String(data)));
+        //var fileTempName = await response.Content.ReadAsStringAsync();
+
+        Console.WriteLine(JsonSerializer.ToString(_expense, new JsonSerializerOptions { WriteIndented = true }));
+
+        _expense.Id = Id;
+
+        return Id == 0 ?
+               Http.PostJsonAsync("http://localhost:7071/api/AddExpense", _expense) :
+               Http.SendAsync(CreatePatchRequest(_expense));
+    }
+}

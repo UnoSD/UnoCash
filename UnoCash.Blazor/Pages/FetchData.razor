@@ -19,6 +19,7 @@ else
                 <th>Description</th>
                 <th>Status</th>
                 <th>Delete</th>
+                <th>Edit</th>
             </tr>
         </thead>
         <tbody>
@@ -30,6 +31,8 @@ else
                     <td>@expense.Description</td>
                     <td>@expense.Status</td>
                     <td><BlazorButton onclick="@(() => Delete(expense))">X</BlazorButton> </td>
+                    @*<td><form action="/?id=@expense.Id"><input type="submit" value="?" /></form></td>*@
+                    <NavLink href="@($"edit/{expense.Id}")" Match="NavLinkMatch.All">Edit</NavLink>
                 </tr>
             }
         </tbody>
