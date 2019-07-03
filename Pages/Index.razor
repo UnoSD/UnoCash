@@ -1,0 +1,87 @@
+﻿@page "/"
+@using System.Globalization
+
+<h1>Add an expense</h1>
+
+<BlazorForm OnSubmit="@Add">
+
+    <FormGroup>
+        <BlazorLabel For="Date">Password</BlazorLabel>
+        <BlazorInput Id="Date"
+                     InputType="InputType.Date"
+                     Value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Amount">Amount</BlazorLabel>
+        <BlazorInput Id="Amount"
+                     InputType="InputType.Number"
+                     Value="@_expense.Amount.ToString(CultureInfo.InvariantCulture)"
+                     @onchange="@(e => _expense.Amount = decimal.Parse(e.Value.ToString()))" />
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Account">Account</BlazorLabel>
+        <BlazorInput Id="Account"
+                     InputType="InputType.Select">
+            <option>Current</option>
+            <option>ISA</option>
+            <option>Wallet</option>
+        </BlazorInput>
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Type">Type</BlazorLabel>
+        <BlazorInput Id="Type"
+                     InputType="InputType.Select"
+                     Value="Regular">
+            <option>Regular</option>
+            <option>Internal transfer</option>
+            <option>Scheduled</option>
+        </BlazorInput>
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Status">Status</BlazorLabel>
+        <BlazorInput Id="Status"
+                     InputType="InputType.Select"
+                     Value="New">
+            <option>New</option>
+            <option>Pending</option>
+            <option>Reconciled</option>
+        </BlazorInput>
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Description">Description</BlazorLabel>
+        <BlazorInput Id="Description"
+                     InputType="InputType.TextArea"
+                     @onchange="@(e => Console.WriteLine($"Pippo: {e.Value}"))"
+                     Rows="4" />
+    </FormGroup>
+
+    <FormGroup>
+        <BlazorLabel For="Receipt">Upload a receipt</BlazorLabel>
+        <BlazorInput Id="Receipt"
+                     InputType="InputType.File" />
+    </FormGroup>
+
+    <BlazorButton Color="Color.Primary"
+                  ButtonType="ButtonType.Submit">Add</BlazorButton>
+
+    <BlazorButton Color="Color.Primary"
+                  ButtonType="ButtonType.Submit">Split</BlazorButton>
+
+</BlazorForm>
+
+@functions
+{
+    readonly Expense _expense = new Expense() { Amount = 99 };
+
+    Task Add()
+    {
+        Console.WriteLine($"Added {_expense.Amount}");
+
+        return Task.CompletedTask;
+    }
+}
