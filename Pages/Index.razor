@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using System.Globalization
+@using System.Text.Json.Serialization
 
 <h1>Add an expense</h1>
 
@@ -10,8 +11,7 @@
         @*<input Id="Date" @bind="_expense.Date" @bind:format="yyyy-MM-dd" />*@
         <BlazorInput Id="Date"
                      InputType="InputType.Date"
-                     @bind-value="DateBinder"
-                     @bind-value:event="onchange" />
+                     @bind-Value="DateBinder" />
     </FormGroup>
 
     <FormGroup>
@@ -22,14 +22,15 @@
                      @onchange="@(e => _expense.Amount = decimal.Parse(e.Value.ToString()))" />*@
         <BlazorInput Id="Amount"
                      InputType="InputType.Number"
-                     @bind-value="AmountBinder"
+                     @bind-Value="AmountBinder"
                      step=".01" />
     </FormGroup>
 
     <FormGroup>
         <BlazorLabel For="Account">Account</BlazorLabel>
         <BlazorInput Id="Account"
-                     InputType="InputType.Select">
+                     InputType="InputType.Select"
+                     @bind-Value="_expense.Account">
             <option>Current</option>
             <option>ISA</option>
             <option>Wallet</option>
@@ -40,7 +41,7 @@
         <BlazorLabel For="Type">Type</BlazorLabel>
         <BlazorInput Id="Type"
                      InputType="InputType.Select"
-                     Value="Regular">
+                     @bind-Value="_expense.Type">
             <option>Regular</option>
             <option>Internal transfer</option>
             <option>Scheduled</option>
@@ -51,7 +52,7 @@
         <BlazorLabel For="Status">Status</BlazorLabel>
         <BlazorInput Id="Status"
                      InputType="InputType.Select"
-                     Value="New">
+                     @bind-Value="_expense.Status">
             <option>New</option>
             <option>Pending</option>
             <option>Reconciled</option>
@@ -62,7 +63,7 @@
         <BlazorLabel For="Description">Description</BlazorLabel>
         <BlazorInput Id="Description"
                      InputType="InputType.TextArea"
-                     @bind-value="_expense.Description"
+                     @bind-Value="_expense.Description"
                      Rows="4" />
     </FormGroup>
 
@@ -84,7 +85,11 @@
     readonly Expense _expense = new Expense
     {
         Date = DateTime.Today,
-        Amount = 99
+        Amount = 99,
+        Account = "Current",
+        Type = "Regular",
+        Status = "New",
+        Description = ""
     };
 
     string AmountBinder
@@ -101,7 +106,11 @@
 
     Task Add()
     {
-        Console.WriteLine($"Added {_expense.Amount} {_expense.Description} {_expense.Date}");
+        //var data = JsInterop.GetFileData("Receipt");
+        //var response = await Http.PostAsync("/api/upload",new ByteArrayContent(Convert.FromBase64String(data)));
+        //var fileTempName = await response.Content.ReadAsStringAsync();
+
+        Console.WriteLine($"Added {JsonSerializer.ToString(_expense, new JsonSerializerOptions { WriteIndented = true })}");
 
         return Task.CompletedTask;
     }
