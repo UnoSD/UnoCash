@@ -6,18 +6,24 @@
 <BlazorForm OnSubmit="@Add">
 
     <FormGroup>
-        <BlazorLabel For="Date">Password</BlazorLabel>
+        <BlazorLabel For="Date">Date</BlazorLabel>
+        @*<input Id="Date" @bind="_expense.Date" @bind:format="yyyy-MM-dd" />*@
         <BlazorInput Id="Date"
                      InputType="InputType.Date"
-                     Value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                     @bind-value="DateBinder"
+                     @bind-value:event="onchange" />
     </FormGroup>
 
     <FormGroup>
         <BlazorLabel For="Amount">Amount</BlazorLabel>
-        <BlazorInput Id="Amount"
+        @*<BlazorInput Id="Amount"
                      InputType="InputType.Number"
                      Value="@_expense.Amount.ToString(CultureInfo.InvariantCulture)"
-                     @onchange="@(e => _expense.Amount = decimal.Parse(e.Value.ToString()))" />
+                     @onchange="@(e => _expense.Amount = decimal.Parse(e.Value.ToString()))" />*@
+        <BlazorInput Id="Amount"
+                     InputType="InputType.Number"
+                     @bind-value="AmountBinder"
+                     step=".01" />
     </FormGroup>
 
     <FormGroup>
@@ -56,7 +62,7 @@
         <BlazorLabel For="Description">Description</BlazorLabel>
         <BlazorInput Id="Description"
                      InputType="InputType.TextArea"
-                     @onchange="@(e => Console.WriteLine($"Pippo: {e.Value}"))"
+                     @bind-value="_expense.Description"
                      Rows="4" />
     </FormGroup>
 
@@ -69,18 +75,33 @@
     <BlazorButton Color="Color.Primary"
                   ButtonType="ButtonType.Submit">Add</BlazorButton>
 
-    <BlazorButton Color="Color.Primary"
-                  ButtonType="ButtonType.Submit">Split</BlazorButton>
+    <BlazorButton Color="Color.Secondary">Split</BlazorButton>
 
 </BlazorForm>
 
 @functions
 {
-    readonly Expense _expense = new Expense() { Amount = 99 };
+    readonly Expense _expense = new Expense
+    {
+        Date = DateTime.Today,
+        Amount = 99
+    };
+
+    string AmountBinder
+    {
+        get => _expense.Amount.ToString(CultureInfo.InvariantCulture);
+        set => _expense.Amount = decimal.TryParse(value, out var result) ? result : 0;
+    }
+
+    string DateBinder
+    {
+        get => _expense.Date.ToString("yyyy-MM-dd");
+        set => _expense.Date = DateTime.TryParse(value, out var result) ? result : DateTime.Today;
+    }
 
     Task Add()
     {
-        Console.WriteLine($"Added {_expense.Amount}");
+        Console.WriteLine($"Added {_expense.Amount} {_expense.Description} {_expense.Date}");
 
         return Task.CompletedTask;
     }
