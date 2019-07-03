@@ -26,6 +26,7 @@ namespace UnoCash.Api
                 {
                     new Expense
                     {
+                        Id = 1,
                         Amount = 10.99m,
                         Account = account,
                         Date = DateTime.Today.AddDays(-1),
@@ -35,6 +36,7 @@ namespace UnoCash.Api
                     },
                     new Expense
                     {
+                        Id = 2,
                         Amount = 23.90m,
                         Account = account,
                         Date = DateTime.Today.AddDays(-2),
@@ -44,6 +46,7 @@ namespace UnoCash.Api
                     },
                     new Expense
                     {
+                        Id = 3,
                         Amount = 9.80m,
                         Account = account,
                         Date = DateTime.Today.AddDays(-3),

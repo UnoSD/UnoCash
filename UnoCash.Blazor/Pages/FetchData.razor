@@ -18,6 +18,7 @@ else
                 <th>Amount</th>
                 <th>Description</th>
                 <th>Status</th>
+                <th>Delete</th>
             </tr>
         </thead>
         <tbody>
@@ -28,6 +29,7 @@ else
                     <td>@expense.Amount</td>
                     <td>@expense.Description</td>
                     <td>@expense.Status</td>
+                    <td><BlazorButton onclick="@(() => Delete(expense))">X</BlazorButton> </td>
                 </tr>
             }
         </tbody>
@@ -35,9 +37,12 @@ else
 }
 
 @code {
-    Expense[] _expenses;
+Expense[] _expenses;
 
-    protected override async Task OnInitAsync() => 
-        _expenses =
-            await Http.GetJsonAsync<Expense[]>("http://localhost:7071/api/GetExpenses");
+protected override async Task OnInitAsync() =>
+    _expenses =
+        await Http.GetJsonAsync<Expense[]>("http://localhost:7071/api/GetExpenses?account=Current");
+
+    Task Delete(Expense expense) => 
+        Http.DeleteAsync($"http://localhost:7071/api/DeleteExpense?id={expense.Id}");
 }
