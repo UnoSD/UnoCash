@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using System.Globalization
 @using System.Text.Json.Serialization
+@inject HttpClient Http
 
 <h1>Add an expense</h1>
 
@@ -112,6 +113,6 @@
 
         Console.WriteLine($"Added {JsonSerializer.ToString(_expense, new JsonSerializerOptions { WriteIndented = true })}");
 
-        return Task.CompletedTask;
+        return Http.PostJsonAsync("http://localhost:7071/api/AddExpense", _expense);
     }
 }
