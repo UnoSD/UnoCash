@@ -31,7 +31,6 @@ namespace UnoCash.Api
             log.LogWarning(expense.Status);
             log.LogWarning(expense.Type);
             log.LogWarning(expense.Date.ToString(CultureInfo.InvariantCulture));
-            log.LogWarning(expense.Account);
             log.LogWarning(expense.Description);
 
             return new OkObjectResult("Hello");

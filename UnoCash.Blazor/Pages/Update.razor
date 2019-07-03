@@ -95,15 +95,24 @@ else
     [Parameter]
     int Id { get; set; }
 
-    readonly Expense _expense = new Expense
-    {
-        Date = DateTime.Today,
-        Amount = 99,
-        Account = "Current",
-        Type = "Regular",
-        Status = "New",
-        Description = ""
-    };
+    // If I remove the new Expense, I get a null exception, probably OnInitAsync happens after the binding
+    // Do that BEFORE the binding
+    Expense _expense = new Expense();
+
+    protected override async Task OnInitAsync() =>
+        _expense =
+            Id == 0 ?
+                new Expense
+                {
+                    Date = DateTime.Today,
+                    Amount = 99,
+                    Account = "Current",
+                    Type = "Regular",
+                    Status = "New",
+                    Description = ""
+                } :
+            (await Http.GetJsonAsync<Expense[]>($"http://localhost:7071/api/GetExpenses?account=Current&id={Id}")).Single();
+
 
     string AmountBinder
     {
