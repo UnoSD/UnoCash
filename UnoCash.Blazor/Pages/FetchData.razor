@@ -37,38 +37,7 @@ else
 @code {
     Expense[] _expenses;
 
-    protected override async Task OnInitAsync()
-    {
-        //_expenses = await Http.GetJsonAsync<Expense[]>("http://localhost:7071/api/AddExpense");
-        _expenses = new[]
-        {
-            new Expense
-            {
-                Amount = 10.99m,
-                Account = "Current",
-                Date = DateTime.Today.AddDays(-1),
-                Description = "Pizza",
-                Status = "Reconciled",
-                Type = "Regular"
-            },
-            new Expense
-            {
-                Amount = 23.90m,
-                Account = "Current",
-                Date = DateTime.Today.AddDays(-2),
-                Description = "Thai",
-                Status = "Reconciled",
-                Type = "Regular"
-            },
-            new Expense
-            {
-                Amount = 9.80m,
-                Account = "Current",
-                Date = DateTime.Today.AddDays(-3),
-                Description = "Burger",
-                Status = "Pending",
-                Type = "Regular"
-            }
-        };
-    }
+    protected override async Task OnInitAsync() => 
+        _expenses =
+            await Http.GetJsonAsync<Expense[]>("http://localhost:7071/api/GetExpenses");
 }

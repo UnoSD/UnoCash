@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -18,14 +19,19 @@ namespace UnoCash.Api
             HttpRequest req,
             ILogger log)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            log.LogInformation("Adding a new expense");
 
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 
             var expense = JsonConvert.DeserializeObject<Expense>(requestBody);
 
-            log.LogWarning(requestBody);
+            log.LogInformation(requestBody);
 
+            log.LogWarning(expense.Account);
+            log.LogWarning(expense.Status);
+            log.LogWarning(expense.Type);
+            log.LogWarning(expense.Date.ToString(CultureInfo.InvariantCulture));
+            log.LogWarning(expense.Account);
             log.LogWarning(expense.Description);
 
             return new OkObjectResult("Hello");
