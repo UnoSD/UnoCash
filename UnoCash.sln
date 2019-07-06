@@ -9,6 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnoCash.Blazor", "UnoCash.B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnoCash.Core", "UnoCash.Core\UnoCash.Core.csproj", "{0B027628-02A3-4B20-AE94-E3065105D443}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F5B95AAE-34C4-4BF7-B102-497DB46D4B4B}"
+	ProjectSection(SolutionItems) = preProject
+		TODO.md = TODO.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
