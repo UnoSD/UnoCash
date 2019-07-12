@@ -79,19 +79,20 @@ else
 
     <FormGroup>
         <BlazorLabel For="Receipt">Upload a receipt</BlazorLabel>
-        <BlazorInput Id="Receipt"
-                     InputType="InputType.File" />
+        <input id="Receipt"
+               type="file"
+               onchange="uploadToBlobStorage(@("'Blob URL'"))" />
     </FormGroup>
-   
+
     <BlazorButton Color="Color.Primary"
                   ButtonType="ButtonType.Submit">@(Guid == Guid.Empty ? "Add" : "Update")</BlazorButton>
 
-    <BlazorButton Color="Color.Secondary">Split</BlazorButton>
+                <BlazorButton Color="Color.Secondary">Split</BlazorButton>
 
-</BlazorForm>
+            </BlazorForm>
 
 @functions
-{ 
+{
     [Parameter]
     string Id
     {
@@ -140,10 +141,6 @@ else
 
     Task AddOrUpdate()
     {
-        //var data = JsInterop.GetFileData("Receipt");
-        //var response = await Http.PostAsync("/api/upload",new ByteArrayContent(Convert.FromBase64String(data)));
-        //var fileTempName = await response.Content.ReadAsStringAsync();
-
         Console.WriteLine(JsonSerializer.ToString(_expense, new JsonSerializerOptions { WriteIndented = true }));
 
         _expense.Id = Guid;

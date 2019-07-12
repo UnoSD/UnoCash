@@ -12,5 +12,46 @@
     <app>Loading...</app>
 
     <script src="_framework/blazor.webassembly.js"></script>
+
+<script>
+        function uploadToBlobStorage(url) {
+            var file = document.querySelector('input[type=file]').files[0];
+
+            const account = {
+                name: '',
+                sas:  url
+            };
+
+            const blobUri = 'http://127.0.0.1:10000' //'https://' + account.name + '.blob.core.windows.net';
+            const blobService = AzureStorage.Blob.createBlobServiceWithSas(blobUri, account.sas);
+
+            blobService.createBlockBlobFromBrowserFile(
+                'receipts', 
+                file.name, 
+                file, 
+                (error, result) => {
+                    if(error) {
+                        // Handle blob error
+                    } else {
+                        console.log('Upload is successful');
+
+                        // Now invoke Function to run analysis and get results
+                        // Then apply to the inputs
+                    }
+                });
+
+            var reader = new FileReader();
+
+            reader.addEventListener("load", function () {
+                alert(reader.result);
+                alert(url);
+            }, false);
+
+            if (file) {
+                reader.readAsText(file);
+            }
+        }
+    </script>
+
 </body>
 </html>
