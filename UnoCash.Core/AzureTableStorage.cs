@@ -28,18 +28,17 @@ namespace UnoCash.Core
 
         static Task<IEnumerable<DynamicTableEntity>> GetAllAsync(CloudTable table, 
                                                                  TableQuery query) =>
-            table.ExecuteQuerySegmented(query, default)
-                 .GetAllAsync(table, query);
+            table.ExecuteQuerySegmentedAsync(query, default)
+                 .Bind(segment => segment.GetAllAsync(table, query));
 
-        static async Task<IEnumerable<DynamicTableEntity>> GetAllAsync(
+        static Task<IEnumerable<DynamicTableEntity>> GetAllAsync(
             this TableQuerySegment<DynamicTableEntity> segment, 
             CloudTable table,
             TableQuery query) =>
-            segment.Unfold(ns => (ns.Results, 
-                                  table.ExecuteQuerySegmented(query, ns.ContinuationToken)),
-                           ns => ns.ContinuationToken == default)
-                   .SelectMany(x => x)
-                   .Concat(segment.Results)
-                   .ToList();
+            segment.UnfoldAsync(ns => table.ExecuteQuerySegmentedAsync(query, ns.ContinuationToken)
+                                           .Map(s => (ns.Results, s)),
+                                ns => ns.ContinuationToken == default)
+                   .SelectManyAsync(x => x)
+                   .ConcatAsync(segment.Results);
     }
 }

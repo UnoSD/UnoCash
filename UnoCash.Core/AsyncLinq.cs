@@ -15,6 +15,14 @@ namespace UnoCash.Core
                                                                        Func<TIn, TOut> func) =>
             functor.Map(collection => collection.Select(func));
 
+        internal static Task<IEnumerable<TOut>> SelectManyAsync<TIn, TOut>(this Task<IEnumerable<TIn>> functor,
+                                                                           Func<TIn, IEnumerable<TOut>> func) =>
+            functor.Map(collection => collection.SelectMany(func));
+
+        internal static Task<IEnumerable<T>> ConcatAsync<T>(this Task<IEnumerable<T>> task,
+                                                            IEnumerable<T> source) =>
+            task.Map(collection => collection.Concat(source));
+
         internal static IEnumerable<T> Unfold<TState, T>(this TState state,
                                                          Func<TState, (T item, TState state)> generator,
                                                          Func<TState, bool> stopCondition) =>
@@ -65,5 +73,11 @@ namespace UnoCash.Core
                                               generator(state)
                                                   .Bind(t => UnfoldAsync(t.state, generator, stopCondition)
                                                                 .Map(x => x.Cons(t.item))));
+
+        internal static Task<IEnumerable<T>> UnfoldAsync<TState, T>(
+            this TState state,
+            Func<TState, Task<(T item, TState state)>> generator,
+            Func<TState, bool> stopCondition) =>
+            UnfoldAsync(state, generator, x => Task.FromResult(stopCondition(x)));
     }
 }
