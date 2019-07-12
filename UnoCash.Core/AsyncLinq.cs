@@ -41,5 +41,29 @@ namespace UnoCash.Core
 
         internal static IEnumerable<T> Cons<T>(this IEnumerable<T> source, T item) =>
             new[] { item }.Concat(source);
+
+        internal static async Task<IEnumerable<T>> UnfoldAsync2<TState, T>(
+            this TState state,
+            Func<TState, Task<(T item, TState state)>> generator,
+            Func<TState, Task<bool>> stopCondition)
+        {
+            if (await stopCondition(state).ConfigureAwait(false))
+                return Enumerable.Empty<T>();
+
+            var (item, newState) = await generator(state).ConfigureAwait(false);
+
+            return await UnfoldAsync2(newState, generator, stopCondition).Map(x => x.Cons(item))
+                             .ConfigureAwait(false);
+        }
+
+        internal static Task<IEnumerable<T>> UnfoldAsync<TState, T>(
+            this TState state,
+            Func<TState, Task<(T item, TState state)>> generator,
+            Func<TState, Task<bool>> stopCondition) =>
+            stopCondition(state).Bind(stop => stop ? 
+                                              Task.FromResult(Enumerable.Empty<T>()) :
+                                              generator(state)
+                                                  .Bind(t => UnfoldAsync(t.state, generator, stopCondition)
+                                                                .Map(x => x.Cons(t.item))));
     }
 }
