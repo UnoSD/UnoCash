@@ -33,6 +33,8 @@ namespace UnoCash.Api
             log.LogWarning(expense.Date.ToString(CultureInfo.InvariantCulture));
             log.LogWarning(expense.Description);
 
+            expense.Write();
+
             return new OkObjectResult("Hello");
         }
     }
