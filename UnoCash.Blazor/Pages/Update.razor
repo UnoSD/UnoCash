@@ -1,11 +1,11 @@
-﻿@page "/edit/{Id:int}"
+﻿@page "/edit/{Id}"
 
 @using System.Globalization
 @using System.Text
 @using System.Text.Json.Serialization
 @inject HttpClient Http
 
-@if (Id == 0)
+@if (Guid == Guid.Empty)
 {
     <h1>Add an expense</h1>
 }
@@ -84,7 +84,7 @@ else
     </FormGroup>
    
     <BlazorButton Color="Color.Primary"
-                  ButtonType="ButtonType.Submit">@(Id == 0 ? "Add" : "Update")</BlazorButton>
+                  ButtonType="ButtonType.Submit">@(Guid == Guid.Empty ? "Add" : "Update")</BlazorButton>
 
     <BlazorButton Color="Color.Secondary">Split</BlazorButton>
 
@@ -93,7 +93,13 @@ else
 @functions
 { 
     [Parameter]
-    int Id { get; set; }
+    string Id
+    {
+        get => Guid.ToString();
+        set => Guid = Guid.Parse(value);
+    }
+
+    Guid Guid { get; set; }
 
     // If I remove the new Expense, I get a null exception, probably OnInitAsync happens after the binding
     // Do that BEFORE the binding
@@ -101,7 +107,7 @@ else
 
     protected override async Task OnInitAsync() =>
         _expense =
-            Id == 0 ?
+            Guid == Guid.Empty ?
                 new Expense
                 {
                     Date = DateTime.Today,
@@ -126,7 +132,7 @@ else
         set => _expense.Date = DateTime.TryParse(value, out var result) ? result : DateTime.Today;
     }
 
-    static HttpRequestMessage CreatePatchRequest(Expense expense) => 
+    static HttpRequestMessage CreatePatchRequest(Expense expense) =>
         new HttpRequestMessage(new HttpMethod("PATCH"), "http://localhost:7071/api/UpdateExpense")
         {
             Content = new StringContent(JsonSerializer.ToString(expense), Encoding.UTF8, "application/json")
@@ -140,9 +146,9 @@ else
 
         Console.WriteLine(JsonSerializer.ToString(_expense, new JsonSerializerOptions { WriteIndented = true }));
 
-        _expense.Id = Id;
+        _expense.Id = Guid;
 
-        return Id == 0 ?
+        return Guid == Guid.Empty ?
                Http.PostJsonAsync("http://localhost:7071/api/AddExpense", _expense) :
                Http.SendAsync(CreatePatchRequest(_expense));
     }

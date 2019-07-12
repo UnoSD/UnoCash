@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.Azure.Cosmos.Table;
 
 namespace UnoCash.Core
@@ -7,11 +8,11 @@ namespace UnoCash.Core
     {
         public static void Write(this Expense expense) =>
             expense.ToTableEntity()
-                   .Write();
+                   .Write(nameof(Expense));
 
         static DynamicTableEntity ToTableEntity(this Expense expense) =>
             new DynamicTableEntity(expense.Account/*Escape characters*/,
-                expense.Id.ToString(),
+                expense.Id.Coalesce(Guid.NewGuid()).ToString(),
                 "*",
                 new Dictionary<string, EntityProperty>
                 {
@@ -22,18 +23,5 @@ namespace UnoCash.Core
                     [nameof(Expense.Date)] = EntityProperty.GeneratePropertyForDateTimeOffset(expense.Date),
                     [nameof(Expense.Amount)] = EntityProperty.GeneratePropertyForLong((long)(expense.Amount * 100L)),
                 });
-
-        static void Write(this ITableEntity entity)
-        {
-            var storage = CloudStorageAccount.Parse("UseDevelopmentStorage=true");
-
-            var client = storage.CreateCloudTableClient(new TableClientConfiguration());
-
-            var table = client.GetTableReference(nameof(Expense));
-
-            table.CreateIfNotExists();
-
-            table.Execute(TableOperation.Insert(entity));
-        }
     }
 }
