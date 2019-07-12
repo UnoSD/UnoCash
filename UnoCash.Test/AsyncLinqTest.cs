@@ -15,8 +15,21 @@ namespace UnoCash.Test
             };
 
             var actual =
-                0.Unfold(i => (i, i + 2), 
+                0.Unfold(i => (i, i + 2),
                          i => i > 8)
+                 .ToList();
+
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void UnfoldSingle()
+        {
+            int[] expected = { };
+
+            var actual =
+                0.Unfold(i => (i, i + 2),
+                         i => true)
                  .ToList();
 
             CollectionAssert.AreEqual(expected, actual);
@@ -34,6 +47,18 @@ namespace UnoCash.Test
                 0.Unfold(i => i > 8 ?
                          new (int, int)?() :
                          (i, i + 2))
+                 .ToList();
+
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void UnfoldNullableSingle()
+        {
+            int[] expected = { };
+
+            var actual =
+                0.Unfold(i => new (int, int)?())
                  .ToList();
 
             CollectionAssert.AreEqual(expected, actual);

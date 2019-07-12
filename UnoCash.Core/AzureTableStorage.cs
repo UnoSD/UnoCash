@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.Cosmos.Table;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace UnoCash.Core
@@ -22,27 +23,23 @@ namespace UnoCash.Core
             return table;
         }
 
-        internal static async Task<IEnumerable<DynamicTableEntity>> GetAllAsync(string tableName)
-        {
-            var cloudTable = GetOrCreate(tableName);
+        internal static Task<IEnumerable<DynamicTableEntity>> GetAllAsync(string tableName) => 
+            GetAllAsync(GetOrCreate(tableName), new TableQuery());
 
-            var accumulator = new List<DynamicTableEntity>();
+        static Task<IEnumerable<DynamicTableEntity>> GetAllAsync(CloudTable table, 
+                                                                 TableQuery query) =>
+            table.ExecuteQuerySegmented(query, default)
+                 .GetAllAsync(table, query);
 
-            TableQuerySegment<DynamicTableEntity> segment;
-
-            TableContinuationToken tableContinuationToken = default;
-
-            do
-            {
-                segment = await cloudTable.ExecuteQuerySegmentedAsync(new TableQuery(), tableContinuationToken);
-
-                tableContinuationToken = segment.ContinuationToken;
-
-                accumulator.AddRange(segment.Results);
-                
-            } while (segment.ContinuationToken != null);
-
-            return accumulator;
-        }
+        static async Task<IEnumerable<DynamicTableEntity>> GetAllAsync(
+            this TableQuerySegment<DynamicTableEntity> segment, 
+            CloudTable table,
+            TableQuery query) =>
+            segment.Unfold(ns => (ns.Results, 
+                                  table.ExecuteQuerySegmented(query, ns.ContinuationToken)),
+                           ns => ns.ContinuationToken == default)
+                   .SelectMany(x => x)
+                   .Concat(segment.Results)
+                   .ToList();
     }
 }
