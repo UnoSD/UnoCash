@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos.Table;
 
 namespace UnoCash.Core
 {
     public static class ExpenseReader
     {
-        public static Expense[] Get(string account, Guid id) =>
-            GetAll(account).Where(expense => expense.Id == id)
-                           .ToArray();
+        public static Task<IEnumerable<Expense>> GetAsync(string account, Guid id) =>
+            GetAllAsync(account).WhereAsync(expense => expense.Id == id);
 
-        public static Expense[] GetAll(string account) =>
-            AzureTableStorage.GetAll(nameof(Expense))
-                             .Select(ToExpense)
-                             .Where(expense => expense.Account == account)
-                             .ToArray();
+        public static Task<IEnumerable<Expense>> GetAllAsync(string account) =>
+            AzureTableStorage.GetAllAsync(nameof(Expense))
+                             .SelectAsync(ToExpense)
+                             .WhereAsync(expense => expense.Account == account);
 
         static Expense ToExpense(this DynamicTableEntity expense) =>
             new Expense
