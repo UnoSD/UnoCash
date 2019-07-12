@@ -40,12 +40,17 @@ else
 }
 
 @code {
-Expense[] _expenses;
+    List<Expense> _expenses;
 
-protected override async Task OnInitAsync() =>
-    _expenses =
-        await Http.GetJsonAsync<Expense[]>("http://localhost:7071/api/GetExpenses?account=Current");
+    protected override async Task OnInitAsync() =>
+        _expenses =
+            await Http.GetJsonAsync<List<Expense>>("http://localhost:7071/api/GetExpenses?account=Current");
 
-    Task Delete(Expense expense) => 
-        Http.DeleteAsync($"http://localhost:7071/api/DeleteExpense?id={expense.Id}");
+    async Task Delete(Expense expense)
+    {
+        var result = await Http.DeleteAsync($"http://localhost:7071/api/DeleteExpense?account={expense.Account}&id={expense.Id}");
+
+        if(result.IsSuccessStatusCode)
+            _expenses.Remove(expense);
+    }
 }

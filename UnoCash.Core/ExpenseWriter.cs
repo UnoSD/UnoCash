@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos.Table;
 
 namespace UnoCash.Core
@@ -23,5 +24,8 @@ namespace UnoCash.Core
                     [nameof(Expense.Date)] = EntityProperty.GeneratePropertyForDateTimeOffset(expense.Date),
                     [nameof(Expense.Amount)] = EntityProperty.GeneratePropertyForLong((long)(expense.Amount * 100L)),
                 });
+
+        public static Task<bool> DeleteAsync(string account, Guid id) => 
+            AzureTableStorage.DeleteAsync(nameof(Expense), account, id.ToString());
     }
 }
