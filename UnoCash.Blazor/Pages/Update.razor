@@ -3,6 +3,7 @@
 @using System.Globalization
 @using System.Text
 @using System.Text.Json.Serialization
+@using UnoCash.Shared
 @inject HttpClient Http
 
 @if (Guid == Guid.Empty)
@@ -153,7 +154,7 @@ else
         _expense.Id = Guid;
 
         return Guid == Guid.Empty ?
-               Http.PostJsonAsync("http://localhost:7071/api/AddExpense", _expense) :
+               Http.PostJsonAsync($"http://localhost:7071/api/{Constants.AddFunction}", _expense) :
                Http.SendAsync(CreatePatchRequest(_expense));
     }
 }

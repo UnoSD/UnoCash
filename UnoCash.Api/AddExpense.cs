@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using UnoCash.Core;
+using UnoCash.Shared;
 
 namespace UnoCash.Api
 {
     public static class AddExpense
     {
-        [FunctionName("AddExpense")]
+        [FunctionName(Constants.AddFunction)]
         public static async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post")]
             HttpRequest req,

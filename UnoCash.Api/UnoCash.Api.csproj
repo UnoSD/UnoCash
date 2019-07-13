@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\UnoCash.Core\UnoCash.Core.csproj" />
     <ProjectReference Include="..\UnoCash.Dto\UnoCash.Dto.csproj" />
+    <ProjectReference Include="..\UnoCash.Shared\UnoCash.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">
