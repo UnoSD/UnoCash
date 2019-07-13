@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace UnoCash.Core
 {
@@ -7,8 +6,6 @@ namespace UnoCash.Core
     class SecretReader
     {
         internal static async Task<string> GetAsync(string secretName) =>
-            Environment.GetEnvironmentVariable(secretName, EnvironmentVariableTarget.Process) ??
-            Environment.GetEnvironmentVariable(secretName, EnvironmentVariableTarget.User) ??
-            Environment.GetEnvironmentVariable(secretName, EnvironmentVariableTarget.Machine);
+            EnvironmentVariableSettingStore.GetSetting(secretName);
     }
 }
