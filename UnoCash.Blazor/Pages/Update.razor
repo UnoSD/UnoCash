@@ -14,7 +14,22 @@ else
     <h1>Edit the expense @Id</h1>
 }
 
+<FormGroup>
+    <BlazorLabel For="Receipt">Upload a receipt</BlazorLabel>
+    <input id="Receipt" type="file" />
+    <button id="upload-button" 
+            onclick="uploadToBlobStorage()">Load from receipt</button>
+</FormGroup>
+
 <BlazorForm OnSubmit="@AddOrUpdate">
+
+    <FormGroup>
+        <BlazorLabel For="Payee">Payee</BlazorLabel>
+        <BlazorInput Id="Payee"
+                     InputType="InputType.Text"
+                     />
+                     <!--@bind-Value="_expense.Payee" />-->
+    </FormGroup>
 
     <FormGroup>
         <BlazorLabel For="Date">Date</BlazorLabel>
@@ -75,13 +90,6 @@ else
                      InputType="InputType.TextArea"
                      @bind-Value="_expense.Description"
                      Rows="4" />
-    </FormGroup>
-
-    <FormGroup>
-        <BlazorLabel For="Receipt">Upload a receipt</BlazorLabel>
-        <input id="Receipt"
-               type="file"
-               onchange="uploadToBlobStorage(@("'Blob URL'"))" />
     </FormGroup>
 
     <BlazorButton Color="Color.Primary"

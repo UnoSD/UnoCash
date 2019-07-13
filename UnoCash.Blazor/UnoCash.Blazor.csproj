@@ -17,4 +17,8 @@
     <ProjectReference Include="..\UnoCash.Core\UnoCash.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\scripts\" />
+  </ItemGroup>
+
 </Project>

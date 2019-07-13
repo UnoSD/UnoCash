@@ -12,44 +12,49 @@
     <app>Loading...</app>
 
     <script src="_framework/blazor.webassembly.js"></script>
+    <script src="scripts/azure-storage.blob.min.js"></script>
 
 <script>
-        function uploadToBlobStorage(url) {
+        function uploadToBlobStorage() {
             var file = document.querySelector('input[type=file]').files[0];
 
-            const account = {
-                name: '',
-                sas:  url
-            };
+            // Get SAS token from Azure Function
+            const token = '?st=2019-07-13T10%3A01%3A33Z&se=2026-07-14T10%3A01%3A00Z&sp=racwdl&sv=2018-03-28&sr=c&sig=F1jpNFt4H0ujsGqCaeIZiwWwKXEAV7YE4WPxhkvcd4A%3D';
 
-            const blobUri = 'http://127.0.0.1:10000' //'https://' + account.name + '.blob.core.windows.net';
-            const blobService = AzureStorage.Blob.createBlobServiceWithSas(blobUri, account.sas);
+            const blobUri = 'http://127.0.0.1:10000/devstoreaccount1';
+            const blobService = AzureStorage.Blob.createBlobServiceWithSas(blobUri, token);
 
             blobService.createBlockBlobFromBrowserFile(
                 'receipts', 
                 file.name, 
                 file, 
-                (error, result) => {
+                (error, _) => {
                     if(error) {
                         // Handle blob error
                     } else {
-                        console.log('Upload is successful');
-
                         // Now invoke Function to run analysis and get results
-                        // Then apply to the inputs
+                        var xmlHttp = new XMLHttpRequest();
+                        xmlHttp.responseType = 'json';
+                        xmlHttp.onreadystatechange = function() { 
+                            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                                var j = xmlHttp.response;
+                                var i = function (id) {
+                                    return document.querySelector('input[id=' + id + ']');
+                                };
+                                console.log(JSON.stringify(j));
+                                var date = new Date(j['date']);
+                                console.log(j['date']);
+                                // Then apply to the inputs
+                                i('Payee').value = j['payee'];
+                                i('Date').value = date.getFullYear() + '-' + ("0" + (date.getMonth() + 1)).slice(-2) + '-' + ("0" + date.getDate()).slice(-2);
+                                //i('Account').value = j['method'];
+                                i('Amount').value = j['amount'];
+                            }
+                        }
+                        xmlHttp.open("GET", 'http://localhost:7071/api/GetReceiptData?blobName=' + file.name, true);
+                        xmlHttp.send(null);
                     }
                 });
-
-            var reader = new FileReader();
-
-            reader.addEventListener("load", function () {
-                alert(reader.result);
-                alert(url);
-            }, false);
-
-            if (file) {
-                reader.readAsText(file);
-            }
         }
     </script>
 
