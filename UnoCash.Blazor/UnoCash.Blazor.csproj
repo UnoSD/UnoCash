@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\UnoCash.Core\UnoCash.Core.csproj" />
+    <ProjectReference Include="..\UnoCash.Dto\UnoCash.Dto.csproj" />
   </ItemGroup>
 
   <ItemGroup>
