@@ -4,6 +4,13 @@ namespace UnoCash.Core
 {
     public static class ResultExtensions
     {
+        public static IResult<T> RTap<T>(this IResult<T> result, Action<T> action) =>
+            result.Map(r =>
+            {
+                action(r);
+                return r;
+            });
+
         public static IResult<T> Success<T>(this T value) =>
             new SuccessResult<T>(value);
 
@@ -18,7 +25,7 @@ namespace UnoCash.Core
                                             Func<TIn, TOut> onSuccess,
                                             Func<string, TOut> onFailure) =>
             value is SuccessResult<TIn> success ? onSuccess(success.Success) :
-            value is FailureResult<TOut> failure ? onFailure(failure.Failure) :
+            value is FailureResult<TIn> failure ? onFailure(failure.Failure) :
             //value is null                        ? throw new NullReferenceException() : 
             throw new Exception("Bad implementation, do not implement IResult into " +
                                 "classes other than SuccessResult and FailureResult");

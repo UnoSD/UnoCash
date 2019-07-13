@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace UnoCash.Core
 {
-    static class TaskExtensions
+    public static class TaskExtensions
     {
         internal static async Task<TOut> Map<TIn, TOut>(this Task<TIn> functor, Func<TIn, TOut> func)
         {
@@ -16,5 +16,10 @@ namespace UnoCash.Core
         internal static Task<TOut> Bind<TIn, TOut>(this Task<TIn> monad, Func<TIn, Task<TOut>> func) =>
             monad.Map(func)
                  .Unwrap();
+
+        public static Task<T> MatchAsync<T>(this Task<bool> task,
+                                            Func<T> onTrue,
+                                            Func<T> onFalse) =>
+            task.Map(b => b ? onTrue() : onFalse());
     }
 }

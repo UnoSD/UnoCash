@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace UnoCash.Core
 {
     public static class TypeExtensions
     {
+        public static Task<T> ToTask<T>(this T value) =>
+            Task.FromResult(value);
+
         internal static T Coalesce<T>(this T toCheck, T replacement, T comparison = default) =>
             toCheck.Equals(comparison) ? replacement : toCheck;
 
