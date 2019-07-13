@@ -11,8 +11,8 @@ namespace UnoCash.Core
             new FailureResult<T>(value);
 
         public static IResult<TOut> Bind<TIn, TOut>(this IResult<TIn> item, Func<TIn, IResult<TOut>> func) =>
-            item.Match((r => r is SuccessResult<TIn>, r => func(((SuccessResult<TIn>)r).Success)),
-                       (r => r is FailureResult<TIn>, r => ((FailureResult<TIn>)r).Failure.Failure<TOut>()));
+            item.Match(func,
+                       r => r.Failure<TOut>());
 
         public static TOut Match<TIn, TOut>(this IResult<TIn> value,
                                             Func<TIn, TOut> onSuccess,
