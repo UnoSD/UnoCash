@@ -18,6 +18,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnoCash.Test", "UnoCash.Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnoCash.Dto", "UnoCash.Dto\UnoCash.Dto.csproj", "{9DB777FB-DA79-4FD5-B2D5-2721B509D462}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnoCash.Shared", "UnoCash.Shared\UnoCash.Shared.csproj", "{0C14D078-EF79-48A3-B08B-81887473DBBF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{9DB777FB-DA79-4FD5-B2D5-2721B509D462}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9DB777FB-DA79-4FD5-B2D5-2721B509D462}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9DB777FB-DA79-4FD5-B2D5-2721B509D462}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C14D078-EF79-48A3-B08B-81887473DBBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C14D078-EF79-48A3-B08B-81887473DBBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C14D078-EF79-48A3-B08B-81887473DBBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C14D078-EF79-48A3-B08B-81887473DBBF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
