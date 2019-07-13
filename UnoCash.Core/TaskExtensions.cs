@@ -5,7 +5,16 @@ namespace UnoCash.Core
 {
     public static class TaskExtensions
     {
-        internal static async Task<TOut> Map<TIn, TOut>(this Task<TIn> functor, Func<TIn, TOut> func)
+        public static async Task<T> TTap<T>(this Task<T> task, Action<T> action)
+        {
+            var result = await task.ConfigureAwait(false);
+
+            action(result);
+
+            return result;
+        }
+
+        public static async Task<TOut> Map<TIn, TOut>(this Task<TIn> functor, Func<TIn, TOut> func)
         {
             // Use ContinueWith (with correct arguments)
             var result = await functor.ConfigureAwait(false);

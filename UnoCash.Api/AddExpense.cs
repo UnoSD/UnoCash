@@ -15,34 +15,26 @@ namespace UnoCash.Api
     public static class AddExpense
     {
         [FunctionName(Constants.AddFunction)]
-        public static async Task<IActionResult> Run(
+        public static Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post")]
             HttpRequest req,
-            ILogger log)
-        {
-            log.LogInformation("Adding a new expense");
-
-            var body =
-                await new StreamReader(req.Body).UsingAsync(r => r.ReadToEndAsync());
-
-            log.LogInformation($"Request body: {body}");
-
-            var expense =
-                JsonConvert.DeserializeObject<Expense>(body);
-
-            new[]
-            {
-                expense.Account,
-                expense.Date.ToString(CultureInfo.InvariantCulture),
-                expense.Payee,
-                expense.Status,
-                expense.Type,
-                expense.Description,
-            }.Iter(x => log.LogWarning(x));
-
-            expense.Write();
-
-            return new OkObjectResult("Expense successfully added");
-        }
+            ILogger log) =>
+            req.Tap(_ => log.LogInformation("Adding a new expense"))
+               .Body
+               .TMap(body => new StreamReader(body))
+               .UsingAsync(r => r.ReadToEndAsync())
+               .TTap(body => log.LogInformation($"Request body: {body}"))
+               .Map(JsonConvert.DeserializeObject<Expense>)
+               .TTap(expense => new[]
+                                {
+                                    expense.Account,
+                                    expense.Date.ToString(CultureInfo.InvariantCulture),
+                                    expense.Payee,
+                                    expense.Status,
+                                    expense.Type,
+                                    expense.Description,
+                                }.Iter(x => log.LogWarning(x)))
+               .TTap(expense => expense.Write())
+               .Map(_ => (IActionResult)new OkResult());
     }
 }

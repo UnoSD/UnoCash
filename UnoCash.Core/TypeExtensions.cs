@@ -7,6 +7,9 @@ namespace UnoCash.Core
 {
     public static class TypeExtensions
     {
+        public static TOut TMap<TIn, TOut>(this TIn value, Func<TIn, TOut> func) =>
+            func(value);
+
         public static Task<T> ToTask<T>(this T value) =>
             Task.FromResult(value);
 
