@@ -32,6 +32,7 @@ namespace UnoCash.Api
             log.LogWarning(expense.Type);
             log.LogWarning(expense.Date.ToString(CultureInfo.InvariantCulture));
             log.LogWarning(expense.Description);
+            log.LogWarning(expense.Payee);
 
             expense.Write();
 

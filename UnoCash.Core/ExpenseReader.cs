@@ -20,6 +20,7 @@ namespace UnoCash.Core
             {
                 Id = Guid.Parse(expense.RowKey),
                 Account = expense.Properties[nameof(Expense.Account)].StringValue,
+                Payee = expense.Properties[nameof(Expense.Payee)].StringValue,
                 Description = expense.Properties[nameof(Expense.Description)].StringValue,
                 Status = expense.Properties[nameof(Expense.Status)].StringValue,
                 Type = expense.Properties[nameof(Expense.Type)].StringValue,

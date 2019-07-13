@@ -18,6 +18,7 @@ namespace UnoCash.Core
                 new Dictionary<string, EntityProperty>
                 {
                     [nameof(Expense.Account)] = EntityProperty.GeneratePropertyForString(expense.Account),
+                    [nameof(Expense.Payee)] = EntityProperty.GeneratePropertyForString(expense.Payee),
                     [nameof(Expense.Description)] = EntityProperty.GeneratePropertyForString(expense.Description),
                     [nameof(Expense.Status)] = EntityProperty.GeneratePropertyForString(expense.Status),
                     [nameof(Expense.Type)] = EntityProperty.GeneratePropertyForString(expense.Type),
