@@ -5,6 +5,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using UnoCash.Core;
 
 namespace UnoCash.Api
 {
@@ -20,13 +21,9 @@ namespace UnoCash.Api
 
             log.LogWarning($"Processing the receipt for {blob}");
 
-            return new OkObjectResult(new
-            {
-                Payee = "Tesco",
-                Date = DateTime.Today.AddDays(-400),
-                Method = "Cash",
-                Amount = 12.12M
-            });
+            var receipt = await ReceiptParser.ParseAsync(blob);
+
+            return new OkObjectResult(receipt);
         }
     }
 }
