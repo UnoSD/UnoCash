@@ -15,28 +15,33 @@ namespace UnoCash.Api
     {
         [FunctionName("AddExpense")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)]
+            [HttpTrigger(AuthorizationLevel.Function, "post")]
             HttpRequest req,
             ILogger log)
         {
             log.LogInformation("Adding a new expense");
 
-            var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            var body =
+                await new StreamReader(req.Body).UsingAsync(r => r.ReadToEndAsync());
 
-            var expense = JsonConvert.DeserializeObject<Expense>(requestBody);
+            log.LogInformation($"Request body: {body}");
 
-            log.LogInformation(requestBody);
+            var expense =
+                JsonConvert.DeserializeObject<Expense>(body);
 
-            log.LogWarning(expense.Account);
-            log.LogWarning(expense.Status);
-            log.LogWarning(expense.Type);
-            log.LogWarning(expense.Date.ToString(CultureInfo.InvariantCulture));
-            log.LogWarning(expense.Description);
-            log.LogWarning(expense.Payee);
+            new[]
+            {
+                expense.Account,
+                expense.Date.ToString(CultureInfo.InvariantCulture),
+                expense.Payee,
+                expense.Status,
+                expense.Type,
+                expense.Description,
+            }.Iter(x => log.LogWarning(x));
 
             expense.Write();
 
-            return new OkObjectResult("Hello");
+            return new OkObjectResult("Expense successfully added");
         }
     }
 }
