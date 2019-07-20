@@ -1,10 +1,13 @@
 ﻿@page "/edit/{Id}"
 
 @using System.Globalization
+@using System.Reflection
 @using System.Text
 @using System.Text.Json.Serialization
+@using UnoCash.Dto
 @using UnoCash.Shared
 @inject HttpClient Http
+@inject IJSRuntime Js
 
 @if (Guid == Guid.Empty)
 {
@@ -18,8 +21,7 @@ else
 <FormGroup>
     <BlazorLabel For="Receipt">Upload a receipt</BlazorLabel>
     <input id="Receipt" type="file" />
-    <button id="upload-button" 
-            onclick="uploadToBlobStorage()">Load from receipt</button>
+    <BlazorButton onclick="@UploadToBlobStorage">Load from receipt</BlazorButton>
 </FormGroup>
 
 <BlazorForm OnSubmit="@AddOrUpdate">
@@ -101,6 +103,44 @@ else
 
 @functions
 {
+    Task UploadToBlobStorage() =>
+        Js.InvokeAsync<object>("uploadToBlobStorage", 
+                               DotNetObjectRef.Create(this),
+                               "receipts", // Get from config
+                               nameof(OnBlobUploaded),
+                               nameof(GetSasToken),
+                               Assembly.GetAssembly(GetType()).GetName().Name);
+
+    [JSInvokable]
+    public static Task<string> GetSasToken()
+    {
+        // Get SAS token from Azure Function
+
+        const string token = 
+            "?st=2019-07-13T10%3A01%3A33Z&se=2026-07-14T10%3A01%3A00Z&" +
+            "sp=racwdl&sv=2018-03-28&" +
+            "sr=c&" +
+            "sig=F1jpNFt4H0ujsGqCaeIZiwWwKXEAV7YE4WPxhkvcd4A%3D";
+
+        return Task.FromResult(token);
+    }
+
+    [JSInvokable]
+    public async Task OnBlobUploaded(string blobName)
+    {
+        var url =
+            $"http://localhost:7071/api/GetReceiptData?blobName={blobName}";
+
+        var receipt =
+            await Http.GetJsonAsync<Receipt>(url);
+
+        _expense.Payee = receipt.Payee;
+        AmountBinder = receipt.Amount.ToString(CultureInfo.InvariantCulture);
+        DateBinder = receipt.Date.ToString(CultureInfo.InvariantCulture);
+
+        StateHasChanged();
+    }
+
     [Parameter]
     string Id
     {

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.Storage.Blob;
 using Newtonsoft.Json;
+using UnoCash.Dto;
 using CloudStorageAccount = Microsoft.Azure.Storage.CloudStorageAccount;
 
 namespace UnoCash.Core

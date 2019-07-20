@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UnoCash.Core
+namespace UnoCash.Dto
 {
     public class Receipt
     {
