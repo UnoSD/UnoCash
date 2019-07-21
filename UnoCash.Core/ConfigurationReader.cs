@@ -4,7 +4,8 @@ namespace UnoCash.Core
 {
     class ConfigurationReader
     {
-        public static async Task<string> GetAsync(string name) =>
-            EnvironmentVariableSettingStore.GetSetting(name);
+        public static Task<string> GetAsync(string name) =>
+            EnvironmentVariableSettingStore.GetSetting(name)
+                                           .ToTask();
     }
 }

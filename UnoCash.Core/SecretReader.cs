@@ -5,7 +5,8 @@ namespace UnoCash.Core
     // Keep only DTOs in shared project
     class SecretReader
     {
-        internal static async Task<string> GetAsync(string secretName) =>
-            EnvironmentVariableSettingStore.GetSetting(secretName);
+        internal static Task<string> GetAsync(string secretName) =>
+            EnvironmentVariableSettingStore.GetSetting(secretName)
+                                           .ToTask();
     }
 }
