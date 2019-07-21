@@ -1,5 +1,6 @@
 using System;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using UnoCash.Core;
 
@@ -20,5 +21,8 @@ namespace UnoCash.Api
                .Bind(values => values.Match(() => $"Missing value for {key}".Failure<string>(),
                                             value => value.Success(),
                                             _ => $"Too many values for {key}".Failure<string>()));
+
+        public static OkObjectResult ToOkObject<T>(this T obj) =>
+            new OkObjectResult(obj);
     }
 }

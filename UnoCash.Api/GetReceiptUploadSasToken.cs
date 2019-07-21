@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Storage;
+using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
@@ -17,17 +17,20 @@ namespace UnoCash.Api
         public static Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)]
             HttpRequest req,
-            ILogger log)
-        {
-            log.LogWarning("Getting blob upload SAS token for receipts container");
-
-            const string token =
-                "?st=2019-07-13T10%3A01%3A33Z&se=2026-07-14T10%3A01%3A00Z&" +
-                "sp=racwdl&sv=2018-03-28&" +
-                "sr=c&" +
-                "sig=F1jpNFt4H0ujsGqCaeIZiwWwKXEAV7YE4WPxhkvcd4A%3D";
-
-            return new OkObjectResult(token).ToTask<IActionResult>();
-        }
+            ILogger log) =>
+            CloudStorageAccount.DevelopmentStorageAccount
+                               .Tap(_ => log.LogWarning("Getting blob upload SAS token for receipts container"))
+                               .CreateCloudBlobClient()
+                               .GetContainerReference("receipts")
+                               .GetSharedAccessSignature(new SharedAccessBlobPolicy
+                               {
+                                   Permissions            = SharedAccessBlobPermissions.Create |
+                                                            // Remove, is only to override existing blobs
+                                                            SharedAccessBlobPermissions.Write,
+                                   SharedAccessExpiryTime = DateTimeOffset.Now.AddMinutes(2)
+                                   // Add IP range limit? Other access policy?
+                               })
+                               .ToOkObject()
+                               .ToTask<IActionResult>();
     }
 }
