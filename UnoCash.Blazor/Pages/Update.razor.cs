@@ -49,15 +49,7 @@ namespace UnoCash.Blazor.Pages
         {
             AnalysisProgress = 40;
 
-            // Get SAS token from Azure Function
-
-            const string token =
-                "?st=2019-07-13T10%3A01%3A33Z&se=2026-07-14T10%3A01%3A00Z&" +
-                "sp=racwdl&sv=2018-03-28&" +
-                "sr=c&" +
-                "sig=F1jpNFt4H0ujsGqCaeIZiwWwKXEAV7YE4WPxhkvcd4A%3D";
-
-            return Task.FromResult(token);
+            return Http.GetStringAsync("http://localhost:7071/api/GetReceiptUploadSasToken");
         }
 
         [JSInvokable]
