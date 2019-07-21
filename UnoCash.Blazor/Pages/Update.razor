@@ -22,6 +22,7 @@ else
     <BlazorLabel For="Receipt">Upload a receipt</BlazorLabel>
     <input id="Receipt" type="file" />
     <BlazorButton onclick="@UploadToBlobStorage">Load from receipt</BlazorButton>
+    <Progress @bind-Value="AnalysisProgress" IsStriped="true" IsAnimated="true">@AnalysisProgress%</Progress>
 </FormGroup>
 
 <BlazorForm OnSubmit="@AddOrUpdate">
@@ -103,20 +104,27 @@ else
 
 @functions
 {
-    Task UploadToBlobStorage() =>
-        Js.InvokeAsync<object>("uploadToBlobStorage", 
-                               DotNetObjectRef.Create(this),
-                               "receipts", // Get from config
-                               nameof(OnBlobUploaded),
-                               nameof(GetSasToken),
-                               Assembly.GetAssembly(GetType()).GetName().Name);
+    int AnalysisProgress { get; set; }
+
+    Task UploadToBlobStorage()
+    {
+        AnalysisProgress = 25;
+
+        return Js.InvokeAsync<object>("uploadToBlobStorage",
+                                      DotNetObjectRef.Create(this),
+                                      "receipts", // Get from config
+                                      nameof(OnBlobUploaded),
+                                      nameof(GetSasToken));
+    }
 
     [JSInvokable]
-    public static Task<string> GetSasToken()
+    public Task<string> GetSasToken()
     {
+        AnalysisProgress = 40;
+
         // Get SAS token from Azure Function
 
-        const string token = 
+        const string token =
             "?st=2019-07-13T10%3A01%3A33Z&se=2026-07-14T10%3A01%3A00Z&" +
             "sp=racwdl&sv=2018-03-28&" +
             "sr=c&" +
@@ -128,6 +136,9 @@ else
     [JSInvokable]
     public async Task OnBlobUploaded(string blobName)
     {
+        AnalysisProgress = 75;
+        StateHasChanged();
+
         var url =
             $"http://localhost:7071/api/GetReceiptData?blobName={blobName}";
 
@@ -137,6 +148,7 @@ else
         _expense.Payee = receipt.Payee;
         AmountBinder = receipt.Amount.ToString(CultureInfo.InvariantCulture);
         DateBinder = receipt.Date.ToString(CultureInfo.InvariantCulture);
+        AnalysisProgress = 100;
 
         StateHasChanged();
     }
