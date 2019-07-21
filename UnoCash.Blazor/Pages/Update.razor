@@ -1,7 +1,6 @@
 ﻿@page "/edit/{Id}"
 
 @using System.Globalization
-@using System.Reflection
 @using System.Text
 @using System.Text.Json.Serialization
 @using UnoCash.Dto
@@ -97,10 +96,9 @@ else
 
     <BlazorButton Color="Color.Primary"
                   ButtonType="ButtonType.Submit">@(Guid == Guid.Empty ? "Add" : "Update")</BlazorButton>
+    <BlazorButton Color="Color.Secondary">Split</BlazorButton>
 
-                <BlazorButton Color="Color.Secondary">Split</BlazorButton>
-
-            </BlazorForm>
+</BlazorForm>
 
 @functions
 {
