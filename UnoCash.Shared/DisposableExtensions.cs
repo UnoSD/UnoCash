@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace UnoCash.Core
+namespace UnoCash.Shared
 {
     public static class DisposableExtensions
     {
