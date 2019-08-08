@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using BlazorStrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using UnoCash.Core;
@@ -15,6 +16,8 @@ namespace UnoCash.Blazor.Pages
 {
     public class UpdatePage : ComponentBase
     {
+        protected bool IsModalOpen;
+
         [Inject]
         protected IJSRuntime Js { get; set; }
 
@@ -33,7 +36,7 @@ namespace UnoCash.Blazor.Pages
         protected Task UploadToBlobStorage()
         {
             AnalysisProgress = 25;
-
+            
             return UploadToBlobStorageJs(DotNetObjectRef.Create(this));
         }
 

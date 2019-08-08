@@ -80,6 +80,23 @@
 
             <BlazorButton Color="Color.Primary"
                           ButtonType="ButtonType.Submit">@(Guid == Guid.Empty ? "Add" : "Update")</BlazorButton>
-                        <BlazorButton Color="Color.Secondary">Split</BlazorButton>
+            <BlazorButton Color="Color.Secondary"
+                          OnClick="@(() => IsModalOpen = true)">Split</BlazorButton>
+
+            <Modal @bind-IsOpen="IsModalOpen" IsCentered="true">
+                <ModalHeader>Split</ModalHeader>
+                <ModalBody>
+                    <p>Split the expense</p>
+                    List of people to split with (with completion) / Group
+                    Description will be autopopulated
+                    Controls to split percentage
+                    Date/image taken from other form
+                </ModalBody>
+                <ModalFooter>
+                    <BlazorButton Color="Color.Primary">Apply</BlazorButton>
+                    <BlazorButton Color="Color.Secondary"
+                                  OnClick="@(() => IsModalOpen = false)">Cancel</BlazorButton>
+                </ModalFooter>
+            </Modal>
 
         </BlazorForm>
