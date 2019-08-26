@@ -19,6 +19,7 @@ The project uses:
 * Azure Functions as a serverless microservice back end, deployed in a consumption plan so extremely cheap
 * Azure Storage blobs to host the static website in Blazor so no need for any compute for the front end
 * Azure Tables for storage, because it's way cheaper than Cosmos DB and it is behind the same SDK API so it can be easily migrated
+* Azure Form Recognizer to analyse receipt photos and extract data (still in private preview, I had to request access to Microsoft)
 
 It will use soon:
 
