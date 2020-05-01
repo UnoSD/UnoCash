@@ -3,100 +3,100 @@
 
 <h1>@GetTitle()</h1>
 
-<FormGroup>
-    <BlazorLabel For="Receipt">Upload a receipt</BlazorLabel>
+<BSFormGroup>
+    <BSLabel For="Receipt">Upload a receipt</BSLabel>
     <input id="Receipt"
            type="file" />
-    <BlazorButton onclick="@UploadToBlobStorage">Load from receipt</BlazorButton>
-    <Progress @bind-Value="AnalysisProgress"
+    <BSButton OnClick="@UploadToBlobStorage">Load from receipt</BSButton>
+    <BSProgress @bind-Value="AnalysisProgress"
               IsStriped="true"
-              IsAnimated="true">@AnalysisProgress%</Progress>
-        </FormGroup>
+              IsAnimated="true">@AnalysisProgress%</BSProgress>
+</BSFormGroup>
 
-        <BlazorForm OnSubmit="@AddOrUpdate">
-
-            <FormGroup>
-                <BlazorLabel For="Payee">Payee</BlazorLabel>
-                <BlazorInput Id="Payee"
+        <BSForm OnSubmit="@AddOrUpdate" Model="Expense">
+            
+            <BSFormGroup>
+                <BSLabel For="Payee">Payee</BSLabel>
+                <BSInput Id="Payee"
                              InputType="InputType.Text"
                              @bind-Value="Expense.Payee" />
-            </FormGroup>
+            </BSFormGroup>
 
-            <FormGroup>
-                <BlazorLabel For="Date">Date</BlazorLabel>
-                <BlazorInput Id="Date"
+            <BSFormGroup>
+                <BSLabel For="Date">Date</BSLabel>
+                <BSInput Id="Date"
                              InputType="InputType.Date"
                              @bind-Value="DateBinder" />
-            </FormGroup>
+            </BSFormGroup>
 
-            <FormGroup>
-                <BlazorLabel For="Amount">Amount</BlazorLabel>
-                <BlazorInput Id="Amount"
+            <BSFormGroup>
+                <BSLabel For="Amount">Amount</BSLabel>
+                <BSInput Id="Amount"
                              InputType="InputType.Number"
                              @bind-Value="AmountBinder"
                              step=".01" />
-            </FormGroup>
+            </BSFormGroup>
 
-            <FormGroup>
-                <BlazorLabel For="Account">Account</BlazorLabel>
-                <BlazorInput Id="Account"
+            <BSFormGroup>
+                <BSLabel For="Account">Account</BSLabel>
+                <BSInput Id="Account"
                              InputType="InputType.Select"
                              @bind-Value="Expense.Account">
                     <option>Current</option>
                     <option>ISA</option>
                     <option>Wallet</option>
-                </BlazorInput>
-            </FormGroup>
+                </BSInput>
+            </BSFormGroup>
 
-            <FormGroup>
-                <BlazorLabel For="Type">Type</BlazorLabel>
-                <BlazorInput Id="Type"
+            <BSFormGroup>
+                <BSLabel For="Type">Type</BSLabel>
+                <BSInput Id="Type"
                              InputType="InputType.Select"
                              @bind-Value="Expense.Type">
                     <option>Regular</option>
                     <option>Internal transfer</option>
                     <option>Scheduled</option>
-                </BlazorInput>
-            </FormGroup>
+                </BSInput>
+            </BSFormGroup>
 
-            <FormGroup>
-                <BlazorLabel For="Status">Status</BlazorLabel>
-                <BlazorInput Id="Status"
+            <BSFormGroup>
+                <BSLabel For="Status">Status</BSLabel>
+                <BSInput Id="Status"
                              InputType="InputType.Select"
                              @bind-Value="Expense.Status">
                     <option>New</option>
                     <option>Pending</option>
                     <option>Reconciled</option>
-                </BlazorInput>
-            </FormGroup>
+                </BSInput>
+            </BSFormGroup>
 
-            <FormGroup>
-                <BlazorLabel For="Description">Description</BlazorLabel>
-                <BlazorInput Id="Description"
+            <BSFormGroup>
+                <BSLabel For="Description">Description</BSLabel>
+                <BSInput Id="Description"
                              InputType="InputType.TextArea"
                              @bind-Value="Expense.Description"
                              Rows="4" />
-            </FormGroup>
+            </BSFormGroup>
 
-            <BlazorButton Color="Color.Primary"
-                          ButtonType="ButtonType.Submit">@(Guid == Guid.Empty ? "Add" : "Update")</BlazorButton>
-            <BlazorButton Color="Color.Secondary"
-                          OnClick="@(() => IsModalOpen = true)">Split</BlazorButton>
+            <BSButton Color="Color.Primary"
+                          ButtonType="ButtonType.Submit">@(Guid == Guid.Empty ? "Add" : "Update")</BSButton>
+            <BSButton Color="Color.Secondary"
+                          OnClick="@(() => IsModalOpen = true)">Split</BSButton>
 
-            <Modal @bind-IsOpen="IsModalOpen" IsCentered="true">
-                <ModalHeader>Split</ModalHeader>
-                <ModalBody>
+            <BSModal @bind-IsOpen="IsModalOpen" IsCentered="true">
+                <BSModalHeader>Split</BSModalHeader>
+                <BSModalBody>
                     <p>Split the expense</p>
                     List of people to split with (with completion) / Group
                     Description will be autopopulated
                     Controls to split percentage
                     Date/image taken from other form
-                </ModalBody>
-                <ModalFooter>
-                    <BlazorButton Color="Color.Primary">Apply</BlazorButton>
-                    <BlazorButton Color="Color.Secondary"
-                                  OnClick="@(() => IsModalOpen = false)">Cancel</BlazorButton>
-                </ModalFooter>
-            </Modal>
+                </BSModalBody>
+                <BSModalFooter>
+                    <BSButton Color="Color.Primary">Apply</BSButton>
+                    <BSButton Color="Color.Secondary"
+                                  OnClick="@(() => IsModalOpen = false)">Cancel</BSButton>
+                </BSModalFooter>
+            </BSModal>
 
-        </BlazorForm>
+        </BSForm>

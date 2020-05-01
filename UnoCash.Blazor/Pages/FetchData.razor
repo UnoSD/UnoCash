@@ -33,7 +33,7 @@ else
                     <td>@expense.Amount</td>
                     <td>@expense.Description</td>
                     <td>@expense.Status</td>
-                    <td><BlazorButton onclick="@(() => Delete(expense))">X</BlazorButton> </td>
+                    <td><BSButton OnClick="@(() => Delete(expense))">X</BSButton> </td>
                     @*<td><form action="/?id=@expense.Id"><input type="submit" value="?" /></form></td>*@
                     <NavLink href="@($"edit/{expense.Id}")" Match="NavLinkMatch.All">Edit</NavLink>
                 </tr>
@@ -45,7 +45,7 @@ else
 @code {
     List<Expense> _expenses;
 
-    protected override async Task OnInitAsync() =>
+    protected override async Task OnInitializedAsync() =>
         _expenses =
             await Http.GetJsonAsync<List<Expense>>("http://localhost:7071/api/GetExpenses?account=Current");
 

@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Text.Json.Serialization;
+using System.Text.Json;
 using System.Threading.Tasks;
 using BlazorStrap;
 using Microsoft.AspNetCore.Components;
@@ -27,7 +27,7 @@ namespace UnoCash.Blazor.Pages
         protected int AnalysisProgress { get; set; }
 
         [Parameter]
-        protected string Id
+        public string Id // Use partial class
         {
             get => Guid.ToString();
             set => Guid = Guid.Parse(value);
@@ -37,15 +37,16 @@ namespace UnoCash.Blazor.Pages
         {
             AnalysisProgress = 25;
             
-            return UploadToBlobStorageJs(DotNetObjectRef.Create(this));
+            return UploadToBlobStorageJs(DotNetObjectReference.Create(this));
         }
 
-        Task<object> UploadToBlobStorageJs(DotNetObjectRef<UpdatePage> instance) =>
+        Task<object> UploadToBlobStorageJs(DotNetObjectReference<UpdatePage> instance) =>
             Js.InvokeAsync<object>("uploadToBlobStorage",
                                    instance,
-                                   "receipts", // Get from config
+                                   "receipts", // Get from config // Create if it doesn't exist
                                    nameof(OnBlobUploaded),
-                                   nameof(GetSasToken));
+                                   nameof(GetSasToken))
+              .AsTask(); // Return ValueTask instead
 
         [JSInvokable]
         public Task<string> GetSasToken()
@@ -87,7 +88,7 @@ namespace UnoCash.Blazor.Pages
         // Do that BEFORE the binding
         protected Expense Expense = new Expense();
 
-        protected override async Task OnInitAsync() =>
+        protected override async Task OnInitializedAsync() =>
             Expense =
                 Guid == Guid.Empty ?
                     new Expense
@@ -119,7 +120,7 @@ namespace UnoCash.Blazor.Pages
         static HttpRequestMessage CreatePatchRequest(Expense expense) =>
             new HttpRequestMessage(new HttpMethod("PATCH"), "http://localhost:7071/api/UpdateExpense")
             {
-                Content = new StringContent(JsonSerializer.ToString(expense),
+                Content = new StringContent(JsonSerializer.Serialize(expense),
                                             Encoding.UTF8,
                                             "application/json")
             };
