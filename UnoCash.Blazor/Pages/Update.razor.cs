@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using BlazorStrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using UnoCash.Core;
@@ -14,7 +13,7 @@ using UnoCash.Shared;
 
 namespace UnoCash.Blazor.Pages
 {
-    public class UpdatePage : ComponentBase
+    public partial class Update
     {
         protected bool IsModalOpen;
 
@@ -37,16 +36,15 @@ namespace UnoCash.Blazor.Pages
         {
             AnalysisProgress = 25;
             
-            return UploadToBlobStorageJs(DotNetObjectReference.Create(this));
+            return UploadToBlobStorageJs(DotNetObjectReference.Create(this)).AsTask();
         }
 
-        Task<object> UploadToBlobStorageJs(DotNetObjectReference<UpdatePage> instance) =>
+        ValueTask<object> UploadToBlobStorageJs(DotNetObjectReference<Update> instance) =>
             Js.InvokeAsync<object>("uploadToBlobStorage",
                                    instance,
                                    "receipts", // Get from config // Create if it doesn't exist
                                    nameof(OnBlobUploaded),
-                                   nameof(GetSasToken))
-              .AsTask(); // Return ValueTask instead
+                                   nameof(GetSasToken));
 
         [JSInvokable]
         public Task<string> GetSasToken()
