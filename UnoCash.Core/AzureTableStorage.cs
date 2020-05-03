@@ -2,29 +2,29 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static UnoCash.Core.ConfigurationKeys;
 
 namespace UnoCash.Core
 {
     static class AzureTableStorage
     {
-        internal static void Write(this ITableEntity entity, string tableName) =>
-            GetOrCreate(tableName).Execute(TableOperation.Insert(entity));
+        static bool IsSuccessStatusCode(this int statusCode) => 
+            statusCode >= 200 && statusCode <= 299;
 
-        static CloudTable GetOrCreate(string name)
-        {
-            var storage = CloudStorageAccount.Parse("UseDevelopmentStorage=true");
+        internal static Task<bool> WriteAsync(this ITableEntity entity, string tableName) =>
+            GetOrCreateAsync(tableName).Bind(t => t.ExecuteAsync(TableOperation.Insert(entity)))
+                                       .Map(result => result.HttpStatusCode.IsSuccessStatusCode());
 
-            var client = storage.CreateCloudTableClient(new TableClientConfiguration());
-
-            var table = client.GetTableReference(name);
-
-            table.CreateIfNotExists();
-
-            return table;
-        }
+        static Task<CloudTable> GetOrCreateAsync(string name) =>
+            ConfigurationReader.GetAsync(StorageAccountConnectionString)
+                               .Map(CloudStorageAccount.Parse)
+                               .Map(csa => csa.CreateCloudTableClient())
+                               .Map(client => client.GetTableReference(name))
+                               .Bind(table => table.CreateIfNotExistsAsync()
+                                                   .Map(_ => table));
 
         internal static Task<IEnumerable<DynamicTableEntity>> GetAllAsync(string tableName) =>
-            GetAllAsync(GetOrCreate(tableName), new TableQuery());
+            GetOrCreateAsync(tableName).Bind(table => GetAllAsync(table, new TableQuery()));
 
         static Task<IEnumerable<DynamicTableEntity>> GetAllAsync(CloudTable table,
                                                                  TableQuery query) =>
@@ -63,7 +63,8 @@ namespace UnoCash.Core
                 // Invert
                 new TableQuery().Where(matches);
 
-            var table = GetOrCreate(tableName);
+            var table =
+                await GetOrCreateAsync(tableName).ConfigureAwait(false);
 
             var segment = await table.ExecuteQuerySegmentedAsync(query, default)
                                      .ConfigureAwait(false);

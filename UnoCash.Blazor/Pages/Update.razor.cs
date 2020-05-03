@@ -44,7 +44,12 @@ namespace UnoCash.Blazor.Pages
                                    instance,
                                    "receipts", // Get from config // Create if it doesn't exist
                                    nameof(OnBlobUploaded),
-                                   nameof(GetSasToken));
+                                   nameof(GetSasToken),
+                                   // Get the whole upload URL including token from an endpoint
+                                   "http://127.0.0.1:10000/devstoreaccount1");
+                                   // Environment.GetEnvironmentVariable("UNOCASH_BLOB_URI"));
+                                   // https://STORAGEACCOUNTNAME.blob.core.windows.net
+                                   // http://127.0.0.1:10000/devstoreaccount1
 
         [JSInvokable]
         public Task<string> GetSasToken()

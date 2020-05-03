@@ -7,9 +7,9 @@ namespace UnoCash.Core
 {
     public static class ExpenseWriter
     {
-        public static void Write(this Expense expense) =>
+        public static Task<bool> WriteAsync(this Expense expense) =>
             expense.ToTableEntity()
-                   .Write(nameof(Expense));
+                   .WriteAsync(nameof(Expense));
 
         static DynamicTableEntity ToTableEntity(this Expense expense) =>
             new DynamicTableEntity(expense.Account/*Escape characters*/,

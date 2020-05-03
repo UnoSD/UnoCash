@@ -11,6 +11,7 @@ using Microsoft.Azure.Storage.Blob;
 using Newtonsoft.Json;
 using UnoCash.Dto;
 using CloudStorageAccount = Microsoft.Azure.Storage.CloudStorageAccount;
+using static UnoCash.Core.ConfigurationKeys;
 
 namespace UnoCash.Core
 {
@@ -18,12 +19,13 @@ namespace UnoCash.Core
     {
         public static async Task<Receipt> ParseAsync(string blobName)
         {
-            var client =
-                CloudStorageAccount.DevelopmentStorageAccount
-                                   .CreateCloudBlobClient();
-
-            var container = client.GetContainerReference("receipts");
-
+            var container = 
+                await ConfigurationReader.GetAsync(StorageAccountConnectionString)
+                                         .Map(CloudStorageAccount.Parse)
+                                         .Map(client => client.CreateCloudBlobClient()
+                                                                               .GetContainerReference("receipts"))
+                                         .ConfigureAwait(false);
+            
             var blob = container.GetBlobReference(blobName);
 
             //blob.Uri
@@ -132,17 +134,17 @@ namespace UnoCash.Core
                            .UploadTextAsync(responseContent)
                            .ConfigureAwait(false);
 
-            SaveResultsToCache(hash, resultsBlobGuid);
+            await SaveResultsToCacheAsync(hash, resultsBlobGuid).ConfigureAwait(false);
 
             return responseContent.ToReceipt();
         }
 
-        static void SaveResultsToCache(string hash, string results) =>
+        static Task SaveResultsToCacheAsync(string hash, string results) =>
             new DynamicTableEntity("receipts",
                                    hash,
                                    "*",
                                    results.ToPropertiesDictionary())
-                .Write("receipthashes");
+                .WriteAsync("receipthashes");
 
         static Dictionary<string, EntityProperty> ToPropertiesDictionary(this string results) =>
             new Dictionary<string, EntityProperty>
@@ -160,10 +162,10 @@ namespace UnoCash.Core
         static Receipt ToReceipt(this Fields fields) =>
             new Receipt
             {
-                Payee = fields.MerchantName.Value,
-                Date  = fields.TransactionDate.Value,
+                Payee = fields.MerchantName?.Value,
+                Date  = fields.TransactionDate?.Value ?? default,
                 //Method = "Cash",
-                Amount = fields.Total.Value
+                Amount = fields.Total?.Value ?? default
             };
     }
 

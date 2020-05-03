@@ -22,7 +22,7 @@ namespace UnoCash.Core
             return func(result);
         }
 
-        internal static Task<TOut> Bind<TIn, TOut>(this Task<TIn> monad, Func<TIn, Task<TOut>> func) =>
+        public static Task<TOut> Bind<TIn, TOut>(this Task<TIn> monad, Func<TIn, Task<TOut>> func) =>
             monad.Map(func)
                  .Unwrap();
 

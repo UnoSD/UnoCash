@@ -8,6 +8,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using UnoCash.Core;
+using static UnoCash.Core.ConfigurationKeys;
 
 namespace UnoCash.Api
 {
@@ -18,7 +19,12 @@ namespace UnoCash.Api
             [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)]
             HttpRequest req,
             ILogger log) =>
-            CloudStorageAccount.DevelopmentStorageAccount
+            ConfigurationReader.GetAsync(StorageAccountConnectionString)
+                               .Bind(cs => GetSasToken(cs, log));
+        
+        
+        static Task<IActionResult> GetSasToken(string connectionString, ILogger log) =>
+            CloudStorageAccount.Parse(connectionString)
                                .Tap(_ => log.LogWarning("Getting blob upload SAS token for receipts container"))
                                .CreateCloudBlobClient()
                                .GetContainerReference("receipts")

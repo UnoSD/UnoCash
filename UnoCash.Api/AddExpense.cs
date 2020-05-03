@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
+using System.Web.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -34,7 +35,9 @@ namespace UnoCash.Api
                                     expense.Type,
                                     expense.Description,
                                 }.Iter(x => log.LogWarning(x)))
-               .TTap(expense => expense.Write())
-               .Map(_ => (IActionResult)new OkResult());
+               .Bind(expense => expense.WriteAsync())
+               .Map(isSuccessful => isSuccessful ?
+                                    (IActionResult)new OkResult() :
+                                    new InternalServerErrorResult());
     }
 }

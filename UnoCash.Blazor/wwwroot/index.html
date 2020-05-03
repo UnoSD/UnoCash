@@ -15,13 +15,17 @@
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="scripts/azure-storage.blob.min.js"></script>
 
-<script>
-        window.uploadToBlobStorage = async (instance, container, callBackFunctionName, getTokenFunctionName) => {
+<script type="application/javascript">
+        //# sourceURL=blob-upload.js
+        window.uploadToBlobStorage = async (instance,
+                                            container,
+                                            callBackFunctionName,
+                                            getTokenFunctionName,
+                                            blobUri) => {
             var file = document.querySelector('input[type=file]').files[0];
 
             var token = await instance.invokeMethodAsync(getTokenFunctionName);
 
-            const blobUri = 'http://127.0.0.1:10000/devstoreaccount1';
             const blobService = AzureStorage.Blob.createBlobServiceWithSas(blobUri, token);
 
             blobService.createBlockBlobFromBrowserFile(
