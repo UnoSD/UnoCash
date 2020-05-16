@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
@@ -6,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using UnoCash.Core;
 using UnoCash.Dto;
@@ -17,11 +19,9 @@ namespace UnoCash.Blazor.Pages
     {
         protected bool IsModalOpen;
 
-        [Inject]
-        protected IJSRuntime Js { get; set; }
+        [Inject] protected IJSRuntime Js { get; set; }
 
-        [Inject]
-        protected HttpClient Http { get; set; }
+        [Inject] protected HttpClient Http { get; set; }
 
         protected int AnalysisProgress { get; set; }
 
@@ -35,7 +35,7 @@ namespace UnoCash.Blazor.Pages
         protected Task UploadToBlobStorage()
         {
             AnalysisProgress = 25;
-            
+
             return UploadToBlobStorageJs(DotNetObjectReference.Create(this)).AsTask();
         }
 
@@ -46,10 +46,10 @@ namespace UnoCash.Blazor.Pages
                                    nameof(OnBlobUploaded),
                                    nameof(GetSasToken),
                                    // Get the whole upload URL including token from an endpoint
-                                   "http://127.0.0.1:10000/devstoreaccount1");
-                                   // Environment.GetEnvironmentVariable("UNOCASH_BLOB_URI"));
-                                   // https://STORAGEACCOUNTNAME.blob.core.windows.net
-                                   // http://127.0.0.1:10000/devstoreaccount1
+                                   "https://unocash.blob.core.windows.net");
+        // Environment.GetEnvironmentVariable("UNOCASH_BLOB_URI"));
+        // https://STORAGEACCOUNTNAME.blob.core.windows.net
+        // http://127.0.0.1:10000/devstoreaccount1
 
         [JSInvokable]
         public Task<string> GetSasToken()
@@ -71,18 +71,16 @@ namespace UnoCash.Blazor.Pages
             var receipt =
                 await Http.GetJsonAsync<Receipt>(url);
 
-            Expense.Payee = receipt.Payee;
-            AmountBinder = receipt.Amount.ToString(CultureInfo.InvariantCulture);
-            DateBinder = receipt.Date.ToString(CultureInfo.InvariantCulture);
+            Expense.Payee    = receipt.Payee;
+            AmountBinder     = receipt.Amount.ToString(CultureInfo.InvariantCulture);
+            DateBinder       = receipt.Date.ToString(CultureInfo.InvariantCulture);
             AnalysisProgress = 100;
 
             StateHasChanged();
         }
 
         protected string GetTitle() =>
-            Guid == Guid.Empty ?
-            "Add an expense" :
-            $"Edit the expense {Id}";
+            Guid == Guid.Empty ? "Add an expense" : $"Edit the expense {Id}";
 
         protected Guid Guid { get; set; }
 
@@ -90,8 +88,41 @@ namespace UnoCash.Blazor.Pages
         // probably OnInitAsync happens after the binding
         // Do that BEFORE the binding
         protected Expense Expense = new Expense();
+        List<string> _tags = new List<string>();
 
-        protected override async Task OnInitializedAsync() =>
+        string _searchText = string.Empty;
+        string _searchDesc = string.Empty;
+        string _popOverColor = "";
+        bool _popOver = false;
+
+        Dictionary<string, string> _tagsDb = new Dictionary<string, string>
+        {
+            ["pippo"] = "Disney character",
+            ["peppe"] = "Neapolitan name"
+        };
+        
+        void HandleKeyPress(KeyboardEventArgs args)
+        {
+            if (args.Code != "Enter")
+            {
+                _searchText += args.Key;
+                
+                _searchDesc   = _tagsDb.TryGetValue(_searchText, out var desc) ? desc : "New tag";
+                _popOverColor = _searchDesc == "New tag" ? "" : ".red";
+            
+                _popOver = true;
+                StateHasChanged();
+                return;
+            }
+
+            _popOver = false;
+            StateHasChanged();
+            
+            _tags.Add(_searchText); // If not already
+            _searchText = string.Empty;
+        }
+
+    protected override async Task OnInitializedAsync() =>
             Expense =
                 Guid == Guid.Empty ?
                     new Expense

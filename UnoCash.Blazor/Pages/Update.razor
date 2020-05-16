@@ -31,9 +31,42 @@
             <BSFormGroup>
                 <BSLabel For="Amount">Amount</BSLabel>
                 <BSInput Id="Amount"
-                             InputType="InputType.Number"
-                             @bind-Value="AmountBinder"
-                             step=".01" />
+                         InputType="InputType.Number"
+                         @bind-Value="AmountBinder"
+                         step=".01" />
+            </BSFormGroup>
+            
+            <BSFormGroup>
+            
+                <BSLabel For="Tags">Tags</BSLabel>
+                <input class="is-valid form-control"
+                       Id="Tags"
+                       @onkeypress="HandleKeyPress"
+                       @onkeypress:preventDefault
+                       value="@_searchText"/>
+                <style>
+                .red {
+                  color: red;
+                }
+                </style>
+                <BSPopover Target="Tags"
+                           IsOpen="@_popOver"
+                           Placement="Placement.Auto"
+                           class="@_popOverColor">
+                    <BSPopoverHeader>@_searchText</BSPopoverHeader>
+                    <BSPopoverBody>@_searchDesc</BSPopoverBody>
+                </BSPopover>
+                <BSTable>
+                    <tbody>
+                    @foreach (var tag in _tags)
+                    {
+                        <tr>
+                            <td>@tag</td>
+                            <td><BSButton>Remove</BSButton></td>
+                        </tr>
+                    }
+                    </tbody>
+                </BSTable>
             </BSFormGroup>
 
             <BSFormGroup>
