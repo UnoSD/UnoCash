@@ -36,7 +36,7 @@ module.exports = (env, options) => {
     console.log("Bundling for " + (isProduction ? "production" : "development") + "...");
 
     return {
-        devtool: undefined,
+        devtool: 'inline-source-map',
         entry: isProduction ? // We don't use the same entry for dev and production, to make HMR over style quicker for dev env
             {
                 demo: [
