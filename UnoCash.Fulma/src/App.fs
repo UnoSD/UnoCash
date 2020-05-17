@@ -15,12 +15,17 @@ type Tab =
     | ShowStatistics
     | About
 
+type AlertType =
+    | None
+    | DuplicateTag
+
 type Model =
     {
         CurrentTab : Tab
         Amount : decimal
         Tags : string list
         TagsText : string
+        Alert : AlertType
     }
 
 type Msg =
@@ -34,8 +39,9 @@ let init _ =
     {
         CurrentTab = AddExpense
         Amount = 0m
-        Tags = [ "groceries"; "fuel" ]
+        Tags = [ ]
         TagsText = ""
+        Alert = None
     }, Cmd.none
 
 let private sanitize value =
@@ -48,7 +54,13 @@ let private update msg model =
     | ChangeToTab newTab    -> { model with CurrentTab = newTab }, Cmd.none
     | ChangeAmount newValue -> { model with Amount = sanitize newValue }, Cmd.none
     | TagsKeyDown (key, x)  -> match key with
-                               | "Enter" -> { model with Tags = x :: model.Tags; TagsText = String.Empty }, Cmd.none
+                               | "Enter" -> {
+                                                model with Tags = x :: model.Tags |> List.distinct
+                                                           TagsText = String.Empty
+                                                           Alert = match model.Tags |> List.exists ((=)x) with
+                                                                   | true  -> DuplicateTag
+                                                                   | false -> None
+                                            }, Cmd.none
                                | _       -> model, Cmd.none
     | TagsTextChanged text  -> { model with TagsText = text }, Cmd.none
     | TagDelete tagName     -> { model with Tags = model.Tags |> List.except [ tagName ] }, Cmd.none
@@ -128,13 +140,22 @@ let private addExpensePage model dispatch =
                  dropdown "Type" [ "Regular"; "Internal transfer"; "Scheduled" ] ]
 
            Field.div [ ]
-                     [ Label.label [ ] [ str "Tags" ]
-                       Control.div [ Control.HasIconLeft ]
-                                   [ Input.text [ Input.Placeholder "Ex: groceries"
-                                                  Input.Value model.TagsText
-                                                  Input.OnChange (fun ev -> TagsTextChanged ev.Value |> dispatch)
-                                                  Input.Props [ OnKeyDown (fun ev -> TagsKeyDown (ev.key, ev.Value) |> dispatch) ] ]
-                                     Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ] [ Fa.i [ Fa.Solid.Tags ] [ ] ] ] ]
+                     ([ Label.label [ ] [ str "Tags" ]
+                        Control.div [ Control.HasIconLeft; Control.HasIconRight ]
+                                    ([ Input.text ([ Input.Placeholder "Ex: groceries"
+                                                     Input.Value model.TagsText
+                                                     Input.OnChange (fun ev -> TagsTextChanged ev.Value |> dispatch)
+                                                     Input.Props [ OnKeyDown (fun ev -> TagsKeyDown (ev.key, ev.Value) |> dispatch) ] ] @
+                                                     (match model.Alert with
+                                                      | DuplicateTag -> [ Input.Color IsDanger ]
+                                                      | _            -> [] ))
+                                       Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ] [ Fa.i [ Fa.Solid.Tags ] [ ] ] ] @
+                                       (match model.Alert with
+                                        | DuplicateTag -> [ Icon.icon [ Icon.Size IsSmall; Icon.IsRight ] [ Fa.i [ Fa.Solid.ExclamationTriangle ] [ ] ] ]
+                                        | _            -> [] )) ] @ 
+                        (match model.Alert with
+                         | DuplicateTag -> [ Help.help [ Help.Color IsDanger ] [ str "Duplicate tag" ] ]
+                         | _            -> [] ))
            
            tags model dispatch
 
