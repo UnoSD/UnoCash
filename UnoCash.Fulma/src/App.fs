@@ -48,6 +48,7 @@ type Msg =
     | TagsTextChanged of string
     | TagDelete of string
     | DateChanged of string
+    | ShowExpensesLoaded of Expense list
 
 let expensesTest = [
     {
@@ -87,7 +88,7 @@ let init _ =
         TagsText = ""
         Alert = None
         Date = DateTime.Today
-        Expenses = expensesTest
+        Expenses = [ ]
     }, Cmd.none
 
 let private sanitize value =
@@ -95,9 +96,16 @@ let private sanitize value =
     | true, dec -> (dec * 100m |> Decimal.Truncate) / 100m
     | false, _  -> 0m
 
+let private loadExpensesCmd =
+    Cmd.OfAsync.perform (fun _ -> Async.Sleep 5000)
+                        ()
+                        (fun _ -> ShowExpensesLoaded expensesTest)
+
 let private update msg model =
     match msg with
-    | ChangeToTab newTab    -> { model with CurrentTab = newTab }, Cmd.none
+    | ChangeToTab newTab    -> match newTab with
+                               | ShowExpenses -> { model with CurrentTab = newTab }, loadExpensesCmd
+                               | _            -> { model with CurrentTab = newTab }, Cmd.none
     | ChangeAmount newValue -> { model with Amount = sanitize newValue }, Cmd.none
     | TagsKeyDown (key, x)  -> match key with
                                | "Enter" -> {
@@ -111,6 +119,7 @@ let private update msg model =
     | TagsTextChanged text  -> { model with TagsText = text }, Cmd.none
     | TagDelete tagName     -> { model with Tags = model.Tags |> List.except [ tagName ] }, Cmd.none
     | DateChanged newDate   -> { model with Date = DateTime.Parse(newDate) }, Cmd.none
+    | ShowExpensesLoaded es -> { model with Expenses = es }, Cmd.none
 
 let private tab model dispatch tabType title =
     Tabs.tab [ Tabs.Tab.IsActive (model.CurrentTab = tabType) ]
@@ -218,7 +227,7 @@ let private addExpensePage model dispatch =
                        Control.div [ Control.IsLoading true ]
                                    [ Textarea.textarea [ ] [ ] ] ] ]
 
-let private expensesRows model dispatch =
+let private expensesRows model _ =
     let row i (expense : Expense) =
         tr ( match i % 2 with | 0 -> [] | _ -> [ ClassName "is-selected" ])
            [ td [ ] [ str expense.Date ]
