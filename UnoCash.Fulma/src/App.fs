@@ -20,17 +20,22 @@ type Model =
         CurrentTab : Tab
         Amount : decimal
         Tags : string list
+        TagsText : string
     }
 
 type Msg =
     | ChangeToTab of Tab
     | ChangeAmount of string
+    | TagsKeyDown of string * string
+    | TagsTextChanged of string
+    | TagDelete of string
 
 let init _ =
     {
         CurrentTab = AddExpense
         Amount = 0m
         Tags = [ "groceries"; "fuel" ]
+        TagsText = ""
     }, Cmd.none
 
 let private sanitize value =
@@ -42,6 +47,11 @@ let private update msg model =
     match msg with
     | ChangeToTab newTab    -> { model with CurrentTab = newTab }, Cmd.none
     | ChangeAmount newValue -> { model with Amount = sanitize newValue }, Cmd.none
+    | TagsKeyDown (key, x)  -> match key with
+                               | "Enter" -> { model with Tags = x :: model.Tags; TagsText = String.Empty }, Cmd.none
+                               | _       -> model, Cmd.none
+    | TagsTextChanged text  -> { model with TagsText = text }, Cmd.none
+    | TagDelete tagName     -> { model with Tags = model.Tags |> List.except [ tagName ] }, Cmd.none
 
 let private tab model dispatch tabType title =
     Tabs.tab [ Tabs.Tab.IsActive (model.CurrentTab = tabType) ]
@@ -71,7 +81,7 @@ let private dropdown title items =
                                             [ select [ DefaultValue "1" ]
                                                      (options items) ] ] ]
 
-let private tags model =
+let private tags model dispatch =
     let tag name =
         let iconLookup name =
             match name with
@@ -82,7 +92,7 @@ let private tags model =
                     [ Tag.list [ Tag.List.HasAddons ]
                                [ Tag.tag [ Tag.Color IsInfo ] [ Icon.icon [ ] [ Fa.i [ iconLookup name ] [ ] ] ]
                                  Tag.tag [ Tag.Color IsLight ] [ str name ]
-                                 Tag.delete [ ] [ ] ] ]
+                                 Tag.delete [ Tag.Props [ OnClick (fun _ -> TagDelete name |> dispatch) ] ] [ ] ] ]
 
     model.Tags |>
     List.map tag |>
@@ -120,10 +130,13 @@ let private addExpensePage model dispatch =
            Field.div [ ]
                      [ Label.label [ ] [ str "Tags" ]
                        Control.div [ Control.HasIconLeft ]
-                                   [ Input.text [ Input.Placeholder "Ex: groceries" ]
+                                   [ Input.text [ Input.Placeholder "Ex: groceries"
+                                                  Input.Value model.TagsText
+                                                  Input.OnChange (fun ev -> TagsTextChanged ev.Value |> dispatch)
+                                                  Input.Props [ OnKeyDown (fun ev -> TagsKeyDown (ev.key, ev.Value) |> dispatch) ] ]
                                      Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ] [ Fa.i [ Fa.Solid.Tags ] [ ] ] ] ]
            
-           tags model
+           tags model dispatch
 
            Field.div [ ]
                      [ Label.label [ ] [ str "Description" ]
