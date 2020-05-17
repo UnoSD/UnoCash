@@ -26,6 +26,7 @@ type Model =
         Tags : string list
         TagsText : string
         Alert : AlertType
+        Date : DateTime
     }
 
 type Msg =
@@ -34,6 +35,7 @@ type Msg =
     | TagsKeyDown of string * string
     | TagsTextChanged of string
     | TagDelete of string
+    | DateChanged of string
 
 let init _ =
     {
@@ -42,6 +44,7 @@ let init _ =
         Tags = [ ]
         TagsText = ""
         Alert = None
+        Date = DateTime.Today
     }, Cmd.none
 
 let private sanitize value =
@@ -64,6 +67,7 @@ let private update msg model =
                                | _       -> model, Cmd.none
     | TagsTextChanged text  -> { model with TagsText = text }, Cmd.none
     | TagDelete tagName     -> { model with Tags = model.Tags |> List.except [ tagName ] }, Cmd.none
+    | DateChanged newDate   -> { model with Date = DateTime.Parse(newDate) }, Cmd.none
 
 let private tab model dispatch tabType title =
     Tabs.tab [ Tabs.Tab.IsActive (model.CurrentTab = tabType) ]
@@ -122,9 +126,18 @@ let private addExpensePage model dispatch =
            Field.div [ ]
                      [ Label.label [ ] [ str "Payee" ]
                        Control.div [ Control.HasIconLeft ]
-                                   [ Input.text [ Input.Placeholder "Ex: Tesco" ]
+                                   [ Input.text [ Input.Placeholder "Ex: Tesco"
+                                                  Input.Props [ AutoFocus true ] ]
                                      Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ]
                                                [ Fa.i [ Fa.Solid.CashRegister ] [ ] ] ] ]
+
+           Field.div [ ]
+                [ Label.label [ ] [ str "Date" ]
+                  Control.div [ Control.HasIconLeft ]
+                              [ Input.date [ Input.Value (model.Date.ToString("yyyy-MM-dd"))
+                                             Input.OnChange (fun ev -> DateChanged ev.Value |> dispatch) ]
+                                Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ]
+                                          [ Fa.i [ Fa.Solid.CalendarDay ] [ ] ] ] ]
 
            Field.div [ ]
                      [ Label.label [ ] [ str "Amount" ]
