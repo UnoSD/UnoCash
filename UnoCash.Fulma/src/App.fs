@@ -19,6 +19,17 @@ type AlertType =
     | None
     | DuplicateTag
 
+type Expense =
+    {
+        Date : string
+        Payee : string
+        Amount : string
+        Status : string
+        Type : string
+        Tags : string
+        Description : string
+    }
+
 type Model =
     {
         CurrentTab : Tab
@@ -27,6 +38,7 @@ type Model =
         TagsText : string
         Alert : AlertType
         Date : DateTime
+        Expenses : Expense list
     }
 
 type Msg =
@@ -37,6 +49,36 @@ type Msg =
     | TagDelete of string
     | DateChanged of string
 
+let expensesTest = [
+    {
+        Date = "10/10/1010"
+        Payee = "Pippo"
+        Amount = "19.22"
+        Status = "Pending"
+        Type = "Regular"
+        Tags = "groceries"
+        Description = "Some stuff"
+    }
+    {
+        Date = "10/10/1010"
+        Payee = "Pippo"
+        Amount = "19.22"
+        Status = "Pending"
+        Type = "Regular"
+        Tags = "groceries"
+        Description = "Some stuff"
+    }
+    {
+        Date = "10/10/1010"
+        Payee = "Pippo"
+        Amount = "19.22"
+        Status = "Pending"
+        Type = "Regular"
+        Tags = "groceries"
+        Description = "Some stuff"
+    }
+]
+
 let init _ =
     {
         CurrentTab = AddExpense
@@ -45,6 +87,7 @@ let init _ =
         TagsText = ""
         Alert = None
         Date = DateTime.Today
+        Expenses = expensesTest
     }, Cmd.none
 
 let private sanitize value =
@@ -175,6 +218,41 @@ let private addExpensePage model dispatch =
                        Control.div [ Control.IsLoading true ]
                                    [ Textarea.textarea [ ] [ ] ] ] ]
 
+let private expensesRows model dispatch =
+    let row i (expense : Expense) =
+        tr ( match i % 2 with | 0 -> [] | _ -> [ ClassName "is-selected" ])
+           [ td [ ] [ str expense.Date ]
+             td [ ] [ str expense.Payee ]
+             td [ ] [ str expense.Amount ]
+             td [ ] [ str expense.Status ]
+             td [ ] [ str expense.Type ]
+             td [ ] [ str expense.Tags ]
+             td [ ] [ str expense.Description ] ]
+
+    model.Expenses |>
+    List.mapi row
+
+let private expensesTable model dispatch =
+    Table.table [ Table.IsBordered
+                  Table.IsFullWidth
+                  Table.IsStriped ]
+                [ thead [ ]
+                        [ tr [ ]
+                             [ th [ ] [ str "Date" ]
+                               th [ ] [ str "Payee" ]
+                               th [ ] [ str "Amount" ]
+                               th [ ] [ str "Status" ]
+                               th [ ] [ str "Type" ]
+                               th [ ] [ str "Tags" ]
+                               th [ ] [ str "Description" ] ] ]
+                  tbody [ ] (expensesRows model dispatch) ]
+
+let private showExpensesPage model dispatch =
+    Card.card [ ]
+              [ Card.content [ ]
+                             [ Content.content [ ] [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ]
+                                                     expensesTable model dispatch ] ] ]
+
 let private page model dispatch =
     match model.CurrentTab with
     | AddExpense   -> Card.card [ ]
@@ -186,6 +264,7 @@ let private page model dispatch =
                                                               [ str "Add" ]
                                                 Card.Footer.a [ ]
                                                               [ str "Split" ] ] ]
+    | ShowExpenses -> showExpensesPage model dispatch
     | _ -> div [ ] [ str "Not implemented" ]
 
 let private view model dispatch =
