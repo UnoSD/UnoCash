@@ -110,6 +110,11 @@ let private tags model dispatch =
     List.map tag |>
     Field.div [ Field.IsGroupedMultiline ]
 
+let private ifDuplicateTagAlertAdd element model =
+    match model.Alert with
+    | DuplicateTag -> [ element ]
+    | _            -> []
+
 let private addExpensePage model dispatch =
     form [ ]
          [ receiptUpload
@@ -146,16 +151,10 @@ let private addExpensePage model dispatch =
                                                      Input.Value model.TagsText
                                                      Input.OnChange (fun ev -> TagsTextChanged ev.Value |> dispatch)
                                                      Input.Props [ OnKeyDown (fun ev -> TagsKeyDown (ev.key, ev.Value) |> dispatch) ] ] @
-                                                     (match model.Alert with
-                                                      | DuplicateTag -> [ Input.Color IsDanger ]
-                                                      | _            -> [] ))
+                                                     ifDuplicateTagAlertAdd (Input.Color IsDanger) model)
                                        Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ] [ Fa.i [ Fa.Solid.Tags ] [ ] ] ] @
-                                       (match model.Alert with
-                                        | DuplicateTag -> [ Icon.icon [ Icon.Size IsSmall; Icon.IsRight ] [ Fa.i [ Fa.Solid.ExclamationTriangle ] [ ] ] ]
-                                        | _            -> [] )) ] @ 
-                        (match model.Alert with
-                         | DuplicateTag -> [ Help.help [ Help.Color IsDanger ] [ str "Duplicate tag" ] ]
-                         | _            -> [] ))
+                                       (ifDuplicateTagAlertAdd (Icon.icon [ Icon.Size IsSmall; Icon.IsRight ] [ Fa.i [ Fa.Solid.ExclamationTriangle ] [ ] ]) model)) ] @ 
+                        (ifDuplicateTagAlertAdd (Help.help [ Help.Color IsDanger ] [ str "Duplicate tag" ]) model))
            
            tags model dispatch
 
