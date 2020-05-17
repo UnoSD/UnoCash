@@ -84,13 +84,13 @@ let private receiptUpload =
 let private dropdown title items =
     let options items =
         items |>
-        List.mapi (fun index item -> option [ Value (string (index + 1)) ] [ str item ])
+        List.map (fun item -> option [ Value item ] [ str item ])
 
     Field.div [ ]
               [ Label.label [ ] [ str title ]
                 Control.div [ ]
                             [ Select.select [ ]
-                                            [ select [ DefaultValue "1" ]
+                                            [ select [ DefaultValue (items |> List.head) ]
                                                      (options items) ] ] ]
 
 let private tags model dispatch =
@@ -129,8 +129,7 @@ let private addExpensePage model dispatch =
            Field.div [ ]
                      [ Label.label [ ] [ str "Amount" ]
                        Control.div [ Control.HasIconLeft ]
-                                   [ Input.number [ Input.DefaultValue "0.00"
-                                                    Input.Props [ Props.Step "0.01" ]
+                                   [ Input.number [ Input.Props [ Props.Step "0.01" ]
                                                     Input.OnChange (fun ev -> ChangeAmount ev.Value |> dispatch)
                                                     Input.Value (string model.Amount) ]
                                      Icon.icon [ Icon.Size IsSmall
