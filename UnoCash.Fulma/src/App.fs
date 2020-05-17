@@ -19,6 +19,7 @@ type Model =
     {
         CurrentTab : Tab
         Amount : decimal
+        Tags : string list
     }
 
 type Msg =
@@ -29,6 +30,7 @@ let init _ =
     {
         CurrentTab = AddExpense
         Amount = 0m
+        Tags = [ "groceries"; "fuel" ]
     }, Cmd.none
 
 let sanitize value =
@@ -45,28 +47,50 @@ let tab model dispatch tabType title =
     Tabs.tab [ Tabs.Tab.IsActive (model.CurrentTab = tabType) ]
              [ a [ OnClick (fun _ -> ChangeToTab tabType |> dispatch) ] [ str title ] ]
 
+let private receiptUpload =
+    Field.div [ ]
+              [ File.file [ File.HasName ]
+                          [ File.label [ ]
+                                       [ File.input [ ]
+                                         File.cta [ ]
+                                                  [ File.icon [ ]
+                                                              [ Icon.icon [ ]
+                                                                          [ Fa.i [ Fa.Solid.Upload ] [ ] ] ]
+                                                    File.label [ ] [ str "Upload a receipt..." ] ]
+                                         File.name [ ] [ str "No receipt selected" ] ] ] ]
+
+let private dropdown title items =
+    let options items =
+        items |>
+        List.mapi (fun index item -> option [ Value (string (index + 1)) ] [ str item ])
+
+    Field.div [ ]
+              [ Label.label [ ] [ str title ]
+                Control.div [ ]
+                            [ Select.select [ ]
+                                            [ select [ DefaultValue "1" ]
+                                                     (options items) ] ] ]
+
+let private tags model =
+    let tag name =
+        let iconLookup name =
+            match name with
+            | "groceries" -> Fa.Solid.ShoppingBag
+            | "fuel"      -> Fa.Solid.Car
+            | _           -> Fa.Solid.Tag
+        Control.div [ ]
+                    [ Tag.list [ Tag.List.HasAddons ]
+                               [ Tag.tag [ Tag.Color IsInfo ] [ Icon.icon [ ] [ Fa.i [ iconLookup name ] [ ] ] ]
+                                 Tag.tag [ Tag.Color IsLight ] [ str name ]
+                                 Tag.delete [ ] [ ] ] ]
+
+    model.Tags |>
+    List.map tag |>
+    Field.div [ Field.IsGroupedMultiline ]
+
 let addExpensePage model dispatch =
     form [ ]
-         [ Field.div [ ]
-                 [ File.file [ File.HasName ]
-                     [ File.label [ ]
-                         [ File.input [ ]
-                           File.cta [ ]
-                             [ File.icon [ ]
-                                 [ Icon.icon [ ]
-                                     [ Fa.i [ Fa.Solid.Upload ]
-                                         [ ] ] ]
-                               File.label [ ]
-                                 [ str "Upload a receipt..." ] ]
-                           File.name [ ]
-                             [ str "No receipt selected" ] ] ] ]
-           
-           Field.div [ ]
-                [ Label.label [ ] [ str "Date" ]
-                  Control.div [ Control.HasIconLeft ]
-                              [ Input.date [ Input.DefaultValue (DateTime.Today |> string) ]
-                                Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ]
-                                          [ Fa.i [ Fa.Solid.CalendarDay ] [ ] ] ] ]
+         [ receiptUpload
                     
            Field.div [ ]
                      [ Label.label [ ] [ str "Payee" ]
@@ -86,34 +110,12 @@ let addExpensePage model dispatch =
                                                  Icon.IsLeft ]
                                                [ Fa.i [ Fa.Solid.DollarSign ] [ ] ] ] ]
  
-           div [ Style [ Display DisplayOptions.InlineFlex ] ] [ 
-                        Field.div [ ]
-                                  [ Label.label [ ] [ str "Account" ]
-                                    Control.div [ ]
-                                                [ Select.select [ ]
-                                                                [ select [ DefaultValue "1" ]
-                                                                         [ option [ Value "1"] [ str "Current" ]
-                                                                           option [ Value "2"] [ str "ISA" ]
-                                                                           option [ Value "3"] [ str "Wallet" ] ] ] ] ]
+           div [ Style [ Display DisplayOptions.InlineFlex ] ]
+               [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ]
 
-                        Field.div [ ]
-                                  [ Label.label [ ] [ str "Status" ]
-                                    Control.div [ ]
-                                                [ Select.select [ ]
-                                                                [ select [ DefaultValue "1" ]
-                                                                         [ option [ Value "1"] [ str "New" ]
-                                                                           option [ Value "2"] [ str "Pending" ]
-                                                                           option [ Value "3"] [ str "Reconciled" ] ] ] ] ]
+                 dropdown "Status" [ "New"; "Pending"; "Reconciled" ]
 
-                        Field.div [ ]
-                                  [ Label.label [ ] [ str "Type" ]
-                                    Control.div [ ]
-                                                [ Select.select [ ]
-                                                                [ select [ DefaultValue "1" ]
-                                                                         [ option [ Value "1"] [ str "Regular" ]
-                                                                           option [ Value "2"] [ str "Internal transfer" ]
-                                                                           option [ Value "3"] [ str "Scheduled" ] ] ] ] ]
-           ]
+                 dropdown "Type" [ "Regular"; "Internal transfer"; "Scheduled" ] ]
 
            Field.div [ ]
                      [ Label.label [ ] [ str "Tags" ]
@@ -122,17 +124,7 @@ let addExpensePage model dispatch =
                                      Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ] [ Fa.i [ Fa.Solid.Tags ] [ ] ] ] ]
            
 
-           Field.div [ Field.IsGroupedMultiline ]
-                     [ Control.div [ ]
-                                   [ Tag.list [ Tag.List.HasAddons ]
-                                              [ Tag.tag [ Tag.Color IsInfo ] [ Icon.icon [ ] [ Fa.i [ Fa.Solid.ShoppingBag ] [ ] ] ]
-                                                Tag.tag [ Tag.Color IsLight ] [ str "groceries" ]
-                                                Tag.delete [ ] [ ] ] ]
-                       Control.div [ ]
-                                   [ Tag.list [ Tag.List.HasAddons ]
-                                              [ Tag.tag [ Tag.Color IsInfo ] [ Icon.icon [ ] [ Fa.i [ Fa.Solid.Car ] [ ] ] ]
-                                                Tag.tag [ Tag.Color IsLight ] [ str "fuel" ]
-                                                Tag.delete [ ] [ ] ] ] ]
+           tags model
 
            Field.div [ ]
                      [ Label.label [ ] [ str "Description" ]
@@ -142,7 +134,6 @@ let addExpensePage model dispatch =
 let page model dispatch =
     match model.CurrentTab with
     | AddExpense   -> addExpensePage model dispatch
-    | ShowExpenses
     | _ -> div [ ] [ str "Not implemented" ]
 
 let private view model dispatch =
