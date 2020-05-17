@@ -33,7 +33,7 @@ let init _ =
         Tags = [ "groceries"; "fuel" ]
     }, Cmd.none
 
-let sanitize value =
+let private sanitize value =
     match Decimal.TryParse(value) with
     | true, dec -> (dec * 100m |> Decimal.Truncate) / 100m
     | false, _  -> 0m
@@ -43,7 +43,7 @@ let private update msg model =
     | ChangeToTab newTab    -> { model with CurrentTab = newTab }, Cmd.none
     | ChangeAmount newValue -> { model with Amount = sanitize newValue }, Cmd.none
 
-let tab model dispatch tabType title =
+let private tab model dispatch tabType title =
     Tabs.tab [ Tabs.Tab.IsActive (model.CurrentTab = tabType) ]
              [ a [ OnClick (fun _ -> ChangeToTab tabType |> dispatch) ] [ str title ] ]
 
@@ -88,7 +88,7 @@ let private tags model =
     List.map tag |>
     Field.div [ Field.IsGroupedMultiline ]
 
-let addExpensePage model dispatch =
+let private addExpensePage model dispatch =
     form [ ]
          [ receiptUpload
                     
@@ -123,7 +123,6 @@ let addExpensePage model dispatch =
                                    [ Input.text [ Input.Placeholder "Ex: groceries" ]
                                      Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ] [ Fa.i [ Fa.Solid.Tags ] [ ] ] ] ]
            
-
            tags model
 
            Field.div [ ]
@@ -131,7 +130,7 @@ let addExpensePage model dispatch =
                        Control.div [ Control.IsLoading true ]
                                    [ Textarea.textarea [ ] [ ] ] ] ]
 
-let page model dispatch =
+let private page model dispatch =
     match model.CurrentTab with
     | AddExpense   -> addExpensePage model dispatch
     | _ -> div [ ] [ str "Not implemented" ]
