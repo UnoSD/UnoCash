@@ -30,7 +30,8 @@
         {
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
-            this.listView2 = new System.Windows.Forms.ListView();
+            this.randomBtn = new System.Windows.Forms.Button();
+            this.tagsLv = new System.Windows.Forms.ListView();
             this.columnHeader9 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader10 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.button3 = new System.Windows.Forms.Button();
@@ -39,7 +40,7 @@
             this.statusCbx = new System.Windows.Forms.ComboBox();
             this.typeCbx = new System.Windows.Forms.ComboBox();
             this.accountCbx = new System.Windows.Forms.ComboBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.tagsTxt = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.amountNud = new System.Windows.Forms.NumericUpDown();
@@ -65,7 +66,6 @@
             this.columnHeader7 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader8 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.accountShowCbx = new System.Windows.Forms.ComboBox();
-            this.randomBtn = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.amountNud)).BeginInit();
@@ -88,14 +88,14 @@
             // tabPage1
             // 
             this.tabPage1.Controls.Add(this.randomBtn);
-            this.tabPage1.Controls.Add(this.listView2);
+            this.tabPage1.Controls.Add(this.tagsLv);
             this.tabPage1.Controls.Add(this.button3);
             this.tabPage1.Controls.Add(this.button2);
             this.tabPage1.Controls.Add(this.descriptionTxt);
             this.tabPage1.Controls.Add(this.statusCbx);
             this.tabPage1.Controls.Add(this.typeCbx);
             this.tabPage1.Controls.Add(this.accountCbx);
-            this.tabPage1.Controls.Add(this.textBox2);
+            this.tabPage1.Controls.Add(this.tagsTxt);
             this.tabPage1.Controls.Add(this.label8);
             this.tabPage1.Controls.Add(this.label7);
             this.tabPage1.Controls.Add(this.amountNud);
@@ -117,18 +117,28 @@
             this.tabPage1.Text = "Add expense";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
-            // listView2
+            // randomBtn
             // 
-            this.listView2.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.randomBtn.Location = new System.Drawing.Point(709, 33);
+            this.randomBtn.Name = "randomBtn";
+            this.randomBtn.Size = new System.Drawing.Size(75, 23);
+            this.randomBtn.TabIndex = 12;
+            this.randomBtn.Text = "Random";
+            this.randomBtn.UseVisualStyleBackColor = true;
+            this.randomBtn.Click += new System.EventHandler(this.RandomBtn_Click);
+            // 
+            // tagsLv
+            // 
+            this.tagsLv.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader9,
             this.columnHeader10});
-            this.listView2.HideSelection = false;
-            this.listView2.Location = new System.Drawing.Point(127, 139);
-            this.listView2.Name = "listView2";
-            this.listView2.Size = new System.Drawing.Size(200, 82);
-            this.listView2.TabIndex = 11;
-            this.listView2.UseCompatibleStateImageBehavior = false;
-            this.listView2.View = System.Windows.Forms.View.Details;
+            this.tagsLv.HideSelection = false;
+            this.tagsLv.Location = new System.Drawing.Point(127, 139);
+            this.tagsLv.Name = "tagsLv";
+            this.tagsLv.Size = new System.Drawing.Size(200, 82);
+            this.tagsLv.TabIndex = 11;
+            this.tagsLv.UseCompatibleStateImageBehavior = false;
+            this.tagsLv.View = System.Windows.Forms.View.Details;
             // 
             // columnHeader9
             // 
@@ -193,12 +203,13 @@
             this.accountCbx.Size = new System.Drawing.Size(200, 21);
             this.accountCbx.TabIndex = 8;
             // 
-            // textBox2
+            // tagsTxt
             // 
-            this.textBox2.Location = new System.Drawing.Point(127, 113);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(200, 20);
-            this.textBox2.TabIndex = 7;
+            this.tagsTxt.Location = new System.Drawing.Point(127, 113);
+            this.tagsTxt.Name = "tagsTxt";
+            this.tagsTxt.Size = new System.Drawing.Size(200, 20);
+            this.tagsTxt.TabIndex = 7;
+            this.tagsTxt.KeyUp += new System.Windows.Forms.KeyEventHandler(this.TagsTxt_KeyUp);
             // 
             // label8
             // 
@@ -408,16 +419,6 @@
             this.accountShowCbx.Size = new System.Drawing.Size(780, 21);
             this.accountShowCbx.TabIndex = 1;
             // 
-            // randomBtn
-            // 
-            this.randomBtn.Location = new System.Drawing.Point(709, 33);
-            this.randomBtn.Name = "randomBtn";
-            this.randomBtn.Size = new System.Drawing.Size(75, 23);
-            this.randomBtn.TabIndex = 12;
-            this.randomBtn.Text = "Random";
-            this.randomBtn.UseVisualStyleBackColor = true;
-            this.randomBtn.Click += new System.EventHandler(this.RandomBtn_Click);
-            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -447,7 +448,7 @@
         private System.Windows.Forms.ComboBox statusCbx;
         private System.Windows.Forms.ComboBox typeCbx;
         private System.Windows.Forms.ComboBox accountCbx;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox tagsTxt;
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.NumericUpDown amountNud;
@@ -473,7 +474,7 @@
         private System.Windows.Forms.ColumnHeader columnHeader7;
         private System.Windows.Forms.ColumnHeader columnHeader8;
         private System.Windows.Forms.ComboBox accountShowCbx;
-        private System.Windows.Forms.ListView listView2;
+        private System.Windows.Forms.ListView tagsLv;
         private System.Windows.Forms.ColumnHeader columnHeader9;
         private System.Windows.Forms.ColumnHeader columnHeader10;
         private System.Windows.Forms.Button randomBtn;
