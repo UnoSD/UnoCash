@@ -177,7 +177,15 @@ let private addExpensePage model dispatch =
 
 let private page model dispatch =
     match model.CurrentTab with
-    | AddExpense   -> addExpensePage model dispatch
+    | AddExpense   -> Card.card [ ]
+                                [ Card.content [ ]
+                                               [ Content.content [ ]
+                                                                 [ addExpensePage model dispatch ] ]
+                                  Card.footer [ ]
+                                              [ Card.Footer.a [ ]
+                                                              [ str "Add" ]
+                                                Card.Footer.a [ ]
+                                                              [ str "Split" ] ] ]
     | _ -> div [ ] [ str "Not implemented" ]
 
 let private view model dispatch =
@@ -186,15 +194,7 @@ let private view model dispatch =
                           tab model dispatch ShowExpenses   "Show expenses" 
                           tab model dispatch ShowStatistics "Statistics"    
                           tab model dispatch About          "About"         ]
-              Card.card [ ]
-                        [ Card.content [ ]
-                                       [ Content.content [ ]
-                                                         [ page model dispatch ] ]
-                          Card.footer [ ]
-                                      [ Card.Footer.a [ ]
-                                                      [ str "Add" ]
-                                        Card.Footer.a [ ]
-                                                      [ str "Split" ] ] ] ]
+              page model dispatch ]
 
 Program.mkProgram init update view
 |> Program.withReactSynchronous "elmish-app"
