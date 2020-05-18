@@ -40,6 +40,7 @@ type Model =
         Date : DateTime
         Expenses : Expense list
         SelectedFile : string option
+        ExpensesLoaded : bool
     }
 
 type Msg =
@@ -92,6 +93,7 @@ let init _ =
         Date = DateTime.Today
         Expenses = [ ]
         SelectedFile = Option.None
+        ExpensesLoaded = false
     }, Cmd.none
 
 let private sanitize value =
@@ -100,7 +102,7 @@ let private sanitize value =
     | false, _  -> 0m
 
 let private loadExpensesCmd =
-    Cmd.OfAsync.perform (fun _ -> Async.Sleep 5000)
+    Cmd.OfAsync.perform (fun _ -> Async.Sleep 3000)
                         ()
                         (fun _ -> ShowExpensesLoaded expensesTest)
 
@@ -122,7 +124,7 @@ let private update msg model =
     | TagsTextChanged text  -> { model with TagsText = text }, Cmd.none
     | TagDelete tagName     -> { model with Tags = model.Tags |> List.except [ tagName ] }, Cmd.none
     | DateChanged newDate   -> { model with Date = DateTime.Parse(newDate) }, Cmd.none
-    | ShowExpensesLoaded es -> { model with Expenses = es }, Cmd.none
+    | ShowExpensesLoaded es -> { model with Expenses = es; ExpensesLoaded = true }, Cmd.none
     | FileSelected fileName -> { model with SelectedFile = match fileName with
                                                            | "" | null -> Option.None
                                                            | x -> Some x }, Cmd.none
@@ -252,19 +254,26 @@ let private expensesRows model _ =
     List.mapi row
 
 let private expensesTable model dispatch =
-    Table.table [ Table.IsBordered
-                  Table.IsFullWidth
-                  Table.IsStriped ]
-                [ thead [ ]
-                        [ tr [ ]
-                             [ th [ ] [ str "Date" ]
-                               th [ ] [ str "Payee" ]
-                               th [ ] [ str "Amount" ]
-                               th [ ] [ str "Status" ]
-                               th [ ] [ str "Type" ]
-                               th [ ] [ str "Tags" ]
-                               th [ ] [ str "Description" ] ] ]
-                  tbody [ ] (expensesRows model dispatch) ]
+    let table model dispatch =
+        Table.table [ Table.IsBordered
+                      Table.IsFullWidth
+                      Table.IsStriped ]
+                    [ thead [ ]
+                            [ tr [ ]
+                                 [ th [ ] [ str "Date" ]
+                                   th [ ] [ str "Payee" ]
+                                   th [ ] [ str "Amount" ]
+                                   th [ ] [ str "Status" ]
+                                   th [ ] [ str "Type" ]
+                                   th [ ] [ str "Tags" ]
+                                   th [ ] [ str "Description" ] ] ]
+                      tbody [ ] (expensesRows model dispatch) ]
+    
+    match model.ExpensesLoaded with
+    | true  -> table model dispatch
+    | false -> div [ Class ("block " + Fa.Classes.Size.Fa3x)
+                     Style [ TextAlign TextAlignOptions.Center ] ]
+                   [ Fa.i [ Fa.Solid.Sync; Fa.Spin ] [  ] ]
 
 let private showExpensesPage model dispatch =
     Card.card [ ]
