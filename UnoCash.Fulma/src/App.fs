@@ -39,6 +39,7 @@ type Model =
         Alert : AlertType
         Date : DateTime
         Expenses : Expense list
+        SelectedFile : string option
     }
 
 type Msg =
@@ -49,6 +50,7 @@ type Msg =
     | TagDelete of string
     | DateChanged of string
     | ShowExpensesLoaded of Expense list
+    | FileSelected of string
 
 let expensesTest = [
     {
@@ -89,6 +91,7 @@ let init _ =
         Alert = None
         Date = DateTime.Today
         Expenses = [ ]
+        SelectedFile = Option.None
     }, Cmd.none
 
 let private sanitize value =
@@ -120,22 +123,29 @@ let private update msg model =
     | TagDelete tagName     -> { model with Tags = model.Tags |> List.except [ tagName ] }, Cmd.none
     | DateChanged newDate   -> { model with Date = DateTime.Parse(newDate) }, Cmd.none
     | ShowExpensesLoaded es -> { model with Expenses = es }, Cmd.none
+    | FileSelected fileName -> { model with SelectedFile = match fileName with
+                                                           | "" | null -> Option.None
+                                                           | x -> Some x }, Cmd.none
 
 let private tab model dispatch tabType title =
     Tabs.tab [ Tabs.Tab.IsActive (model.CurrentTab = tabType) ]
              [ a [ OnClick (fun _ -> ChangeToTab tabType |> dispatch) ] [ str title ] ]
 
-let private receiptUpload =
+let private receiptUpload model dispatch =
+    let filename =
+        match model.SelectedFile with
+        | Some f      -> f
+        | Option.None -> "No receipt selected" 
     Field.div [ ]
               [ File.file [ File.HasName ]
                           [ File.label [ ]
-                                       [ File.input [ ]
+                                       [ File.input [ Props [ OnChange (fun ev -> FileSelected ev.Value |> dispatch) ] ]
                                          File.cta [ ]
                                                   [ File.icon [ ]
                                                               [ Icon.icon [ ]
                                                                           [ Fa.i [ Fa.Solid.Upload ] [ ] ] ]
                                                     File.label [ ] [ str "Upload a receipt..." ] ]
-                                         File.name [ ] [ str "No receipt selected" ] ] ] ]
+                                         File.name [ ] [ str filename ] ] ] ]
 
 let private dropdown title items =
     let options items =
@@ -173,7 +183,7 @@ let private ifDuplicateTagAlertAdd element model =
 
 let private addExpensePage model dispatch =
     form [ ]
-         [ receiptUpload
+         [ receiptUpload model dispatch
                     
            Field.div [ ]
                      [ Label.label [ ] [ str "Payee" ]
