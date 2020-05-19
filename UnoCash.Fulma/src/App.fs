@@ -9,7 +9,6 @@ open System
 open Elmish.Debug
 open Elmish.HMR
 open Fetch
-open Thoth.Json
 open Fable
 
 type Expense =
@@ -33,7 +32,7 @@ type Model =
         TagsText : string
         Alert : AlertType
         Date : DateTime
-        Expenses : Expense list
+        Expenses : Expense[]
         SelectedFile : string option
         ExpensesLoaded : bool
     }
@@ -45,7 +44,7 @@ type Msg =
     | TagsTextChanged of string
     | TagDelete of string
     | DateChanged of string
-    | ShowExpensesLoaded of Expense list
+    | ShowExpensesLoaded of Expense[]
     | FileSelected of string
 
 let init _ =
@@ -56,7 +55,7 @@ let init _ =
         TagsText = ""
         Alert = None
         Date = DateTime.Today
-        Expenses = [ ]
+        Expenses = [||]
         SelectedFile = Option.None
         ExpensesLoaded = false
     }, Cmd.none
@@ -67,13 +66,9 @@ let private sanitize value =
     | false, _  -> 0m
 
 let loadExpenses () =
-    promise {
-        let! x = fetch "http://localhost:7071/api/GetExpenses?account=Current" []
-        return x
-    } |>
+    fetch "http://localhost:7071/api/GetExpenses?account=Current" [] |>
     Promise.bind (fun x -> x.text()) |>
-    Promise.map (fun x -> Decode.Auto.fromString<Expense list>(x, caseStrategy = CamelCase)) |>
-    Promise.map (fun r -> match r with | Ok x -> x | Error e -> printfn "%A" e; [])
+    Promise.map Expense.ParseArray
 
 let private loadExpensesCmd () =
     Cmd.OfPromise.perform loadExpenses
@@ -225,7 +220,7 @@ let private expensesRows model _ =
              td [ ] [ str ""]]//expense.Description ] ]
            
     model.Expenses |>
-    List.mapi row
+    Array.mapi row
     
 let private expensesTable model dispatch =
     let table model dispatch =
