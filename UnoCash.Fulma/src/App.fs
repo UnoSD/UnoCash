@@ -8,6 +8,12 @@ open Fable.FontAwesome
 open System
 open Elmish.Debug
 open Elmish.HMR
+open Fetch
+open Thoth.Json
+open Fable
+
+type Expense =
+    JsonProvider.Generator<"http://localhost:7071/api/GetExpenses?account=Current">
 
 type Tab =
     | AddExpense
@@ -18,17 +24,6 @@ type Tab =
 type AlertType =
     | None
     | DuplicateTag
-
-type Expense =
-    {
-        Date : string
-        Payee : string
-        Amount : string
-        Status : string
-        Type : string
-        Tags : string
-        Description : string
-    }
 
 type Model =
     {
@@ -53,36 +48,6 @@ type Msg =
     | ShowExpensesLoaded of Expense list
     | FileSelected of string
 
-let expensesTest = [
-    {
-        Date = "10/10/1010"
-        Payee = "Pippo"
-        Amount = "19.22"
-        Status = "Pending"
-        Type = "Regular"
-        Tags = "groceries"
-        Description = "Some stuff"
-    }
-    {
-        Date = "10/10/1010"
-        Payee = "Pippo"
-        Amount = "19.22"
-        Status = "Pending"
-        Type = "Regular"
-        Tags = "groceries"
-        Description = "Some stuff"
-    }
-    {
-        Date = "10/10/1010"
-        Payee = "Pippo"
-        Amount = "19.22"
-        Status = "Pending"
-        Type = "Regular"
-        Tags = "groceries"
-        Description = "Some stuff"
-    }
-]
-
 let init _ =
     {
         CurrentTab = AddExpense
@@ -101,15 +66,24 @@ let private sanitize value =
     | true, dec -> (dec * 100m |> Decimal.Truncate) / 100m
     | false, _  -> 0m
 
-let private loadExpensesCmd =
-    Cmd.OfAsync.perform (fun _ -> Async.Sleep 3000)
-                        ()
-                        (fun _ -> ShowExpensesLoaded expensesTest)
+let loadExpenses () =
+    promise {
+        let! x = fetch "http://localhost:7071/api/GetExpenses?account=Current" []
+        return x
+    } |>
+    Promise.bind (fun x -> x.text()) |>
+    Promise.map (fun x -> Decode.Auto.fromString<Expense list>(x, caseStrategy = CamelCase)) |>
+    Promise.map (fun r -> match r with | Ok x -> x | Error e -> printfn "%A" e; [])
+
+let private loadExpensesCmd () =
+    Cmd.OfPromise.perform loadExpenses
+                          ()
+                          ShowExpensesLoaded
 
 let private update msg model =
     match msg with
     | ChangeToTab newTab    -> match newTab with
-                               | ShowExpenses -> { model with CurrentTab = newTab }, loadExpensesCmd
+                               | ShowExpenses -> { model with CurrentTab = newTab }, loadExpensesCmd()
                                | _            -> { model with CurrentTab = newTab }, Cmd.none
     | ChangeAmount newValue -> { model with Amount = sanitize newValue }, Cmd.none
     | TagsKeyDown (key, x)  -> match key with
@@ -242,17 +216,17 @@ let private addExpensePage model dispatch =
 let private expensesRows model _ =
     let row i (expense : Expense) =
         tr ( match i % 2 with | 0 -> [] | _ -> [ ClassName "is-selected" ])
-           [ td [ ] [ str expense.Date ]
-             td [ ] [ str expense.Payee ]
-             td [ ] [ str expense.Amount ]
-             td [ ] [ str expense.Status ]
-             td [ ] [ str expense.Type ]
-             td [ ] [ str expense.Tags ]
-             td [ ] [ str expense.Description ] ]
-
+           [ td [ ] [ str expense.date ]
+             td [ ] [ str expense.payee ]
+             td [ ] [ str (string expense.amount) ]
+             td [ ] [ str expense.status ]
+             td [ ] [ str expense.``type`` ]
+             td [ ] [ str ""]//expense.Tags ]
+             td [ ] [ str ""]]//expense.Description ] ]
+           
     model.Expenses |>
     List.mapi row
-
+    
 let private expensesTable model dispatch =
     let table model dispatch =
         Table.table [ Table.IsBordered

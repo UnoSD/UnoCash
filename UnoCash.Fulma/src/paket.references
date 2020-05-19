@@ -11,3 +11,6 @@ Fable.FontAwesome.Free
 Fulma.Extensions.Wikiki.Calendar
 Fulma.Extensions
 Fulma.Elmish
+Fable.Fetch
+Thoth.Json
+Fable.JsonProvider
