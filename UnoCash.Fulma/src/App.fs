@@ -24,22 +24,34 @@ type AlertType =
     | None
     | DuplicateTag
 
+type ExpenseModel =
+    {
+        Amount : decimal
+        Tags : string list
+        Date : DateTime
+        Payee : string
+        Account : string
+        Status : string
+        Type : string
+        Description : string
+    }
+
 type Model =
     {
         CurrentTab : Tab
-        Amount : decimal
-        Tags : string list
         TagsText : string
         Alert : AlertType
-        Date : DateTime
         Expenses : Expense[]
         SelectedFile : string option
         ExpensesLoaded : bool
+        Expense : ExpenseModel
+        ShowAccount : string
     }
 
 type Msg =
     | ChangeToTab of Tab
     | ChangeAmount of string
+    | ChangePayee of string
     | TagsKeyDown of string * string
     | TagsTextChanged of string
     | TagDelete of string
@@ -47,18 +59,32 @@ type Msg =
     | ShowExpensesLoaded of Expense[]
     | FileSelected of string
     | AddNewExpense
+    | ChangeAccount of string
+    | ChangeStatus of string
+    | ChangeType of string
+    | ChangeShowAccount of string
+    | ChangeDescription of string
 
 let private emptyModel = 
     {
         CurrentTab = AddExpense
-        Amount = 0m
-        Tags = [ ]
         TagsText = ""
         Alert = None
-        Date = DateTime.Today
         Expenses = [||]
         SelectedFile = Option.None
         ExpensesLoaded = false
+        ShowAccount = "Current"
+        Expense =
+        {
+            Date = DateTime.Today
+            Tags = []
+            Amount = 0m
+            Payee = ""
+            Account = ""
+            Status = ""
+            Type = ""
+            Description = ""
+        }
     }
     
 let init _ =
@@ -83,36 +109,52 @@ let private addExpense model =
     Fetch.fetch "http://localhost:7071/api/AddExpense"
                 [ Method HttpMethod.POST
                   Body <| unbox(sprintf """{
-    "date": "%A"
-    "payee": "%A"
-    "amount": %A
-    "status": "%A"
-    "type: "%A"
-}"""                                    (model.Date.ToString("yyyy-MM-dd")) "Test" model.Amount "Pending" "Regular") ]
+    "date": "%A",
+    "payee": "%A",
+    "amount": %A,
+    "status": "%A",
+    "type": "%A",
+    "description": "%A",
+    "account": "%A",
+    "id": "%A"
+}"""                                    (model.Date.ToString("O"))
+                                        model.Payee
+                                        model.Amount
+                                        model.Status
+                                        model.Type
+                                        model.Description
+                                        model.Account
+                                        (Guid.NewGuid().ToString())) ]
 
 let private update msg model =
     match msg with
     | ChangeToTab newTab    -> match newTab with
                                | ShowExpenses -> { model with CurrentTab = newTab }, loadExpensesCmd()
                                | _            -> { model with CurrentTab = newTab }, Cmd.none
-    | ChangeAmount newValue -> { model with Amount = sanitize newValue }, Cmd.none
+    | ChangeAmount newValue -> { model with Expense = { model.Expense with Amount = sanitize newValue } }, Cmd.none
     | TagsKeyDown (key, x)  -> match key with
                                | "Enter" -> {
-                                                model with Tags = x :: model.Tags |> List.distinct
+                                                model with Expense = { model.Expense with Tags = x :: model.Expense.Tags |> List.distinct }
                                                            TagsText = String.Empty
-                                                           Alert = match model.Tags |> List.exists ((=)x) with
+                                                           Alert = match model.Expense.Tags |> List.exists ((=)x) with
                                                                    | true  -> DuplicateTag
                                                                    | false -> None
                                             }, Cmd.none
                                | _       -> model, Cmd.none
     | TagsTextChanged text  -> { model with TagsText = text }, Cmd.none
-    | TagDelete tagName     -> { model with Tags = model.Tags |> List.except [ tagName ] }, Cmd.none
-    | DateChanged newDate   -> { model with Date = DateTime.Parse(newDate) }, Cmd.none
+    | TagDelete tagName     -> { model with Expense = { model.Expense with Tags = model.Expense.Tags |> List.except [ tagName ] } }, Cmd.none
+    | DateChanged newDate   -> { model with Expense = { model.Expense with Date = DateTime.Parse(newDate) } }, Cmd.none
     | ShowExpensesLoaded es -> { model with Expenses = es; ExpensesLoaded = true }, Cmd.none
     | FileSelected fileName -> { model with SelectedFile = match fileName with
                                                            | "" | null -> Option.None
                                                            | x -> Some x }, Cmd.none
-    | AddNewExpense         -> emptyModel, Cmd.OfPromise.perform addExpense model (fun _ -> ChangeToTab AddExpense)
+    | AddNewExpense         -> emptyModel, Cmd.OfPromise.perform addExpense model.Expense (fun _ -> ChangeToTab AddExpense)
+    | ChangePayee text      -> { model with Expense = { model.Expense with Payee = text } }, Cmd.none
+    | ChangeAccount text    -> { model with Expense = { model.Expense with Account = text } }, Cmd.none
+    | ChangeStatus text     -> { model with Expense = { model.Expense with Status = text } }, Cmd.none
+    | ChangeType text       -> { model with Expense = { model.Expense with Type = text } }, Cmd.none
+    | ChangeDescription txt -> { model with Expense = { model.Expense with Description = txt } }, Cmd.none
+    | ChangeShowAccount acc -> { model with ShowAccount = acc }, Cmd.none
 
 let private tab model dispatch tabType title =
     Tabs.tab [ Tabs.Tab.IsActive (model.CurrentTab = tabType) ]
@@ -134,7 +176,10 @@ let private receiptUpload model dispatch =
                                                     File.label [ ] [ str "Upload a receipt..." ] ]
                                          File.name [ ] [ str filename ] ] ] ]
 
-let private dropdown title items =
+let onDdChange msg dispatch =
+    OnChange (fun ev -> msg ev.Value |> dispatch)
+
+let private dropdown title items prop =
     let options items =
         items |>
         List.map (fun item -> option [ Value item ] [ str item ])
@@ -143,7 +188,7 @@ let private dropdown title items =
               [ Label.label [ ] [ str title ]
                 Control.div [ ]
                             [ Select.select [ ]
-                                            [ select [ DefaultValue (items |> List.head) ]
+                                            [ select [ DefaultValue (items |> List.head); prop ]
                                                      (options items) ] ] ]
 
 let private tags model dispatch =
@@ -168,6 +213,12 @@ let private ifDuplicateTagAlertAdd element model =
     | DuplicateTag -> [ element ]
     | _            -> []
 
+let onChange msg dispatch =
+    Input.OnChange (fun ev -> msg ev.Value |> dispatch)
+    
+let onTaChange msg dispatch =
+    Textarea.OnChange (fun ev -> msg ev.Value |> dispatch)
+
 let private addExpensePage model dispatch =
     form [ ]
          [ receiptUpload model dispatch
@@ -176,15 +227,16 @@ let private addExpensePage model dispatch =
                      [ Label.label [ ] [ str "Payee" ]
                        Control.div [ Control.HasIconLeft ]
                                    [ Input.text [ Input.Placeholder "Ex: Tesco"
-                                                  Input.Props [ AutoFocus true ] ]
+                                                  Input.Props [ AutoFocus true ]
+                                                   ]
                                      Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ]
                                                [ Fa.i [ Fa.Solid.CashRegister ] [ ] ] ] ]
 
            Field.div [ ]
                 [ Label.label [ ] [ str "Date" ]
                   Control.div [ Control.HasIconLeft ]
-                              [ Input.date [ Input.Value (model.Date.ToString("yyyy-MM-dd"))
-                                             Input.OnChange (fun ev -> DateChanged ev.Value |> dispatch) ]
+                              [ Input.date [ Input.Value (model.Expense.Date.ToString("yyyy-MM-dd"))
+                                             onChange DateChanged dispatch ]
                                 Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ]
                                           [ Fa.i [ Fa.Solid.CalendarDay ] [ ] ] ] ]
 
@@ -192,18 +244,18 @@ let private addExpensePage model dispatch =
                      [ Label.label [ ] [ str "Amount" ]
                        Control.div [ Control.HasIconLeft ]
                                    [ Input.number [ Input.Props [ Props.Step "0.01" ]
-                                                    Input.OnChange (fun ev -> ChangeAmount ev.Value |> dispatch)
-                                                    Input.Value (string model.Amount) ]
+                                                    onChange ChangeAmount dispatch
+                                                    Input.Value (string model.Expense.Amount) ]
                                      Icon.icon [ Icon.Size IsSmall
                                                  Icon.IsLeft ]
                                                [ Fa.i [ Fa.Solid.DollarSign ] [ ] ] ] ]
  
            div [ Style [ Display DisplayOptions.InlineFlex ] ]
-               [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ]
+               [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ] (onDdChange ChangeAccount dispatch)
 
-                 dropdown "Status" [ "New"; "Pending"; "Reconciled" ]
+                 dropdown "Status" [ "New"; "Pending"; "Reconciled" ] (onDdChange ChangeStatus dispatch)
 
-                 dropdown "Type" [ "Regular"; "Internal transfer"; "Scheduled" ] ]
+                 dropdown "Type" [ "Regular"; "Internal transfer"; "Scheduled" ] (onDdChange ChangeType dispatch) ]
 
            Field.div [ ]
                      ([ Label.label [ ] [ str "Tags" ]
@@ -217,12 +269,12 @@ let private addExpensePage model dispatch =
                                        (ifDuplicateTagAlertAdd (Icon.icon [ Icon.Size IsSmall; Icon.IsRight ] [ Fa.i [ Fa.Solid.ExclamationTriangle ] [ ] ]) model)) ] @ 
                         (ifDuplicateTagAlertAdd (Help.help [ Help.Color IsDanger ] [ str "Duplicate tag" ]) model))
            
-           tags model dispatch
+           tags model.Expense dispatch
 
            Field.div [ ]
                      [ Label.label [ ] [ str "Description" ]
                        Control.div [ Control.IsLoading true ]
-                                   [ Textarea.textarea [ ] [ ] ] ] ]
+                                   [ Textarea.textarea [ onTaChange ChangeDescription dispatch ] [ ] ] ] ]
 
 let private expensesRows model _ =
     let row i (expense : Expense) =
@@ -233,7 +285,7 @@ let private expensesRows model _ =
              td [ ] [ str expense.status ]
              td [ ] [ str expense.``type`` ]
              td [ ] [ str ""]//expense.Tags ]
-             td [ ] [ str ""]]//expense.Description ] ]
+             td [ ] [ str expense.description ] ]
            
     model.Expenses |>
     Array.mapi row
@@ -263,7 +315,7 @@ let private expensesTable model dispatch =
 let private showExpensesPage model dispatch =
     Card.card [ ]
               [ Card.content [ ]
-                             [ Content.content [ ] [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ]
+                             [ Content.content [ ] [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ] (onDdChange ChangeShowAccount dispatch)
                                                      expensesTable model dispatch ] ] ]
 
 let private page model dispatch =
