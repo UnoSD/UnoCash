@@ -46,8 +46,9 @@ type Msg =
     | DateChanged of string
     | ShowExpensesLoaded of Expense[]
     | FileSelected of string
+    | AddNewExpense
 
-let init _ =
+let private emptyModel = 
     {
         CurrentTab = AddExpense
         Amount = 0m
@@ -58,7 +59,10 @@ let init _ =
         Expenses = [||]
         SelectedFile = Option.None
         ExpensesLoaded = false
-    }, Cmd.none
+    }
+    
+let init _ =
+    emptyModel, Cmd.none
 
 let private sanitize value =
     match Decimal.TryParse(value) with
@@ -74,6 +78,17 @@ let private loadExpensesCmd () =
     Cmd.OfPromise.perform loadExpenses
                           ()
                           ShowExpensesLoaded
+
+let private addExpense model =
+    Fetch.fetch "http://localhost:7071/api/AddExpense"
+                [ Method HttpMethod.POST
+                  Body <| unbox(sprintf """{
+    "date": "%A"
+    "payee": "%A"
+    "amount": %A
+    "status": "%A"
+    "type: "%A"
+}"""                                    (model.Date.ToString("yyyy-MM-dd")) "Test" model.Amount "Pending" "Regular") ]
 
 let private update msg model =
     match msg with
@@ -97,6 +112,7 @@ let private update msg model =
     | FileSelected fileName -> { model with SelectedFile = match fileName with
                                                            | "" | null -> Option.None
                                                            | x -> Some x }, Cmd.none
+    | AddNewExpense         -> emptyModel, Cmd.OfPromise.perform addExpense model (fun _ -> ChangeToTab AddExpense)
 
 let private tab model dispatch tabType title =
     Tabs.tab [ Tabs.Tab.IsActive (model.CurrentTab = tabType) ]
@@ -257,12 +273,13 @@ let private page model dispatch =
                                                [ Content.content [ ]
                                                                  [ addExpensePage model dispatch ] ]
                                   Card.footer [ ]
-                                              [ Card.Footer.a [ ]
+                                              [ Card.Footer.a [ Props [ OnClick (fun _ -> AddNewExpense |> dispatch) ] ]
                                                               [ str "Add" ]
                                                 Card.Footer.a [ ]
                                                               [ str "Split" ] ] ]
     | ShowExpenses -> showExpensesPage model dispatch
     | _ -> div [ ] [ str "Not implemented" ]
+
 
 let private view model dispatch =
     div [ ] [ Tabs.tabs [ Tabs.IsCentered ]
