@@ -64,6 +64,7 @@ type Msg =
     | ChangeType of string
     | ChangeShowAccount of string
     | ChangeDescription of string
+    | DeleteExpense of string
 
 let private emptyModel = 
     {
@@ -126,6 +127,10 @@ let private addExpense model =
                                         model.Account
                                         (Guid.NewGuid().ToString())) ]
 
+let private removeExpense (id, account) =
+    Fetch.fetch (sprintf "http://localhost:7071/api/DeleteExpense?id=%s&account=%s" id account)
+                [ Method HttpMethod.DELETE ]
+    
 let private update msg model =
     match msg with
     | ChangeToTab newTab    -> match newTab with
@@ -157,6 +162,7 @@ let private update msg model =
     | ChangeShowAccount acc -> match model.ShowAccount = acc with
                                | true  -> model, Cmd.none
                                | false -> { model with ShowAccount = acc }, loadExpensesCmd acc
+    | DeleteExpense expId   -> model, Cmd.OfPromise.perform removeExpense (expId, model.ShowAccount) (fun _ -> ChangeToTab ShowExpenses)
 
 let private tab model dispatch tabType title =
     Tabs.tab [ Tabs.Tab.IsActive (model.CurrentTab = tabType) ]
@@ -278,7 +284,7 @@ let private addExpensePage model dispatch =
                        Control.div [ Control.IsLoading true ]
                                    [ Textarea.textarea [ onTaChange ChangeDescription dispatch ] [ ] ] ] ]
 
-let private expensesRows model _ =
+let private expensesRows model dispatch =
     let row i (expense : Expense) =
         tr ( match i % 2 with | 0 -> [] | _ -> [ ClassName "is-selected" ])
            [ td [ ] [ str expense.date ]
@@ -287,7 +293,8 @@ let private expensesRows model _ =
              td [ ] [ str expense.status ]
              td [ ] [ str expense.``type`` ]
              td [ ] [ str ""]//expense.Tags ]
-             td [ ] [ str expense.description ] ]
+             td [ ] [ str expense.description ]
+             td [ ] [ a [ OnClick (fun _ -> DeleteExpense expense.id |> dispatch) ] [ Fa.i [ Fa.Solid.Trash ] [] ] ] ]
            
     model.Expenses |>
     Array.mapi row
@@ -305,7 +312,8 @@ let private expensesTable model dispatch =
                                    th [ ] [ str "Status" ]
                                    th [ ] [ str "Type" ]
                                    th [ ] [ str "Tags" ]
-                                   th [ ] [ str "Description" ] ] ]
+                                   th [ ] [ str "Description" ]
+                                   th [ ] [ str "Actions" ] ] ]
                       tbody [ ] (expensesRows model dispatch) ]
     
     match model.ExpensesLoaded with
