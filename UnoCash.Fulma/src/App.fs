@@ -189,7 +189,7 @@ let private receiptUpload model dispatch =
 let onDdChange msg dispatch =
     OnChange (fun ev -> msg ev.Value |> dispatch)
 
-let private dropdown title items prop =
+let private dropdown title items prop value =
     let options items =
         items |>
         List.map (fun item -> option [ Value item ] [ str item ])
@@ -198,7 +198,7 @@ let private dropdown title items prop =
               [ Label.label [ ] [ str title ]
                 Control.div [ ]
                             [ Select.select [ ]
-                                            [ select [ DefaultValue (items |> List.head); prop ]
+                                            [ select [ Value value; prop ]
                                                      (options items) ] ] ]
 
 let private tags model dispatch =
@@ -238,6 +238,7 @@ let private addExpensePage model dispatch =
                        Control.div [ Control.HasIconLeft ]
                                    [ Input.text [ Input.Placeholder "Ex: Tesco"
                                                   Input.Props [ AutoFocus true ]
+                                                  Input.Value model.Expense.Payee
                                                   onChange ChangePayee dispatch ]
                                      Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ]
                                                [ Fa.i [ Fa.Solid.CashRegister ] [ ] ] ] ]
@@ -261,11 +262,11 @@ let private addExpensePage model dispatch =
                                                [ Fa.i [ Fa.Solid.DollarSign ] [ ] ] ] ]
  
            div [ Style [ Display DisplayOptions.InlineFlex ] ]
-               [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ] (onDdChange ChangeAccount dispatch)
+               [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ] (onDdChange ChangeAccount dispatch) model.Expense.Account
 
-                 dropdown "Status" [ "New"; "Pending"; "Reconciled" ] (onDdChange ChangeStatus dispatch)
+                 dropdown "Status" [ "New"; "Pending"; "Reconciled" ] (onDdChange ChangeStatus dispatch) model.Expense.Status
 
-                 dropdown "Type" [ "Regular"; "Internal transfer"; "Scheduled" ] (onDdChange ChangeType dispatch) ]
+                 dropdown "Type" [ "Regular"; "Internal transfer"; "Scheduled" ] (onDdChange ChangeType dispatch) model.Expense.Type ]
 
            Field.div [ ]
                      ([ Label.label [ ] [ str "Tags" ]
@@ -284,7 +285,7 @@ let private addExpensePage model dispatch =
            Field.div [ ]
                      [ Label.label [ ] [ str "Description" ]
                        Control.div [ Control.IsLoading true ]
-                                   [ Textarea.textarea [ onTaChange ChangeDescription dispatch ] [ ] ] ] ]
+                                   [ Textarea.textarea [ onTaChange ChangeDescription dispatch; Textarea.Option.Value model.Expense.Description ] [ ] ] ] ]
 
 let private expensesRows model dispatch =
     let row i (expense : Expense) =
@@ -327,7 +328,7 @@ let private expensesTable model dispatch =
 let private showExpensesPage model dispatch =
     Card.card [ ]
               [ Card.content [ ]
-                             [ Content.content [ ] [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ] (onDdChange ChangeShowAccount dispatch)
+                             [ Content.content [ ] [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ] (onDdChange ChangeShowAccount dispatch) model.ShowAccount
                                                      expensesTable model dispatch ] ] ]
 
 let private page model dispatch =
