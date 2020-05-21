@@ -4,7 +4,13 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="README.md" />
+    <Compile Include="Models.fs" />
+    <Compile Include="Messages.fs" />
+    <Compile Include="Tabs.fs" />
+    <Compile Include="Helpers.fs" />
+    <Compile Include="Pages.fs" />
+    <Compile Include="Updates.fs" />
+    <Compile Include="View.fs" />
     <Compile Include="App.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />

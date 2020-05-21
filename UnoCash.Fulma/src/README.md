@@ -1,1 +1,0 @@
-﻿.\fake.cmd build -t Watch
