@@ -66,7 +66,7 @@ let onChange msg dispatch =
 let onTaChange msg dispatch =
     Textarea.OnChange (fun ev -> msg ev.Value |> dispatch)
 
-let private addExpensePage model dispatch =
+let private expenseForm model dispatch =
     form [ ]
          [ receiptUpload model dispatch
                     
@@ -166,26 +166,30 @@ let private expensesTable model dispatch =
                      Style [ TextAlign TextAlignOptions.Center ] ]
                    [ Fa.i [ Fa.Solid.Sync; Fa.Spin ] [  ] ]
 
-let private showExpensesPage model dispatch =
+let private card content footer =
     Card.card [ ]
-              [ Card.content [ ]
-                             [ Content.content [ ] [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ] (onDdChange ChangeShowAccount dispatch) model.ShowAccount
-                                                     expensesTable model dispatch ] ] ]
+              ([ Card.content [ ]
+                              [ Content.content [ ] content ] ] @ footer)
 
-let addExpenseCard model dispatch completeText =
-    Card.card [ ]
-              [ Card.content [ ]
-                             [ Content.content [ ]
-                                               [ addExpensePage model dispatch ] ]
-                Card.footer [ ]
-                            [ Card.Footer.a [ Props [ OnClick (fun _ -> AddNewExpense |> dispatch) ] ]
-                                            [ str completeText ]
-                              Card.Footer.a [ ]
-                                            [ str "Split" ] ] ]
+let private showExpensesCard model dispatch =
+    card [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ] (onDdChange ChangeShowAccount dispatch) model.ShowAccount
+           expensesTable model dispatch ] []
 
-let page model dispatch =
+let private buttons dispatch submitText =
+    Card.footer [ ]
+                [ Card.Footer.a [ Props [ OnClick (fun _ -> AddNewExpense |> dispatch) ] ]
+                                [ str submitText ]
+                  Card.Footer.a [ ]
+                                [ str "Split" ] ]
+                
+let expenseFormCard submitButtonText model dispatch =
+    card [ expenseForm model dispatch ]
+         [ buttons dispatch submitButtonText ]
+
+let page model =
+    model |>
     match model.CurrentTab with
-    | AddExpense   -> addExpenseCard model dispatch "Add"
-    | Tab.EditExpense  -> addExpenseCard model dispatch "Edit"
-    | ShowExpenses -> showExpensesPage model dispatch
-    | _            -> div [ ] [ str "Not implemented" ]
+    | AddExpense      -> expenseFormCard "Add"
+    | Tab.EditExpense -> expenseFormCard "Edit"
+    | ShowExpenses    -> showExpensesCard
+    | _               -> (fun _ _ -> Helpers.div [ str "Not implemented" ])

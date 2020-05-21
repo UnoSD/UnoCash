@@ -1,4 +1,4 @@
-module App.Program
+module UnoCash.Fulma.App
 
 open Elmish
 open Elmish.HMR

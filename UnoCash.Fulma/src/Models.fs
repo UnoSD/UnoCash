@@ -8,10 +8,10 @@ type Expense =
 
 type Tab =
     | AddExpense
+    | EditExpense
     | ShowExpenses
     | ShowStatistics
     | About
-    | EditExpense
 
 type AlertType =
     | None
