@@ -19,6 +19,7 @@ type Tab =
     | ShowExpenses
     | ShowStatistics
     | About
+    | EditExpense
 
 type AlertType =
     | None
@@ -46,6 +47,7 @@ type Model =
         ExpensesLoaded : bool
         Expense : ExpenseModel
         ShowAccount : string
+        SelectedExpenseId : string
     }
 
 type Msg =
@@ -65,6 +67,7 @@ type Msg =
     | ChangeShowAccount of string
     | ChangeDescription of string
     | DeleteExpense of string
+    | EditExpense of Expense
 
 let private emptyModel = 
     {
@@ -75,6 +78,7 @@ let private emptyModel =
         SelectedFile = Option.None
         ExpensesLoaded = false
         ShowAccount = "Current"
+        SelectedExpenseId = ""
         Expense =
         {
             Date = DateTime.Today
@@ -133,6 +137,18 @@ let private removeExpense (id, account) =
     Fetch.fetch (sprintf "http://localhost:7071/api/DeleteExpense?id=%s&account=%s" id account)
                 [ Method HttpMethod.DELETE ]
     
+let private toModel (expense : Expense) =
+    {
+        Amount = decimal expense.amount
+        Tags = expense.tags.Split(",".[0]) |> List.ofArray
+        Date = DateTime.Parse expense.date
+        Payee = expense.payee
+        Account = expense.account
+        Status = expense.status
+        Type = expense.``type``
+        Description = expense.description
+    }
+    
 let private update msg model =
     match msg with
     | ChangeToTab newTab    -> match newTab with
@@ -165,6 +181,7 @@ let private update msg model =
                                | true  -> model, Cmd.none
                                | false -> { model with ShowAccount = acc }, loadExpensesCmd acc
     | DeleteExpense expId   -> model, Cmd.OfPromise.perform removeExpense (expId, model.ShowAccount) (fun _ -> ChangeToTab ShowExpenses)
+    | EditExpense expense   -> { model with Expense = expense |> toModel; CurrentTab = Tab.EditExpense }, Cmd.none
 
 let private tab model dispatch tabType title =
     Tabs.tab [ Tabs.Tab.IsActive (model.CurrentTab = tabType) ]
@@ -288,8 +305,8 @@ let private addExpensePage model dispatch =
                                    [ Textarea.textarea [ onTaChange ChangeDescription dispatch; Textarea.Option.Value model.Expense.Description ] [ ] ] ] ]
 
 let private expensesRows model dispatch =
-    let row i (expense : Expense) =
-        tr ( match i % 2 with | 0 -> [] | _ -> [ ClassName "is-selected" ])
+    let row (expense : Expense) =
+        tr ( match expense.id = model.SelectedExpenseId with | false -> [] | true -> [ ClassName "is-selected" ])
            [ td [ ] [ str expense.date ]
              td [ ] [ str expense.payee ]
              td [ ] [ str (string expense.amount) ]
@@ -297,10 +314,14 @@ let private expensesRows model dispatch =
              td [ ] [ str expense.``type`` ]
              td [ ] [ str expense.tags ]
              td [ ] [ str expense.description ]
-             td [ ] [ a [ OnClick (fun _ -> DeleteExpense expense.id |> dispatch) ] [ Fa.i [ Fa.Solid.Trash ] [] ] ] ]
+             td [ Style [ WhiteSpace WhiteSpaceOptions.Nowrap ] ]
+                [ a [ OnClick (fun _ -> DeleteExpense expense.id |> dispatch); Style [ PaddingLeft "10px"; PaddingRight "10px" ] ]
+                    [ Fa.i [ Fa.Solid.Trash ] [] ]
+                  a [ OnClick (fun _ -> EditExpense expense |> dispatch); Style [ PaddingLeft "10px"; PaddingRight "10px" ] ]
+                    [ Fa.i [ Fa.Solid.PencilAlt ] [] ] ] ]
            
     model.Expenses |>
-    Array.mapi row
+    Array.map row
     
 let private expensesTable model dispatch =
     let table model dispatch =
@@ -316,7 +337,7 @@ let private expensesTable model dispatch =
                                    th [ ] [ str "Type" ]
                                    th [ ] [ str "Tags" ]
                                    th [ ] [ str "Description" ]
-                                   th [ ] [ str "Actions" ] ] ]
+                                   th [ Style [ Width "1%" ] ] [ str "Actions" ] ] ]
                       tbody [ ] (expensesRows model dispatch) ]
     
     match model.ExpensesLoaded with
@@ -331,19 +352,23 @@ let private showExpensesPage model dispatch =
                              [ Content.content [ ] [ dropdown "Account" [ "Current"; "ISA"; "Wallet" ] (onDdChange ChangeShowAccount dispatch) model.ShowAccount
                                                      expensesTable model dispatch ] ] ]
 
+let addExpenseCard model dispatch completeText =
+    Card.card [ ]
+              [ Card.content [ ]
+                             [ Content.content [ ]
+                                               [ addExpensePage model dispatch ] ]
+                Card.footer [ ]
+                            [ Card.Footer.a [ Props [ OnClick (fun _ -> AddNewExpense |> dispatch) ] ]
+                                            [ str completeText ]
+                              Card.Footer.a [ ]
+                                            [ str "Split" ] ] ]
+
 let private page model dispatch =
     match model.CurrentTab with
-    | AddExpense   -> Card.card [ ]
-                                [ Card.content [ ]
-                                               [ Content.content [ ]
-                                                                 [ addExpensePage model dispatch ] ]
-                                  Card.footer [ ]
-                                              [ Card.Footer.a [ Props [ OnClick (fun _ -> AddNewExpense |> dispatch) ] ]
-                                                              [ str "Add" ]
-                                                Card.Footer.a [ ]
-                                                              [ str "Split" ] ] ]
-    | ShowExpenses -> showExpensesPage model dispatch
-    | _ -> div [ ] [ str "Not implemented" ]
+    | AddExpense      -> addExpenseCard model dispatch "Add"
+    | Tab.EditExpense -> addExpenseCard model dispatch "Edit"
+    | ShowExpenses    -> showExpensesPage model dispatch
+    | _               -> div [ ] [ str "Not implemented" ]
 
 
 let private view model dispatch =
