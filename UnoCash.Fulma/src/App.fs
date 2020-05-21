@@ -95,14 +95,14 @@ let private sanitize value =
     | true, dec -> (dec * 100m |> Decimal.Truncate) / 100m
     | false, _  -> 0m
 
-let loadExpenses () =
-    fetch "http://localhost:7071/api/GetExpenses?account=Current" [] |>
+let loadExpenses account =
+    fetch (sprintf "http://localhost:7071/api/GetExpenses?account=%s" account) [] |>
     Promise.bind (fun x -> x.text()) |>
     Promise.map Expense.ParseArray
 
-let private loadExpensesCmd () =
+let private loadExpensesCmd account =
     Cmd.OfPromise.perform loadExpenses
-                          ()
+                          account
                           ShowExpensesLoaded
 
 let private addExpense model =
@@ -129,7 +129,7 @@ let private addExpense model =
 let private update msg model =
     match msg with
     | ChangeToTab newTab    -> match newTab with
-                               | ShowExpenses -> { model with CurrentTab = newTab }, loadExpensesCmd()
+                               | ShowExpenses -> { model with CurrentTab = newTab }, loadExpensesCmd model.ShowAccount
                                | _            -> { model with CurrentTab = newTab }, Cmd.none
     | ChangeAmount newValue -> { model with Expense = { model.Expense with Amount = sanitize newValue } }, Cmd.none
     | TagsKeyDown (key, x)  -> match key with
@@ -154,7 +154,9 @@ let private update msg model =
     | ChangeStatus text     -> { model with Expense = { model.Expense with Status = text } }, Cmd.none
     | ChangeType text       -> { model with Expense = { model.Expense with Type = text } }, Cmd.none
     | ChangeDescription txt -> { model with Expense = { model.Expense with Description = txt } }, Cmd.none
-    | ChangeShowAccount acc -> { model with ShowAccount = acc }, Cmd.none
+    | ChangeShowAccount acc -> match model.ShowAccount = acc with
+                               | true  -> model, Cmd.none
+                               | false -> { model with ShowAccount = acc }, loadExpensesCmd acc
 
 let private tab model dispatch tabType title =
     Tabs.tab [ Tabs.Tab.IsActive (model.CurrentTab = tabType) ]
