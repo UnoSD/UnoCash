@@ -34,6 +34,7 @@ namespace UnoCash.Api
                                     expense.Status,
                                     expense.Type,
                                     expense.Description,
+                                    expense.Tags
                                 }.Iter(x => log.LogWarning(x)))
                .Bind(expense => expense.WriteAsync())
                .Map(isSuccessful => isSuccessful ?

@@ -25,7 +25,8 @@ namespace UnoCash.Core
                 Status = expense.Properties[nameof(Expense.Status)].StringValue,
                 Type = expense.Properties[nameof(Expense.Type)].StringValue,
                 Date = expense.Properties[nameof(Expense.Date)].DateTime ?? throw new Exception(),
-                Amount = expense.Properties[nameof(Expense.Amount)].Int64Value / 100m ?? throw new Exception()
+                Amount = expense.Properties[nameof(Expense.Amount)].Int64Value / 100m ?? throw new Exception(),
+                Tags = expense[nameof(Expense.Tags)].StringValue
             };
     }
 }

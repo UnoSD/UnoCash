@@ -24,6 +24,7 @@ namespace UnoCash.Core
                     [nameof(Expense.Type)] = EntityProperty.GeneratePropertyForString(expense.Type),
                     [nameof(Expense.Date)] = EntityProperty.GeneratePropertyForDateTimeOffset(expense.Date),
                     [nameof(Expense.Amount)] = EntityProperty.GeneratePropertyForLong((long)(expense.Amount * 100L)),
+                    [nameof(Expense.Tags)] = EntityProperty.GeneratePropertyForString(expense.Tags)
                 });
 
         public static Task<bool> DeleteAsync(string account, Guid id) => 

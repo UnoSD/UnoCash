@@ -117,6 +117,7 @@ let private addExpense model =
     "type": "%A",
     "description": "%A",
     "account": "%A",
+    "tags": "%s",
     "id": "%A"
 }"""                                    (model.Date.ToString("O"))
                                         model.Payee
@@ -125,6 +126,7 @@ let private addExpense model =
                                         model.Type
                                         model.Description
                                         model.Account
+                                        (model.Tags |> String.concat ",")
                                         (Guid.NewGuid().ToString())) ]
 
 let private removeExpense (id, account) =
@@ -292,7 +294,7 @@ let private expensesRows model dispatch =
              td [ ] [ str (string expense.amount) ]
              td [ ] [ str expense.status ]
              td [ ] [ str expense.``type`` ]
-             td [ ] [ str ""]//expense.Tags ]
+             td [ ] [ str expense.tags ]
              td [ ] [ str expense.description ]
              td [ ] [ a [ OnClick (fun _ -> DeleteExpense expense.id |> dispatch) ] [ Fa.i [ Fa.Solid.Trash ] [] ] ] ]
            
