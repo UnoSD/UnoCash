@@ -80,9 +80,9 @@ let private emptyModel =
             Tags = []
             Amount = 0m
             Payee = ""
-            Account = ""
-            Status = ""
-            Type = ""
+            Account = "Current"
+            Status = "New"
+            Type = "Regular"
             Description = ""
         }
     }
@@ -108,7 +108,7 @@ let private loadExpensesCmd () =
 let private addExpense model =
     Fetch.fetch "http://localhost:7071/api/AddExpense"
                 [ Method HttpMethod.POST
-                  Body <| unbox(sprintf """{
+                  Body <| Fable.Core.U3.Case3 (sprintf """{
     "date": "%A",
     "payee": "%A",
     "amount": %A,
@@ -228,7 +228,7 @@ let private addExpensePage model dispatch =
                        Control.div [ Control.HasIconLeft ]
                                    [ Input.text [ Input.Placeholder "Ex: Tesco"
                                                   Input.Props [ AutoFocus true ]
-                                                   ]
+                                                  onChange ChangePayee dispatch ]
                                      Icon.icon [ Icon.Size IsSmall; Icon.IsLeft ]
                                                [ Fa.i [ Fa.Solid.CashRegister ] [ ] ] ] ]
 
