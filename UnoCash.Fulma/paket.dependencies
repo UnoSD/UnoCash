@@ -4,6 +4,7 @@ framework: netstandard2.0
 
 nuget Fable.Fetch
 nuget Fable.JsonProvider
+nuget Feliz
 nuget FSharp.Core redirects:force
 nuget Fable.Core
 nuget Fable.Elmish

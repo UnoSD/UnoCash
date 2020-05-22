@@ -2,9 +2,12 @@ module UnoCash.Fulma.Models
 
 open Fable
 open System
+open Microsoft.FSharp.Reflection
+open UnoCash.Fulma.Helpers
+open UnoCash.Fulma.Config
 
 type Expense =
-    JsonProvider.Generator<"http://localhost:7071/api/GetExpenses?account=Current">
+    JsonProvider.Generator<expenseSampleUrl>
 
 type Tab =
     | AddExpense
@@ -14,7 +17,7 @@ type Tab =
     | About
 
 type AlertType =
-    | None
+    | NoAlert
     | DuplicateTag
 
 type ExpenseModel =
@@ -40,27 +43,49 @@ type Model =
         Expense : ExpenseModel
         ShowAccount : string
         SelectedExpenseId : string
+        Accounts : string list
     }
     
 let emptyModel = 
     {
         CurrentTab = AddExpense
         TagsText = ""
-        Alert = None
+        Alert = NoAlert
         Expenses = [||]
         SelectedFile = Option.None
         ExpensesLoaded = false
-        ShowAccount = "Current"
-        SelectedExpenseId = ""
+        ShowAccount = initialAccount
+        SelectedExpenseId = String.Empty
+        Accounts = accounts
         Expense =
         {
             Date = DateTime.Today
             Tags = []
             Amount = 0m
-            Payee = ""
-            Account = "Current"
+            Payee = String.Empty
+            Account = initialAccount
             Status = "New"
             Type = "Regular"
-            Description = ""
+            Description = String.Empty
         }
     }
+
+type ExpenseType =
+    | New
+    | Pending
+    | Scheduled
+
+type ExpenseStatus =
+    | Regular
+    | InternalTransfer
+    | Scheduled
+
+let inline enumerateCases<'a> =
+    FSharpType.GetUnionCases typeof<'a> |>
+    Array.map (fun case -> pascalCaseToDisplay case.Name)
+
+let expenseTypes =
+    enumerateCases<ExpenseType>
+    
+let expenseStatus =
+    enumerateCases<ExpenseStatus>

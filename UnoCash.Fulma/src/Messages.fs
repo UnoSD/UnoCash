@@ -2,14 +2,14 @@ module UnoCash.Fulma.Messages
 
 open UnoCash.Fulma.Models
 
-type Msg =
+type Message =
     | ChangeToTab of Tab
     | ChangeAmount of string
     | ChangePayee of string
     | TagsKeyDown of string * string
     | TagsTextChanged of string
     | TagDelete of string
-    | DateChanged of string
+    | ChangeDate of string
     | ShowExpensesLoaded of Expense[]
     | FileSelected of string
     | AddNewExpense

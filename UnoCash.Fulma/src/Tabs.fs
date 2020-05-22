@@ -11,8 +11,11 @@ let private tab model dispatch tabType title =
              [ a [ OnClick (fun _ -> ChangeToTab tabType |> dispatch) ] [ str title ] ]
 
 let tabs model dispatch =
+    let tab tabType title =
+        tab model dispatch tabType title
+    
     Tabs.tabs [ Tabs.IsCentered ]
-              [ tab model dispatch AddExpense     "Add expense"
-                tab model dispatch ShowExpenses   "Show expenses" 
-                tab model dispatch ShowStatistics "Statistics"    
-                tab model dispatch About          "About"         ]
+              [ tab AddExpense     "Add expense"
+                tab ShowExpenses   "Show expenses" 
+                tab ShowStatistics "Statistics"    
+                tab About          "About"         ]
