@@ -40,6 +40,16 @@ type ExpenseModel =
         Description : string
     }
 
+type ReceiptAnalysisStatus =
+    | NotStarted
+    | InProgress
+    | Completed
+
+type ReceiptAnalysis =
+    {
+        Status : ReceiptAnalysisStatus
+    }
+
 type Model =
     {
         CurrentTab : Tab
@@ -52,6 +62,7 @@ type Model =
         ShowAccount : string
         SelectedExpenseId : string
         Accounts : string list
+        ReceiptAnalysis : ReceiptAnalysis
     }
     
 let emptyModel = 
@@ -65,6 +76,7 @@ let emptyModel =
         ShowAccount = initialAccount
         SelectedExpenseId = String.Empty
         Accounts = accounts
+        ReceiptAnalysis = { Status = NotStarted }
         Expense =
         {
             Date = DateTime.Today

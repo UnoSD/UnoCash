@@ -130,7 +130,13 @@ let private expenseForm model dispatch =
         | None      -> "No receipt selected"
     
     let fileUploadIcon =
-        Icon.icon [] [ Fa.i [ Fa.Solid.Upload ] [ ] ]
+        let icon =
+            match model.ReceiptAnalysis.Status with
+            | NotStarted -> [ Fa.Solid.Upload ]
+            | InProgress -> [ Fa.Solid.Spinner; Fa.Spin ]
+            | Completed  -> [ Fa.Solid.Check ]
+        
+        Icon.icon [] [ Fa.i icon [ ] ]
         
     let uploadButton =
         File.cta []

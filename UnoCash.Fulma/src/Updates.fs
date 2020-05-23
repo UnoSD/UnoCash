@@ -121,15 +121,20 @@ let update message model =
     | FileSelected fileName  -> { model with SelectedFile = match fileName with
                                                             | "" | null -> Option.None
                                                             | fileName  -> Some fileName }, Cmd.none
-    | FileUpload (b, n, l)   -> model, fileUploadCmd b n l
+    | FileUpload (b, n, l)   -> { model with ReceiptAnalysis = { model.ReceiptAnalysis with Status = InProgress } },
+                                fileUploadCmd b n l
     | ReceiptUploaded blob   -> model, receiptParseCmd blob
-    | ShowParsedExpense exp  -> { model with Expense = exp }, Cmd.none
+    | ShowParsedExpense exp  -> { model with Expense = exp
+                                             ReceiptAnalysis = { model.ReceiptAnalysis with Status = Completed } },
+                                Cmd.none
     
     | AddNewExpense          -> emptyModel, addExpenseCmd model.Expense
                              
     | ChangePayee text       -> { model with Expense = { model.Expense with Payee = text } }, Cmd.none
-    | ChangeDate newDate     -> { model with Expense = { model.Expense with Date = DateTime.Parse(newDate) } }, Cmd.none
-    | ChangeAmount newValue  -> { model with Expense = { model.Expense with Amount = toDecimal newValue 2 } }, Cmd.none
+    | ChangeDate newDate     -> { model with Expense = { model.Expense with Date = DateTime.Parse(newDate) } },
+                                Cmd.none
+    | ChangeAmount newValue  -> { model with Expense = { model.Expense with Amount = toDecimal newValue 2 } },
+                                Cmd.none
     | ChangeAccount text     -> { model with Expense = { model.Expense with Account = text } }, Cmd.none
     | ChangeStatus text      -> { model with Expense = { model.Expense with Status = text } }, Cmd.none
     | ChangeType text        -> { model with Expense = { model.Expense with Type = text } }, Cmd.none
