@@ -46,7 +46,7 @@ let private expenseForm model dispatch =
         Input.number [ Input.Props [ Props.Step "0.01"
                                      onChange ChangeAmount dispatch ]
                        Input.Value (string model.Expense.Amount) ] |>
-        simpleField "Amount" Fa.Solid.DollarSign
+        simpleField "Amount" Fa.Solid.PoundSign
     
     let addEmptyOnAlert empty element =
         match model.Alert with
