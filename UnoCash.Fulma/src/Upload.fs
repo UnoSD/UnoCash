@@ -12,12 +12,11 @@ let receiptParse blobName =
         let url =
             sprintf "%s?blobName=%s" getReceiptDataUrl blobName
         
-        let! receiptData =
-            Thoth.Fetch.Fetch.get<_, Receipt> (url, caseStrategy = CamelCase)
+        (*let! receiptData =
+            Thoth.Fetch.Fetch.get<_, Receipt> (url, caseStrategy = CamelCase)*)
         
-        (*let! response =
-            Fetch.fetch url
-                        [ Method HttpMethod.PUT ]
+        let! response =
+            Fetch.fetch url []
         
         let! json =
             response.text()
@@ -27,11 +26,11 @@ let receiptParse blobName =
             | Ok r    -> r
             | Error e -> printfn "Error parsing receipt json: %s" e
                          {
-                             Method = ""
-                             Payee = ""
-                             Amount = ""
-                             Date = DateTime.Today
-                         }*)
+                             Method = None
+                             Payee = None
+                             Amount = None
+                             Date = None
+                         }
         
         return {
             Date = Option.defaultValue DateTime.Today receiptData.Date
