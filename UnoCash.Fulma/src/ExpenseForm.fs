@@ -24,7 +24,8 @@ let private expenseForm model dispatch =
         dropdownWithEvent title options value msg dispatch
     
     let inlineElements elements =
-        div [ Style [ Display DisplayOptions.InlineFlex ] ]
+        div [ Style [ Display DisplayOptions.Flex
+                      FlexFlow "row wrap" ] ]
             elements
     
     let descriptionField =

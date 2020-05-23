@@ -25,7 +25,7 @@ let dropdownWithEvent title items value msgOnChange dispatch =
         items |>
         Seq.map (fun item -> option [ Value item ] [ str item ])
 
-    Field.div [ ]
+    Field.div [ Field.Props [ Style [ MarginRight "20px"; MarginBottom "10px" ] ] ]
               [ Label.label [ ] [ str title ]
                 Control.div [ ]
                             [ Select.select [ ]
