@@ -131,9 +131,20 @@ let private expenseForm model dispatch =
                  [ File.icon [] [ fileUploadIcon ]
                    File.label [] [ str "Upload a receipt..." ] ]
                  
+    let uploadFile (ev : Browser.Types.Event) =
+        let reader = Browser.Dom.FileReader.Create()
+        
+        //Show progress with Browser.Types.ProgressEvent
+        
+        let file = ev.target?files?(0)
+        
+        reader.onload <- (fun evt -> FileUpload (evt.target?result, file?name, evt?total) |> dispatch)
+        
+        reader.readAsArrayBuffer(file)
+                 
     let fileLabelChildren =
         [ File.input [ Props [ OnChange (fun ev -> FileSelected ev.Value |> dispatch)
-                               OnInput (fun ev -> FileUpload ev.target?files?(0) |> dispatch) ] ]
+                               OnInput uploadFile ] ]
           uploadButton
           File.name [] [ str receiptDisplayName ] ]
     

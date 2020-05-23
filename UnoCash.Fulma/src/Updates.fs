@@ -99,8 +99,12 @@ let addExpenseCmd expense =
 let removeExpenseCmd expId account =
     Cmd.OfPromise.perform removeExpense (expId, account) (fun _ -> ChangeToTab ShowExpenses)
 
-let fileUploadCmd file =
-    Cmd.OfPromise.perform fileUpload file (fun blobName -> ReceiptUploaded blobName)
+let fileUploadCmd blob name length =
+    Cmd.OfPromise.perform fileUpload (blob, name, length) (fun blobName -> ReceiptUploaded blobName)
+
+let receiptParseCmd blobName =
+    printfn "Receipt %s uploaded" blobName
+    Cmd.none
 
 let update message model =
     match message with
@@ -118,9 +122,8 @@ let update message model =
     | FileSelected fileName  -> { model with SelectedFile = match fileName with
                                                             | "" | null -> Option.None
                                                             | fileName  -> Some fileName }, Cmd.none
-    | FileUpload file        -> model, fileUploadCmd file
-    | ReceiptUploaded blob   -> printfn "Receipt %s uploaded" blob
-                                model, Cmd.none
+    | FileUpload (b, n, l)   -> model, fileUploadCmd b n l
+    | ReceiptUploaded blob   -> model, receiptParseCmd blob
     
     | AddNewExpense          -> emptyModel, addExpenseCmd model.Expense
                              

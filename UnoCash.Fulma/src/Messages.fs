@@ -13,7 +13,7 @@ type Message =
     | ChangeDate of string
     | ShowExpensesLoaded of Expense[]
     | FileSelected of string
-    | FileUpload of Blob
+    | FileUpload of (Blob * string * int)
     | ReceiptUploaded of string
     | AddNewExpense
     | ChangeAccount of string
