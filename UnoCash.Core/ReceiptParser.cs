@@ -47,11 +47,14 @@ namespace UnoCash.Core
                       .ConfigureAwait(false);
 
             blobStream.Seek(0, SeekOrigin.Begin);
+
+            string EscapeRowKey(string base64) =>
+                base64.Replace('/', '-');
             
             string hash;
 
             using (var md5 = MD5.Create())
-                hash = Convert.ToBase64String(md5.ComputeHash(blobStream));
+                hash = EscapeRowKey(Convert.ToBase64String(md5.ComputeHash(blobStream)));
 
             var existing =
                 await AzureTableStorage.GetAllAsync("receipthashes")
