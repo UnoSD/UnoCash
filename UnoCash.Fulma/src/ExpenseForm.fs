@@ -9,6 +9,7 @@ open UnoCash.Fulma.Messages
 open UnoCash.Fulma.Helpers
 open UnoCash.Fulma.Models
 open UnoCash.Fulma.Config
+open Fable.Core.JsInterop
 
 let private buttons dispatch submitText =
     Card.footer []
@@ -131,7 +132,8 @@ let private expenseForm model dispatch =
                    File.label [] [ str "Upload a receipt..." ] ]
                  
     let fileLabelChildren =
-        [ File.input [ Props [ OnChange (fun ev -> FileSelected ev.Value |> dispatch) ] ]
+        [ File.input [ Props [ OnChange (fun ev -> FileSelected ev.Value |> dispatch)
+                               OnInput (fun ev -> FileUpload ev.target?files?(0) |> dispatch) ] ]
           uploadButton
           File.name [] [ str receiptDisplayName ] ]
     

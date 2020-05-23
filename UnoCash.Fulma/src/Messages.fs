@@ -1,5 +1,6 @@
 module UnoCash.Fulma.Messages
 
+open Browser.Types
 open UnoCash.Fulma.Models
 
 type Message =
@@ -12,6 +13,8 @@ type Message =
     | ChangeDate of string
     | ShowExpensesLoaded of Expense[]
     | FileSelected of string
+    | FileUpload of Blob
+    | ReceiptUploaded of string
     | AddNewExpense
     | ChangeAccount of string
     | ChangeStatus of string

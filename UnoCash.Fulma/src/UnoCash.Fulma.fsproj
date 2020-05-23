@@ -9,6 +9,7 @@
     <Compile Include="Models.fs" />
     <Compile Include="Messages.fs" />
     <Compile Include="Tabs.fs" />
+    <Compile Include="Upload.fs" />
     <Compile Include="Updates.fs" />
     <Compile Include="ShowExpenses.fs" />
     <Compile Include="ExpenseForm.fs" />

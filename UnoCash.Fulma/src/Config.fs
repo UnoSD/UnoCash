@@ -4,10 +4,16 @@ open Fable.FontAwesome
 
 [<Literal>]
 let expenseSampleUrl = "http://localhost:7071/api/GetExpenses?account=Current"
-
 let getExpensesUrl = "http://localhost:7071/api/GetExpenses"
 let addExpenseUrl = "http://localhost:7071/api/AddExpense"
 let deleteExpenseUrl = "http://localhost:7071/api/DeleteExpense"
+let receiptUploadSasTokenUrl = "http://localhost:7071/api/GetReceiptUploadSasToken"
+
+let storageAccount =
+    "unocash"
+
+let receiptStorageContainer =
+    "receipts"
 
 let accounts = [ "Current"; "ISA"; "Wallet" ]
 

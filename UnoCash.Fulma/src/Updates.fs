@@ -6,6 +6,7 @@ open UnoCash.Fulma.Models
 open UnoCash.Fulma.Messages
 open UnoCash.Fulma.Helpers
 open UnoCash.Fulma.Config
+open UnoCash.Fulma.Upload
 open Fetch
 open Fable.Core
 
@@ -98,6 +99,9 @@ let addExpenseCmd expense =
 let removeExpenseCmd expId account =
     Cmd.OfPromise.perform removeExpense (expId, account) (fun _ -> ChangeToTab ShowExpenses)
 
+let fileUploadCmd file =
+    Cmd.OfPromise.perform fileUpload file (fun blobName -> ReceiptUploaded blobName)
+
 let update message model =
     match message with
     | ChangeToTab newTab     -> changeTabTo newTab model
@@ -114,6 +118,9 @@ let update message model =
     | FileSelected fileName  -> { model with SelectedFile = match fileName with
                                                             | "" | null -> Option.None
                                                             | fileName  -> Some fileName }, Cmd.none
+    | FileUpload file        -> model, fileUploadCmd file
+    | ReceiptUploaded blob   -> printfn "Receipt %s uploaded" blob
+                                model, Cmd.none
     
     | AddNewExpense          -> emptyModel, addExpenseCmd model.Expense
                              
