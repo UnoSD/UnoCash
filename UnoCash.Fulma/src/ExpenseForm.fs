@@ -10,6 +10,7 @@ open UnoCash.Fulma.Helpers
 open UnoCash.Fulma.Models
 open UnoCash.Fulma.Config
 open Fable.Core.JsInterop
+open System
 
 let private buttons dispatch submitText =
     Card.footer []
@@ -108,7 +109,12 @@ let private expenseForm model dispatch =
         Field.div [ Field.IsGroupedMultiline ]
    
     let dateField =
-        Input.date [ Input.Value (model.Expense.Date.ToString("yyyy-MM-dd"))
+        let date =
+            match model.Expense.Date.ToString("yyyy-MM-dd") with
+            | "01-01-01" -> DateTime.Today.ToString("yyyy-MM-dd")
+            | d          -> d
+        
+        Input.date [ Input.Value date
                      Input.Props [ onChange ChangeDate dispatch ] ] |>
         simpleField "Date" Fa.Solid.CalendarDay
     

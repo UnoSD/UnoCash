@@ -11,10 +11,7 @@ let receiptParse blobName =
     promise {
         let url =
             sprintf "%s?blobName=%s" getReceiptDataUrl blobName
-        
-        (*let! receiptData =
-            Thoth.Fetch.Fetch.get<_, Receipt> (url, caseStrategy = CamelCase)*)
-        
+            
         let! response =
             Fetch.fetch url []
         
