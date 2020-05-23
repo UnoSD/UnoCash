@@ -46,6 +46,8 @@ namespace UnoCash.Core
             await blob.DownloadToStreamAsync(blobStream)
                       .ConfigureAwait(false);
 
+            blobStream.Seek(0, SeekOrigin.Begin);
+            
             string hash;
 
             using (var md5 = MD5.Create())
