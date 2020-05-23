@@ -67,3 +67,6 @@ let toDecimal value precision =
     match Decimal.TryParse(value) with
     | true, dec -> (dec * precisionMultiplier |> Decimal.Truncate) / precisionMultiplier
     | false, _  -> 0m
+
+let isSmallScreen =
+    Browser.Dom.window.screen.width <= 768.

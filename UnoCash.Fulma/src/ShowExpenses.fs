@@ -8,6 +8,7 @@ open UnoCash.Fulma.Models
 open UnoCash.Fulma.Messages
 open UnoCash.Fulma.Helpers
 open Feliz
+open System
 
 let private expensesTable model dispatch =
     let expensesRows =
@@ -23,16 +24,31 @@ let private expensesTable model dispatch =
             let editButton =
                 cellButton (EditExpense expense) Fa.Solid.PencilAlt
             
-            let cells =
+            let date =
+                DateTime.Parse(expense.date).ToString("dd/MM/yy")
+            
+            let allCells =
                 [
-                    expense.date
+                    date
                     expense.payee
                     expense.amount |> string
                     expense.status
                     expense.``type``
                     expense.tags
                     expense.description
-                ] |>
+                ]
+                
+            let cellsSubset =
+                [
+                    date
+                    expense.payee
+                    expense.amount |> string
+                ]
+            
+            let cells =
+                (match isSmallScreen with
+                 | true  -> cellsSubset
+                 | false -> allCells) |>
                 List.map (fun cellContent -> td [] [ str cellContent ])
             
             let cellsWithActions =
@@ -45,7 +61,7 @@ let private expensesTable model dispatch =
         model.Expenses |>
         Array.map row
     
-    let columns =
+    let allColumns =
         [
             "Date"
             "Payee"
@@ -54,7 +70,19 @@ let private expensesTable model dispatch =
             "Type"
             "Tags"
             "Description"
-        ] |>
+        ]
+        
+    let columnsSubset =
+        [
+            "Date"
+            "Payee"
+            "Amount"
+        ]
+        
+    let columns =
+        (match isSmallScreen with
+         | true  -> columnsSubset
+         | false -> allColumns) |>
         List.map (fun columnName -> th [] [ str columnName ])
     
     let columnsWithActions =
