@@ -150,13 +150,14 @@ let private expenseForm model dispatch =
         
         let file = ev.target?files?(0)
         
+        dispatch (FileSelected (file?name))
+        
         reader.onload <- (fun evt -> FileUpload (evt.target?result, file?name, evt?total) |> dispatch)
         
         reader.readAsArrayBuffer(file)
                  
     let fileLabelChildren =
-        [ File.input [ Props [ OnChange (fun ev -> FileSelected ev.Value |> dispatch)
-                               OnInput uploadFile ] ]
+        [ File.input [ Props [ OnInput uploadFile ] ]
           uploadButton
           File.name [] [ str receiptDisplayName ] ]
     
