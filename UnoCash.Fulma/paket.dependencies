@@ -19,6 +19,7 @@ nuget Fulma
 nuget Fulma.Elmish
 nuget Fulma.Extensions
 nuget Fulma.Extensions.Wikiki.Calendar
+nuget Thoth.Fetch
 
 group netcorebuild
     storage:none

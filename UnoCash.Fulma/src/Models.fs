@@ -20,6 +20,14 @@ type AlertType =
     | NoAlert
     | DuplicateTag
 
+type Receipt =
+    {
+        Payee : string option
+        Date : DateTime option
+        Method : string option
+        Amount : float option
+    }
+
 type ExpenseModel =
     {
         Amount : decimal

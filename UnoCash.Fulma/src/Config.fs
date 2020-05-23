@@ -8,7 +8,8 @@ let getExpensesUrl = "http://localhost:7071/api/GetExpenses"
 let addExpenseUrl = "http://localhost:7071/api/AddExpense"
 let deleteExpenseUrl = "http://localhost:7071/api/DeleteExpense"
 let receiptUploadSasTokenUrl = "http://localhost:7071/api/GetReceiptUploadSasToken"
-
+let getReceiptDataUrl = "http://localhost:7071/api/GetReceiptData"
+ 
 let storageAccount =
     "unocash"
 

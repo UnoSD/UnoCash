@@ -15,6 +15,7 @@ type Message =
     | FileSelected of string
     | FileUpload of (Blob * string * int)
     | ReceiptUploaded of string
+    | ShowParsedExpense of ExpenseModel
     | AddNewExpense
     | ChangeAccount of string
     | ChangeStatus of string

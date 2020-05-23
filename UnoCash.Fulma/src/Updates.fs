@@ -103,8 +103,7 @@ let fileUploadCmd blob name length =
     Cmd.OfPromise.perform fileUpload (blob, name, length) (fun blobName -> ReceiptUploaded blobName)
 
 let receiptParseCmd blobName =
-    printfn "Receipt %s uploaded" blobName
-    Cmd.none
+    Cmd.OfPromise.perform receiptParse blobName (fun result -> ShowParsedExpense result)
 
 let update message model =
     match message with
@@ -124,6 +123,7 @@ let update message model =
                                                             | fileName  -> Some fileName }, Cmd.none
     | FileUpload (b, n, l)   -> model, fileUploadCmd b n l
     | ReceiptUploaded blob   -> model, receiptParseCmd blob
+    | ShowParsedExpense exp  -> { model with Expense = exp }, Cmd.none
     
     | AddNewExpense          -> emptyModel, addExpenseCmd model.Expense
                              
