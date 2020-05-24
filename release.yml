@@ -46,6 +46,8 @@ steps:
     scriptLocation: inlineScript
     addSpnToEnvironment: true
     inlineScript: |
+      ls
+      echo "PIPPO"
       az group create \
         -l ${{ parameters.pulumi_backend_location }} \
         -n ${{ parameters.pulumi_backend_resource_group }}
