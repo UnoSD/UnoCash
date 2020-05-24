@@ -23,10 +23,10 @@ steps:
     scriptLocation: inlineScript
     addSpnToEnvironment: true
     inlineScript: |
-      az group create -l ${{ parameters.pulumi-backend-location }} -n ${{ parameters.pulumi-backend-resource-group }}
-      az storage account create -n $(backend-storage-account-name) -g ${{ parameters.pulumi-backend-resource-group }} -l ${{ parameters.pulumi-backend-location }} --sku Standard_LRS
+      az group create -l ${{ parameters.pulumibackendlocation }} -n ${{ parameters.pulumibackendresourcegroup }}
+      az storage account create -n $(backend-storage-account-name) -g ${{ parameters.pulumibackendresourcegroup }} -l ${{ parameters.pulumibackendlocation }} --sku Standard_LRS
       az storage container create -n unocash --account-name $(backend-storage-account-name)
-      az keyvault create --location ${{ parameters.pulumi-backend-location }} --name $(secrets-provider-keyvault-name) --resource-group ${{ parameters.pulumi-backend-resource-group }}
+      az keyvault create --location ${{ parameters.pulumibackendlocation }} --name $(secrets-provider-keyvault-name) --resource-group ${{ parameters.pulumibackendresourcegroup }}
       az keyvault set-policy --name unocashpulumi --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey --object-id $(az ad sp show --id $servicePrincipalId --query objectId -o tsv)
       az keyvault key create --name pulumi --vault-name $(secrets-provider-keyvault-name)
       
