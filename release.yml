@@ -12,12 +12,23 @@ steps:
     inlineScript: |
       az group create -l westeurope -n Pulumi
       az storage account create -n $(backend-storage-account-name) -g Pulumi -l westeurope --sku Standard_LRS
-      
+      az keyvault create --location westeurope --name $(secrets-provider-keyvault-name) --resource-group Pulumi
+
       export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
       
       echo "##vso[task.setvariable variable=AZURE_STORAGE_ACCOUNT]$(backend-storage-account-name)"
       echo "##vso[task.setvariable variable=AZURE_STORAGE_SAS_TOKEN;issecret=true]$(az storage account generate-sas --permissions cdlruwap --account-name $(backend-storage-account-name) --services b --resource-types sco --expiry $SAS_END -o tsv)"
-      echo "##vso[task.setvariable variable=PULUMI_CONFIG_PASSPHRASE;issecret=true]$(pulumi-passphrase)"
+
+- task: Pulumi@1
+  displayName: Initialize Pulumi stack
+  inputs:
+    azureSubscription: $(azure-subscription)
+    command: stack
+    loginArgs: azblob://unocash
+    args: init --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
+    cwd: UnoCash.Pulumi
+    stack: dev
+    createStack: true
 
 - task: Pulumi@1
   displayName: Preview infrastructure changes
@@ -27,4 +38,3 @@ steps:
     loginArgs: azblob://unocash
     cwd: UnoCash.Pulumi
     stack: dev
-    createStack: true
