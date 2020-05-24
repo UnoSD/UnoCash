@@ -1,0 +1,13 @@
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: $(azure-subscription)
+    scriptType: bash
+    scriptLocation: inlineScript
+    inlineScript: |
+      az group create -l westeurope -n Pulumi
+      az storage account create -n unosd-pulumi -g Pulumi -l westeurope --sku Standard_LRS
