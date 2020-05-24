@@ -24,6 +24,7 @@ steps:
     azureSubscription: $(azure-subscription)
     command: preview
     loginArgs: azblob://unocash
+    args: '--non-interactive'
     cwd: UnoCash.Pulumi
     stack: dev
     createStack: true
