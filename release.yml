@@ -15,7 +15,7 @@ steps:
       az storage account create -n $(backend-storage-account-name) -g Pulumi -l westeurope --sku Standard_LRS
       az storage container create -n unocash --account-name $(backend-storage-account-name)
       az keyvault create --location westeurope --name $(secrets-provider-keyvault-name) --resource-group Pulumi
-      az keyvault set-policy --name unocashpulumi --key-permissions encrypt --object-id $(az ad sp show --id $servicePrincipalId --query objectId -o tsv)
+      az keyvault set-policy --name unocashpulumi --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey --object-id $(az ad sp show --id $servicePrincipalId --query objectId -o tsv)
       
       export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
 
