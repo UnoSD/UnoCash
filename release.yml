@@ -40,4 +40,4 @@ steps:
     command: preview
     loginArgs: -c azblob://unocash
     cwd: UnoCash.Pulumi
-    stack: dev
+    stack: dev --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
