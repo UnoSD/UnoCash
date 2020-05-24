@@ -7,9 +7,17 @@ parameters:
     type: string
     default: WestEurope
     
+  - name: pulumi_keyvault_key
+    type: string
+    default: pulumi
+    
   - name: secrets_provider_keyvault_name
     type: string
     default: $(secrets-provider-keyvault-name)
+
+  - name: backend_storage_account_name
+    type: string
+    default: $(backend-storage-account-name)
     
   - name: azure_subscription
     type: string
@@ -24,7 +32,7 @@ steps:
   displayName: Create Pulumi backend storage account
   env:
     PULUMI_CONFIG_PASSPHRASE:
-    AZURE_STORAGE_ACCOUNT: $(backend-storage-account-name)
+    AZURE_STORAGE_ACCOUNT: ${{ parameters.backend_storage_account_name }}
   inputs:
     azureSubscription: ${{ parameters.azure_subscription }}
     scriptType: bash
@@ -35,32 +43,32 @@ steps:
         -l ${{ parameters.pulumi_backend_location }} \
         -n ${{ parameters.pulumi_backend_resource_group }}
       az storage account create \
-        -n $(backend-storage-account-name) \
+        -n ${{ parameters.backend_storage_account_name }} \
         -g ${{ parameters.pulumi_backend_resource_group }} \
         -l ${{ parameters.pulumi_backend_location }} \
         --sku Standard_LRS
       az storage container create \
         -n unocash \
-        --account-name $(backend-storage-account-name)
+        --account-name ${{ parameters.backend_storage_account_name }}
       az keyvault create \
         --location ${{ parameters.pulumi_backend_location }} \
         --name ${{ parameters.secrets_provider_keyvault_name }} \
         --resource-group ${{ parameters.pulumi_backend_resource_group }}
       az keyvault set-policy \
-        --name unocashpulumi \
+        --name ${{ parameters.secrets_provider_keyvault_name }} \
         --key-permissions encrypt \
         --object-id $(az ad sp show --id $servicePrincipalId --query objectId -o tsv)
       az keyvault key create \
-        --name pulumi \
+        --name ${{ parameters.pulumi_keyvault_key }} \
         --vault-name ${{ parameters.secrets_provider_keyvault_name }}
 
       export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
       export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
       export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas \
         --permissions cdlruwap \
-        --account-name $(backend-storage-account-name) \
+        --account-name ${{ parameters.backend_storage_account_name }} \
         --services b \
-        --resource-types sco \
+        --resource-types co \
         --expiry $SAS_END \
         -o tsv)
             
