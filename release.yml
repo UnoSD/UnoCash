@@ -6,6 +6,12 @@ parameters:
   - name: pulumi_backend_location
     type: string
     default: WestEurope
+    
+  - name: secrets_provider_keyvault_name
+    type: string
+    
+  - name: azure_subscription
+    type: string
 
 pool:
   vmImage: ubuntu-latest
@@ -18,7 +24,7 @@ steps:
     PULUMI_CONFIG_PASSPHRASE:
     AZURE_STORAGE_ACCOUNT: $(backend-storage-account-name)
   inputs:
-    azureSubscription: $(azure-subscription)
+    azureSubscription: ${{ parameters.azure_subscription }}
     scriptType: bash
     scriptLocation: inlineScript
     addSpnToEnvironment: true
@@ -36,7 +42,7 @@ steps:
         --account-name $(backend-storage-account-name)
       az keyvault create \
         --location ${{ parameters.pulumi_backend_location }} \
-        --name $(secrets-provider-keyvault-name) \
+        --name ${{ parameters.secrets_provider_keyvault_name }} \
         --resource-group ${{ parameters.pulumi_backend_resource_group }}
       az keyvault set-policy \
         --name unocashpulumi \
@@ -44,20 +50,31 @@ steps:
         --object-id $(az ad sp show --id $servicePrincipalId --query objectId -o tsv)
       az keyvault key create \
         --name pulumi \
-        --vault-name $(secrets-provider-keyvault-name)
-      
-      export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
-      export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas --permissions cdlruwap --account-name $(backend-storage-account-name) --services b --resource-types sco --expiry $SAS_END -o tsv)
+        --vault-name ${{ parameters.secrets_provider_keyvault_name }}
+
       export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
-      
-      export ARM_CLIENT_ID="$servicePrincipalId"
-      export ARM_CLIENT_SECRET="$servicePrincipalKey"
-      export ARM_TENANT_ID="$tenantId"
+      export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
+      export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas \
+        --permissions cdlruwap \
+        --account-name $(backend-storage-account-name) \
+        --services b \
+        --resource-types sco \
+        --expiry $SAS_END \
+        -o tsv)
+            
+      export ARM_CLIENT_ID=$servicePrincipalId
+      export ARM_CLIENT_SECRET=$servicePrincipalKey
+      export ARM_TENANT_ID=$tenantId
       export PATH="$PATH:/home/vsts/.pulumi/bin"
+      export KEYVAULT="${{ parameters.secrets_provider_keyvault_name }}.vault.azure.net"
       
       curl -fsSL https://get.pulumi.com | sh
       
       pulumi login -c azblob://unocash -C UnoCash.Pulumi
-      pulumi stack select dev -c -C UnoCash.Pulumi --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
+      
+      pulumi stack select dev \
+        -c \
+        -C UnoCash.Pulumi \
+        --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
 
       pulumi preview -C UnoCash.Pulumi
