@@ -1,9 +1,9 @@
 parameters:
-  - name: pulumi-backend-resource-group
+  - name: pulumibackendresourcegroup
     type: string
     default: Pulumi
     
-  - name: pulumi-backend-location
+  - name: pulumibackendlocation
     type: string
     default: WestEurope
 
