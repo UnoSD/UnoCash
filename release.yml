@@ -11,7 +11,6 @@ steps:
     ARM_CLIENT_ID: "$servicePrincipalId"
     ARM_CLIENT_SECRET: "$servicePrincipalKey"
     ARM_TENANT_ID: "$tenantId"
-    PATH: "$PATH:/home/vsts/.pulumi/bin"
     AZURE_STORAGE_ACCOUNT: $(backend-storage-account-name)
   inputs:
     azureSubscription: $(azure-subscription)
@@ -29,6 +28,7 @@ steps:
       export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
       export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas --permissions cdlruwap --account-name $(backend-storage-account-name) --services b --resource-types sco --expiry $SAS_END -o tsv)
       export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+      export PATH="$PATH:/home/vsts/.pulumi/bin"
       
       curl -fsSL https://get.pulumi.com | sh
       
