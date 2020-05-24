@@ -1,0 +1,5 @@
+name: UnoCash.Pulumi
+runtime: dotnet
+description: Infrastructure deployment
+backend:
+    url: azblob://unocash-pulumi
