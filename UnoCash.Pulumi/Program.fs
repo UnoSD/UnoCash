@@ -8,7 +8,7 @@ let infra () =
     let resourceGroup = ResourceGroup "UnoCash"
 
     let storageAccount =
-        Account("unocash-storage",
+        Account("unocashstorage",
                 AccountArgs(ResourceGroupName = io resourceGroup.Name,
                             AccountReplicationType = input "LRS",
                             AccountTier = input "Standard"))
