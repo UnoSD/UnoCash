@@ -8,7 +8,7 @@ open Pulumi.Azure.Core
 open Pulumi.Azure.Storage
 
 let infra () =
-    let resourceGroup = ResourceGroup "UnoCash"
+    (*let resourceGroup = ResourceGroup "UnoCash"
 
     let storageAccount =
         Account("unocashstorage",
@@ -28,7 +28,7 @@ let infra () =
                       Sku = input (PlanSkuArgs(Tier = input "Dynamic",
                                                Size = input "Y1"))))
     
-    (*let blob =
+    let blob =
         Blob("zip",
              BlobArgs(StorageAccountName = io storageAccount.Name,
                       StorageContainerName = io storageContainer.Name,
