@@ -25,6 +25,7 @@ steps:
       curl -fsSL https://get.pulumi.com | sh
       
       export PATH="$PATH:/home/vsts/.pulumi/bin"
+      export AZURE_KEYVAULT_AUTH_VIA_CLI=true
       
       pulumi login -c azblob://unocash -C UnoCash.Pulumi
       pulumi stack init dev -C UnoCash.Pulumi --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
