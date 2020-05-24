@@ -26,8 +26,8 @@ steps:
       
       export PATH="$PATH:/home/vsts/.pulumi/bin"
       
-      pulumi login -c azblob://unocash
-      pulumi stack init dev --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
+      pulumi login -c azblob://unocash -C UnoCash.Pulumi
+      pulumi stack init dev -C UnoCash.Pulumi --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
 
 - task: Pulumi@1
   displayName: Preview infrastructure changes
