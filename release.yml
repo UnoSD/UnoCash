@@ -24,8 +24,8 @@ steps:
   inputs:
     azureSubscription: $(azure-subscription)
     command: stack
-    loginArgs: azblob://unocash
-    args: init --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
+    loginArgs: azblob://unocash --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
+    args: init
     cwd: UnoCash.Pulumi
     stack: dev
     createStack: true
@@ -35,6 +35,6 @@ steps:
   inputs:
     azureSubscription: $(azure-subscription)
     command: preview
-    loginArgs: azblob://unocash
+    loginArgs: azblob://unocash --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
     cwd: UnoCash.Pulumi
     stack: dev
