@@ -29,6 +29,7 @@ steps:
     args: --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
     cwd: UnoCash.Pulumi
     stack: dev
+    createStack: true
 
 - task: Pulumi@1
   displayName: Preview infrastructure changes
