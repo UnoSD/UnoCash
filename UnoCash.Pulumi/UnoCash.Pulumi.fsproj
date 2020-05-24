@@ -9,6 +9,7 @@
   <ItemGroup>
     <Content Include="Pulumi.yaml" />
     <Content Include="Pulumi.dev.yaml" />
+    <Content Include="../release.yml" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

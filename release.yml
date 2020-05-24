@@ -10,4 +10,4 @@ steps:
     scriptLocation: inlineScript
     inlineScript: |
       az group create -l westeurope -n Pulumi
-      az storage account create -n unosd-pulumi -g Pulumi -l westeurope --sku Standard_LRS
+      az storage account create -n unosdpulumi -g Pulumi -l westeurope --sku Standard_LRS
