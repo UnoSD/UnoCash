@@ -1,3 +1,7 @@
+variables:
+  pulumi-backend-resource-group: Pulumi
+  platform: x64
+
 pool:
   vmImage: ubuntu-latest
 
@@ -6,7 +10,6 @@ steps:
 - task: AzureCLI@2
   displayName: Create Pulumi backend storage account
   env:
-    AZURE_KEYVAULT_AUTH_VIA_CLI: true
     PULUMI_CONFIG_PASSPHRASE: ""
     AZURE_STORAGE_ACCOUNT: $(backend-storage-account-name)
   inputs:
@@ -25,6 +28,7 @@ steps:
       export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
       export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas --permissions cdlruwap --account-name $(backend-storage-account-name) --services b --resource-types sco --expiry $SAS_END -o tsv)
       export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+      
       export ARM_CLIENT_ID="$servicePrincipalId"
       export ARM_CLIENT_SECRET="$servicePrincipalKey"
       export ARM_TENANT_ID="$tenantId"
@@ -36,13 +40,3 @@ steps:
       pulumi stack select dev -c -C UnoCash.Pulumi --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
 
       pulumi preview -C UnoCash.Pulumi
-
-# Awaiting support for --secrets-provider
-#- task: Pulumi@1
-#  displayName: Preview infrastructure changes
-#  inputs:
-#    azureSubscription: $(azure-subscription)
-#    command: preview
-#    loginArgs: -c azblob://unocash
-#    cwd: UnoCash.Pulumi
-#    stack: dev
