@@ -21,8 +21,9 @@ steps:
 - task: Pulumi@1
   displayName: Preview infrastructure changes
   inputs:
-    azureSubscription: '$(azure-subscription)'
-    command: 'preview'
-    loginArgs: 'azblob://unocash'
-    stack: 'dev'
+    azureSubscription: $(azure-subscription)
+    command: preview
+    loginArgs: azblob://unocash
+    cwd: UnoCash.Pulumi
+    stack: dev
     createStack: true
