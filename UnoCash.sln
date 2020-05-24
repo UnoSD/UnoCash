@@ -12,6 +12,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F5B95AAE-34C4-4BF7-B102-497DB46D4B4B}"
 	ProjectSection(SolutionItems) = preProject
 		TODO.md = TODO.md
+		UnoCash.Fulma\build.fsx = UnoCash.Fulma\build.fsx
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnoCash.Test", "UnoCash.Test\UnoCash.Test.csproj", "{F4CD8B1D-0DF5-4DF0-ABEC-7CCA7E2BD603}"
