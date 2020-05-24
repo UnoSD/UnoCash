@@ -29,11 +29,11 @@ pool:
 steps:
 
 - task: DotNetCoreCLI@2
-  displayName: Publish Function API
   inputs:
     command: publish
-    publishWebProjects: true
-    workingDirectory: UnoCash.Api/UnoCash.Api.csproj
+    publishWebProjects: false
+    projects: UnoCash.Api/UnoCash.Api.csproj
+    zipAfterPublish: false
 
 - task: AzureCLI@2
   displayName: Create Pulumi backend storage
