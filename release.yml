@@ -29,10 +29,11 @@ steps:
       
       export PATH="$PATH:/home/vsts/.pulumi/bin"
       export AZURE_KEYVAULT_AUTH_VIA_CLI=true
+      export PULUMI_CONFIG_PASSPHRASE=""
       
       pulumi login -c azblob://unocash -C UnoCash.Pulumi
       pulumi stack select dev -c -C UnoCash.Pulumi --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
-      
+
       pulumi preview -C UnoCash.Pulumi
 
 # Awaiting support for --secrets-provider
