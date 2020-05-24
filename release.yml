@@ -11,11 +11,11 @@ steps:
     scriptLocation: inlineScript
     inlineScript: |
       az group create -l westeurope -n Pulumi
-      az storage account create -n unosdpulumi -g Pulumi -l westeurope --sku Standard_LRS
+      az storage account create -n $(backend-storage-account-name) -g Pulumi -l westeurope --sku Standard_LRS
       
       export SAS_END=`date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ'`
-      export AZURE_STORAGE_ACCOUNT=unosdpulumi
-      export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas --permissions cdlruwap --account-name unosdpulumi --services b --resource-types sco --expiry $SAS_END -o tsv)
+      export AZURE_STORAGE_ACCOUNT=$(backend-storage-account-name)
+      export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas --permissions cdlruwap --account-name $(backend-storage-account-name) --services b --resource-types sco --expiry $SAS_END -o tsv)
 
 - task: Pulumi@1
   inputs:
