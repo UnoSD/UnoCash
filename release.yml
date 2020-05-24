@@ -4,7 +4,7 @@ pool:
 steps:
 
 - task: AzureCLI@2
-  displayName: "Create Pulumi backend storage account"
+  displayName: Create Pulumi backend storage account
   inputs:
     azureSubscription: $(azure-subscription)
     scriptType: bash
@@ -13,13 +13,13 @@ steps:
       az group create -l westeurope -n Pulumi
       az storage account create -n $(backend-storage-account-name) -g Pulumi -l westeurope --sku Standard_LRS
       
-      export SAS_END=`date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ'`
+      export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
       export AZURE_STORAGE_ACCOUNT=$(backend-storage-account-name)
       export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas --permissions cdlruwap --account-name $(backend-storage-account-name) --services b --resource-types sco --expiry $SAS_END -o tsv)
 
 - task: Pulumi@1
   inputs:
     azureSubscription: $(azure-subscription)
-    command: 'up'
-    loginArgs: 'azblob://unocash'
-    stack: 'dev'
+    command: preview
+    loginArgs: azblob://unocash
+    stack: dev
