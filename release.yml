@@ -33,7 +33,7 @@ steps:
   inputs:
     command: publish
     publishWebProjects: true
-    workingDirectory: UnoCash.Api
+    workingDirectory: UnoCash.Api/UnoCash.Api.csproj
 
 - task: AzureCLI@2
   displayName: Create Pulumi backend storage
@@ -46,8 +46,6 @@ steps:
     scriptLocation: inlineScript
     addSpnToEnvironment: true
     inlineScript: |
-      ls
-      echo "PIPPO"
       az group create \
         -l ${{ parameters.pulumi_backend_location }} \
         -n ${{ parameters.pulumi_backend_resource_group }}
