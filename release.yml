@@ -1,6 +1,6 @@
 variables:
   pulumi-backend-resource-group: Pulumi
-  platform: x64
+  pulumi-backend-location: westeurope
 
 pool:
   vmImage: ubuntu-latest
@@ -10,7 +10,7 @@ steps:
 - task: AzureCLI@2
   displayName: Create Pulumi backend storage account
   env:
-    PULUMI_CONFIG_PASSPHRASE: ""
+    PULUMI_CONFIG_PASSPHRASE:
     AZURE_STORAGE_ACCOUNT: $(backend-storage-account-name)
   inputs:
     azureSubscription: $(azure-subscription)
@@ -18,10 +18,10 @@ steps:
     scriptLocation: inlineScript
     addSpnToEnvironment: true
     inlineScript: |
-      az group create -l westeurope -n Pulumi
-      az storage account create -n $(backend-storage-account-name) -g Pulumi -l westeurope --sku Standard_LRS
+      az group create -l $(pulumi-backend-location) -n $(pulumi-backend-resource-group)
+      az storage account create -n $(backend-storage-account-name) -g $(pulumi-backend-resource-group) -l $(pulumi-backend-location) --sku Standard_LRS
       az storage container create -n unocash --account-name $(backend-storage-account-name)
-      az keyvault create --location westeurope --name $(secrets-provider-keyvault-name) --resource-group Pulumi
+      az keyvault create --location $(pulumi-backend-location) --name $(secrets-provider-keyvault-name) --resource-group $(pulumi-backend-resource-group)
       az keyvault set-policy --name unocashpulumi --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey --object-id $(az ad sp show --id $servicePrincipalId --query objectId -o tsv)
       az keyvault key create --name pulumi --vault-name $(secrets-provider-keyvault-name)
       
