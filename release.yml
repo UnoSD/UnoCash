@@ -23,12 +23,28 @@ steps:
     scriptLocation: inlineScript
     addSpnToEnvironment: true
     inlineScript: |
-      az group create -l ${{ parameters.pulumi_backend_location }} -n ${{ parameters.pulumi_backend_resource_group }}
-      az storage account create -n $(backend-storage-account-name) -g ${{ parameters.pulumi_backend_resource_group }} -l ${{ parameters.pulumi_backend_location }} --sku Standard_LRS
-      az storage container create -n unocash --account-name $(backend-storage-account-name)
-      az keyvault create --location ${{ parameters.pulumi_backend_location }} --name $(secrets-provider-keyvault-name) --resource-group ${{ parameters.pulumi_backend_resource_group }}
-      az keyvault set-policy --name unocashpulumi --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey --object-id $(az ad sp show --id $servicePrincipalId --query objectId -o tsv)
-      az keyvault key create --name pulumi --vault-name $(secrets-provider-keyvault-name)
+      az group create \
+        -l ${{ parameters.pulumi_backend_location }} \
+        -n ${{ parameters.pulumi_backend_resource_group }}
+      az storage account create \
+        -n $(backend-storage-account-name) \
+        -g ${{ parameters.pulumi_backend_resource_group }} \
+        -l ${{ parameters.pulumi_backend_location }} \
+        --sku Standard_LRS
+      az storage container create \
+        -n unocash \
+        --account-name $(backend-storage-account-name)
+      az keyvault create \
+        --location ${{ parameters.pulumi_backend_location }} \
+        --name $(secrets-provider-keyvault-name) \
+        --resource-group ${{ parameters.pulumi_backend_resource_group }}
+      az keyvault set-policy \
+        --name unocashpulumi \
+        --key-permissions encrypt \
+        --object-id $(az ad sp show --id $servicePrincipalId --query objectId -o tsv)
+      az keyvault key create \
+        --name pulumi \
+        --vault-name $(secrets-provider-keyvault-name)
       
       export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
       export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas --permissions cdlruwap --account-name $(backend-storage-account-name) --services b --resource-types sco --expiry $SAS_END -o tsv)
