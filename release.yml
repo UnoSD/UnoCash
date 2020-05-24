@@ -20,21 +20,12 @@ steps:
       echo "##vso[task.setvariable variable=AZURE_STORAGE_SAS_TOKEN;issecret=true]$(az storage account generate-sas --permissions cdlruwap --account-name $(backend-storage-account-name) --services b --resource-types sco --expiry $SAS_END -o tsv)"
 
 - task: Pulumi@1
-  displayName: Initialize Pulumi stack
-  inputs:
-    azureSubscription: $(azure-subscription)
-    command: stack
-    loginArgs: azblob://unocash --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
-    args: init
-    cwd: UnoCash.Pulumi
-    stack: dev
-    createStack: true
-
-- task: Pulumi@1
   displayName: Preview infrastructure changes
   inputs:
     azureSubscription: $(azure-subscription)
     command: preview
     loginArgs: azblob://unocash --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
+    args: --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
     cwd: UnoCash.Pulumi
     stack: dev
+    createStack: true
