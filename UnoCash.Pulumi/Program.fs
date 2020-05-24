@@ -28,7 +28,7 @@ let infra () =
                       Sku = input (PlanSkuArgs(Tier = input "Dynamic",
                                                Size = input "Y1"))))
     
-    let blob =
+    (*let blob =
         Blob("zip",
              BlobArgs(StorageAccountName = io storageAccount.Name,
                       StorageContainerName = io storageContainer.Name,
@@ -49,7 +49,8 @@ let infra () =
     
     dict [
         ("Hostname", app.DefaultHostname :> obj)
-    ]
+    ]*)
+    dict [ ("wd", System.Environment.CurrentDirectory :> obj) ]
 
 [<EntryPoint>]
 let main _ =
