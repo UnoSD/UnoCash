@@ -9,9 +9,11 @@ parameters:
     
   - name: secrets_provider_keyvault_name
     type: string
+    default: $(secrets-provider-keyvault-name)
     
   - name: azure_subscription
     type: string
+    default: $(azure-subscription)
 
 pool:
   vmImage: ubuntu-latest
