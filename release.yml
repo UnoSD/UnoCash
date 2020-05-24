@@ -24,9 +24,9 @@ steps:
   displayName: Preview infrastructure changes
   inputs:
     azureSubscription: $(azure-subscription)
-    command: stack
+    command: stack init
     loginArgs: -c azblob://unocash
-    args: init --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
+    args: --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
     cwd: UnoCash.Pulumi
 
 - task: Pulumi@1
