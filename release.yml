@@ -29,6 +29,7 @@ pool:
 steps:
 
 - task: DotNetCoreCLI@2
+  displayName: Publish Function API
   inputs:
     command: publish
     publishWebProjects: false
