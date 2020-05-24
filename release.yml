@@ -32,12 +32,15 @@ steps:
       
       pulumi login -c azblob://unocash -C UnoCash.Pulumi
       pulumi stack select dev -c -C UnoCash.Pulumi --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
+      
+      pulumi preview -C UnoCash.Pulumi
 
-- task: Pulumi@1
-  displayName: Preview infrastructure changes
-  inputs:
-    azureSubscription: $(azure-subscription)
-    command: preview
-    loginArgs: -c azblob://unocash
-    cwd: UnoCash.Pulumi
-    stack: dev --secrets-provider="azurekeyvault://$(secrets-provider-keyvault-name).vault.azure.net/keys/pulumi"
+# Awaiting support for --secrets-provider
+#- task: Pulumi@1
+#  displayName: Preview infrastructure changes
+#  inputs:
+#    azureSubscription: $(azure-subscription)
+#    command: preview
+#    loginArgs: -c azblob://unocash
+#    cwd: UnoCash.Pulumi
+#    stack: dev
