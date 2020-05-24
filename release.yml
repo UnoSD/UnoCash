@@ -17,6 +17,7 @@ steps:
       
       echo "##vso[task.setvariable variable=AZURE_STORAGE_ACCOUNT]$(backend-storage-account-name)"
       echo "##vso[task.setvariable variable=AZURE_STORAGE_SAS_TOKEN;issecret=true]$(az storage account generate-sas --permissions cdlruwap --account-name $(backend-storage-account-name) --services b --resource-types sco --expiry $SAS_END -o tsv)"
+      echo "##vso[task.setvariable variable=PULUMI_CONFIG_PASSPHRASE;issecret=true]$(pulumi-passphrase)"
 
 - task: Pulumi@1
   displayName: Preview infrastructure changes
@@ -24,7 +25,6 @@ steps:
     azureSubscription: $(azure-subscription)
     command: preview
     loginArgs: azblob://unocash
-    args: '--non-interactive'
     cwd: UnoCash.Pulumi
     stack: dev
     createStack: true
