@@ -11,3 +11,10 @@ steps:
     inlineScript: |
       az group create -l westeurope -n Pulumi
       az storage account create -n unosdpulumi -g Pulumi -l westeurope --sku Standard_LRS
+
+- task: Pulumi@1
+  inputs:
+    azureSubscription: $(azure-subscription)
+    command: 'up'
+    loginArgs: 'azblob://unocash'
+    stack: 'dev'
