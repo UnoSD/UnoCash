@@ -33,7 +33,7 @@ let infra () =
              BlobArgs(StorageAccountName = io storageAccount.Name,
                       StorageContainerName = io storageContainer.Name,
                       Type = input "Block",
-                      Source = input (FileArchive("../UnoCash.Api/bin/Debug/netcoreapp3.1/publish") :> AssetOrArchive)))
+                      Source = input ((Pulumi.Config().Require("ApiBuild") |> FileAsset) :> AssetOrArchive)))
     
     let codeBlobUrl =
         SharedAccessSignature.SignedBlobReadUrl(blob, storageAccount)
