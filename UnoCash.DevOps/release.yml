@@ -133,7 +133,7 @@ stages:
               export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
               export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
               export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas \
-                --permissions lrp \
+                --permissions lr \
                 --account-name ${{ parameters.backend_storage_account_name }} \
                 --services b \
                 --resource-types co \
@@ -196,7 +196,7 @@ stages:
                   export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
                   export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
                   export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas \
-                    --permissions lrp \
+                    --permissions lrwc \
                     --account-name ${{ parameters.backend_storage_account_name }} \
                     --services b \
                     --resource-types co \
@@ -245,7 +245,7 @@ stages:
                     export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
                     export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
                     export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas \
-                      --permissions lrp \
+                      --permissions lrwc \
                       --account-name ${{ parameters.backend_storage_account_name }} \
                       --services b \
                       --resource-types co \
