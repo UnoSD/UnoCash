@@ -1,5 +1,10 @@
 trigger:
-- master
+  branches: 
+    include: master
+  paths:
+    exclude:
+    - UnoCash.Pulumi/*
+    - UnoCash.DevOps/release.yml
 
 pool:
   vmImage: ubuntu-latest
