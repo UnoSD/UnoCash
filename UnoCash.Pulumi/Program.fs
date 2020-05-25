@@ -30,7 +30,7 @@ let infra () =
         Container("unocashweb",
                   ContainerArgs(StorageAccountName = io storageAccount.Name,
                                 Name = input "$web",
-                                ContainerAccessType = input "public"))
+                                ContainerAccessType = input "blob"))
     
     let appServicePlan =
         Plan("unocashasp",
