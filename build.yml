@@ -1,0 +1,14 @@
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: DotNetCoreCLI@2
+  displayName: Publish Function API
+  inputs:
+    command: publish
+    publishWebProjects: false
+    projects: UnoCash.Api/UnoCash.Api.csproj
+    zipAfterPublish: false
