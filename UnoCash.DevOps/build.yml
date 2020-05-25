@@ -9,7 +9,7 @@ steps:
   inputs:
     command: custom
     custom: new
-    arguments: tool-manifest
+    arguments: tool-manifest --force
     workingDirectory: UnoCash.Fulma
 
 - task: DotNetCoreCLI@2
