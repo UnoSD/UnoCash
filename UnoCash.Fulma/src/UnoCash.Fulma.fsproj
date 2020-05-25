@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="GetExpenses.json" />
     <Compile Include="Config.fs" />
     <Compile Include="Helpers.fs" />
     <Compile Include="Models.fs" />

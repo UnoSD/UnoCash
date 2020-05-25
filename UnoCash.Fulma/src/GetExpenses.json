@@ -1,0 +1,35 @@
+[
+  {
+    "amount": 66.66,
+    "payee": "Asda",
+    "description": "OK",
+    "date": "2020-05-16T00:00:00Z",
+    "account": "Current",
+    "type": "Internal transfer",
+    "status": "Pending",
+    "tags": "bigstuff,groceries",
+    "id": "5ebff7a9-1e3f-45ee-8bb3-9fd664f12a69"
+  },
+  {
+    "amount": 99.0,
+    "payee": "Tesco",
+    "description": "",
+    "date": "2020-05-02T23:00:00Z",
+    "account": "Current",
+    "type": "Regular",
+    "status": "New",
+    "tags": "pippo",
+    "id": "7b7c8918-8847-4be0-a85f-4824b7056d92"
+  },
+  {
+    "amount": 9.22,
+    "payee": "SHOPPING STORE",
+    "description": "Peppe",
+    "date": "2019-05-02T23:00:00Z",
+    "account": "Current",
+    "type": "Regular",
+    "status": "New",
+    "tags": "groceries",
+    "id": "ea3e9214-1c91-4263-9e29-f4345b7e4163"
+  }
+]
