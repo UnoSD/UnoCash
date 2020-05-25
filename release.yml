@@ -106,7 +106,7 @@ stages:
               -C UnoCash.Pulumi \
               --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
 
-            pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api.zip" -C UnoCash.Pulumi
+            pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
             pulumi preview -C UnoCash.Pulumi
       
       - task: Cache@2
