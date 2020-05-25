@@ -102,6 +102,11 @@ stages:
               --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
 
             pulumi preview -C UnoCash.Pulumi
+      
+      - task: Cache@2
+        inputs:
+          key: 'pulumi'
+          path: '/home/vsts/.pulumi'
 
 - stage: Development_preview
   displayName: Development preview
@@ -120,7 +125,7 @@ stages:
             scriptLocation: inlineScript
             addSpnToEnvironment: true
             inlineScript: |
-              echo "Placeholder"      
+              pulumi preview -C UnoCash.Pulumi
 
 - stage: Development_deploy
   displayName: Development deploy
