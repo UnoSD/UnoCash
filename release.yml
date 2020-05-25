@@ -103,8 +103,8 @@ stages:
 
             pulumi preview -C UnoCash.Pulumi
 
-- stage: Preview
-  displayName: Preview
+- stage: Development_preview
+  displayName: Development preview
   dependsOn: Set_up
   jobs:
     - job: Preview
@@ -122,9 +122,9 @@ stages:
             inlineScript: |
               echo "Placeholder"      
 
-- stage: Development
-  displayName: Development
-  dependsOn: Set_up
+- stage: Development_deploy
+  displayName: Development deploy
+  dependsOn: Development_preview
   jobs:
     - deployment: Up
       environment: dev
