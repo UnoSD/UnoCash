@@ -105,9 +105,6 @@ stages:
               -c \
               -C UnoCash.Pulumi \
               --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
-
-            pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
-            pulumi preview -C UnoCash.Pulumi
       
       - task: Cache@2
         displayName: Cache Pulumi installation
@@ -132,8 +129,32 @@ stages:
             scriptLocation: inlineScript
             addSpnToEnvironment: true
             inlineScript: |
+              export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+              export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
+              export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas \
+                --permissions lrp \
+                --account-name ${{ parameters.backend_storage_account_name }} \
+                --services b \
+                --resource-types co \
+                --expiry $SAS_END \
+                -o tsv)
+  
+              export ARM_CLIENT_ID=$servicePrincipalId
+              export ARM_CLIENT_SECRET=$servicePrincipalKey
+              export ARM_TENANT_ID=$tenantId
               export PATH="$PATH:/home/vsts/.pulumi/bin"
-              ls /home/vsts/.pulumi
+              export KEYVAULT="${{ parameters.secrets_provider_keyvault_name }}.vault.azure.net"
+  
+              curl -fsSL https://get.pulumi.com | sh
+  
+              pulumi login -c azblob://unocash -C UnoCash.Pulumi
+  
+              pulumi stack select dev \
+                -C UnoCash.Pulumi \
+                --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
+  
+              pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
+              
               pulumi preview -C UnoCash.Pulumi
 
 - stage: Development_deploy
@@ -157,4 +178,30 @@ stages:
                 scriptLocation: inlineScript
                 addSpnToEnvironment: true
                 inlineScript: |
-                  echo "Placeholder"
+                  export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+                  export SAS_END=$(date -u -d "30 minutes" '+%Y-%m-%dT%H:%MZ')
+                  export AZURE_STORAGE_SAS_TOKEN=$(az storage account generate-sas \
+                    --permissions lrp \
+                    --account-name ${{ parameters.backend_storage_account_name }} \
+                    --services b \
+                    --resource-types co \
+                    --expiry $SAS_END \
+                    -o tsv)
+    
+                  export ARM_CLIENT_ID=$servicePrincipalId
+                  export ARM_CLIENT_SECRET=$servicePrincipalKey
+                  export ARM_TENANT_ID=$tenantId
+                  export PATH="$PATH:/home/vsts/.pulumi/bin"
+                  export KEYVAULT="${{ parameters.secrets_provider_keyvault_name }}.vault.azure.net"
+    
+                  curl -fsSL https://get.pulumi.com | sh
+    
+                  pulumi login -c azblob://unocash -C UnoCash.Pulumi
+    
+                  pulumi stack select dev \
+                    -C UnoCash.Pulumi \
+                    --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
+    
+                  pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
+    
+                  pulumi up -C UnoCash.Pulumi --yes
