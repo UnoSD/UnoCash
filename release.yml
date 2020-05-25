@@ -115,14 +115,14 @@ stages:
           deploy:
             steps:
             - task: AzureCLI@2
-                displayName: Pulumi preview
-                env:
-                  PULUMI_CONFIG_PASSPHRASE:
-                  AZURE_STORAGE_ACCOUNT: ${{ parameters.backend_storage_account_name }}
-                inputs:
-                  azureSubscription: ${{ parameters.azure_subscription }}
-                  scriptType: bash
-                  scriptLocation: inlineScript
-                  addSpnToEnvironment: true
-                  inlineScript: |
-                    echo "Placeholder"
+              displayName: Pulumi preview
+              env:
+                PULUMI_CONFIG_PASSPHRASE:
+                AZURE_STORAGE_ACCOUNT: ${{ parameters.backend_storage_account_name }}
+              inputs:
+                azureSubscription: ${{ parameters.azure_subscription }}
+                scriptType: bash
+                scriptLocation: inlineScript
+                addSpnToEnvironment: true
+                inlineScript: |
+                  echo "Placeholder"
