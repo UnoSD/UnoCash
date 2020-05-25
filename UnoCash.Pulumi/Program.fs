@@ -32,7 +32,7 @@ let infra () =
         Blob("zip",
              BlobArgs(StorageAccountName = io storageAccount.Name,
                       StorageContainerName = io storageContainer.Name,
-                      Type = input "block",
+                      Type = input "Block",
                       Source = input (FileArchive("../UnoCash.Api/bin/Debug/netcoreapp3.1/publish") :> AssetOrArchive)))
     
     let codeBlobUrl =
