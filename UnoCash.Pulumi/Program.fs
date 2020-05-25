@@ -26,11 +26,11 @@ let infra () =
                   ContainerArgs(StorageAccountName = io storageAccount.Name,
                                 ContainerAccessType = input "private"))
     
-    let staticWebsiteStorageContainer =
-        Container("unocashweb",
-                  ContainerArgs(StorageAccountName = io storageAccount.Name,
-                                Name = input "$web",
-                                ContainerAccessType = input "blob"))
+    //let staticWebsiteStorageContainer =
+    //    Container("unocashweb",
+    //              ContainerArgs(StorageAccountName = io storageAccount.Name,
+    //                            Name = input "$web",
+    //                            ContainerAccessType = input "blob"))
     
     let appServicePlan =
         Plan("unocashasp",
@@ -71,7 +71,7 @@ let infra () =
     let _ =
         Blob("unocashwebconfig",
              BlobArgs(StorageAccountName = io storageAccount.Name,
-                      StorageContainerName = io staticWebsiteStorageContainer.Name,
+                      StorageContainerName = input "$web", //io staticWebsiteStorageContainer.Name,
                       Type = input "Block",
                       Name = input "apibaseurl",
                       Source = io (app.DefaultHostname.Apply (fun x -> x |>
