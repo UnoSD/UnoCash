@@ -221,8 +221,8 @@ stages:
   displayName: Development destroy
   dependsOn: Development_deploy
   jobs:
-    - deployment: Up
-      environment: dev
+    - deployment: Destroy
+      environment: dev_destroy
       strategy:
         runOnce:
           deploy:
