@@ -42,25 +42,22 @@ steps:
     custom: fake
     arguments: build
     workingDirectory: UnoCash.Fulma
-  
-- task: DotNetCoreCLI@2
-  displayName: Build Function API
-  inputs:
-    command: publish
-    publishWebProjects: false
-    projects: UnoCash.Api/UnoCash.Api.csproj
-    arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
-    zipAfterPublish: true
-  
-- task: DotNetCoreCLI@2
-  displayName: Build Function API
-  inputs:
-    command: publish
-    publishWebProjects: false
-    projects: UnoCash.Api/UnoCash.Api.csproj
-    arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
-    zipAfterPublish: true
 
+- task: PublishBuildArtifacts@1
+  displayName: Publish Fable project
+  inputs:
+    pathtoPublish: UnoCash.Fulma/output
+    artifactName: UnoCash.Fulma
+  
+- task: DotNetCoreCLI@2
+  displayName: Build Function API
+  inputs:
+    command: publish
+    publishWebProjects: false
+    projects: UnoCash.Api/UnoCash.Api.csproj
+    arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: true
+  
 - task: PublishBuildArtifacts@1
   displayName: Publish Function API
   inputs:
