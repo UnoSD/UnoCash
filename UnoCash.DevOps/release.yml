@@ -223,7 +223,7 @@ stages:
 
 - stage: Development_destroy
   displayName: Development destroy
-  dependsOn: Development_deploy
+  dependsOn: Set_up
   jobs:
     - deployment: Destroy
       environment: dev_destroy
@@ -231,6 +231,8 @@ stages:
         runOnce:
           deploy:
             steps:
+              - checkout: self
+
               - task: AzureCLI@2
                 displayName: Pulumi destroy
                 env:
