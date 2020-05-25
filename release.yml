@@ -34,14 +34,6 @@ stages:
   jobs:
     - job: Pulumi
       steps:
-      - task: DotNetCoreCLI@2
-        displayName: Publish Function API
-        inputs:
-          command: publish
-          publishWebProjects: false
-          projects: UnoCash.Api/UnoCash.Api.csproj
-          zipAfterPublish: false
-          
       - task: AzureCLI@2
         displayName: Create backend storage
         env:

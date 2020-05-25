@@ -6,7 +6,7 @@ pool:
 
 steps:
 - task: DotNetCoreCLI@2
-  displayName: Publish Function API
+  displayName: Build Function API
   inputs:
     command: publish
     publishWebProjects: false
@@ -15,6 +15,7 @@ steps:
     zipAfterPublish: true
 
 - task: PublishBuildArtifacts@1
+  displayName: Publish Function API
   inputs:
     pathtoPublish: $(Build.ArtifactStagingDirectory)
     artifactName: UnoCash.Api

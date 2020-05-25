@@ -11,6 +11,9 @@
     <Content Include="Pulumi.dev.yaml" />
     <Content Include="../release.yml" />
     <Compile Include="Program.fs" />
+    <Content Include="..\build.yml">
+      <Link>build.yml</Link>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
