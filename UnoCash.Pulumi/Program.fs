@@ -4,6 +4,7 @@ open Pulumi
 open Pulumi.Azure.AppInsights
 open Pulumi.Azure.AppService
 open Pulumi.Azure.AppService.Inputs
+open Pulumi.Azure.Storage.Inputs
 open Pulumi.FSharp
 open Pulumi.Azure.Core
 open Pulumi.Azure.Storage
@@ -16,12 +17,20 @@ let infra () =
         Account("unocashstorage",
                 AccountArgs(ResourceGroupName = io resourceGroup.Name,
                             AccountReplicationType = input "LRS",
-                            AccountTier = input "Standard"))
+                            AccountTier = input "Standard",
+                            EnableHttpsTrafficOnly = input true,
+                            StaticWebsite = input (AccountStaticWebsiteArgs(IndexDocument = input "index.html"))))
 
     let storageContainer =
         Container("unocashbuild",
                   ContainerArgs(StorageAccountName = io storageAccount.Name,
                                 ContainerAccessType = input "private"))
+    
+    let staticWebsiteStorageContainer =
+        Container("unocashweb",
+                  ContainerArgs(StorageAccountName = io storageAccount.Name,
+                                Name = input "$web",
+                                ContainerAccessType = input "public"))
     
     let appServicePlan =
         Plan("unocashasp",
@@ -62,6 +71,7 @@ let infra () =
     dict [
         ("Hostname", app.DefaultHostname :> obj)
         ("StorageAccount", storageAccount.Name :> obj)
+        ("SiteEndpoint", storageAccount.PrimaryWebEndpoint :> obj)
     ]
 
 [<EntryPoint>]
