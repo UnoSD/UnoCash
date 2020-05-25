@@ -25,6 +25,8 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "UnoCash.Fulma", "UnoCash.Fu
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "UnoCash.Pulumi", "UnoCash.Pulumi\UnoCash.Pulumi.fsproj", "{2DBEB983-D013-47F8-971B-537FD8DFC6C2}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "UnoCash.DevOps", "UnoCash.DevOps\UnoCash.DevOps.fsproj", "{C225663B-9CE7-4DDA-96DC-47152B8F9E3F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{2DBEB983-D013-47F8-971B-537FD8DFC6C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DBEB983-D013-47F8-971B-537FD8DFC6C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DBEB983-D013-47F8-971B-537FD8DFC6C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C225663B-9CE7-4DDA-96DC-47152B8F9E3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C225663B-9CE7-4DDA-96DC-47152B8F9E3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C225663B-9CE7-4DDA-96DC-47152B8F9E3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C225663B-9CE7-4DDA-96DC-47152B8F9E3F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
