@@ -2,13 +2,11 @@ module UnoCash.Fulma.Config
 
 open Fable.FontAwesome
 
-[<Literal>]
-let expenseSampleUrl = "http://localhost:7071/api/GetExpenses?account=Current"
-let getExpensesUrl = "http://localhost:7071/api/GetExpenses"
-let addExpenseUrl = "http://localhost:7071/api/AddExpense"
-let deleteExpenseUrl = "http://localhost:7071/api/DeleteExpense"
-let receiptUploadSasTokenUrl = "http://localhost:7071/api/GetReceiptUploadSasToken"
-let getReceiptDataUrl = "http://localhost:7071/api/GetReceiptData"
+let getExpensesUrl = sprintf "%s/api/GetExpenses"
+let addExpenseUrl = sprintf "%s/api/AddExpense"
+let deleteExpenseUrl = sprintf "%s/api/DeleteExpense"
+let receiptUploadSasTokenUrl = sprintf "%s/api/GetReceiptUploadSasToken"
+let getReceiptDataUrl = sprintf "%s/api/GetReceiptData"
  
 let storageAccount =
     "unocash"

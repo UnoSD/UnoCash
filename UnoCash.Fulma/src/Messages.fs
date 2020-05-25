@@ -24,3 +24,4 @@ type Message =
     | ChangeDescription of string
     | DeleteExpense of string
     | EditExpense of Expense
+    | SetApiBaseUrl of string

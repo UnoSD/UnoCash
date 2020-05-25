@@ -68,6 +68,17 @@ let infra () =
                                     StorageAccountAccessKey = io storageAccount.PrimaryAccessKey,
                                     Version = input "~3"))
     
+    let _ =
+        Blob("unocashwebconfig",
+             BlobArgs(StorageAccountName = io storageAccount.Name,
+                      StorageContainerName = io staticWebsiteStorageContainer.Name,
+                      Type = input "Block",
+                      Name = input "apibaseurl",
+                      Source = io (app.DefaultHostname.Apply (fun x -> x |>
+                                                                       sprintf "https://%s" |>
+                                                                       StringAsset :>
+                                                                       AssetOrArchive))))
+    
     dict [
         ("Hostname", app.DefaultHostname :> obj)
         ("StorageAccount", storageAccount.Name :> obj)

@@ -52,6 +52,7 @@ type ReceiptAnalysis =
 
 type Model =
     {
+        ApiBaseUrl : string
         CurrentTab : Tab
         TagsText : string
         Alert : AlertType
@@ -67,6 +68,7 @@ type Model =
     
 let emptyModel = 
     {
+        ApiBaseUrl = "http://localhost:7071"
         CurrentTab = AddExpense
         TagsText = ""
         Alert = NoAlert

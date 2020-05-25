@@ -10,18 +10,22 @@ open UnoCash.Fulma.Upload
 open Fetch
 open Fable.Core
 
-let init _ =
-    emptyModel, Cmd.none
+let private loadConfig () =
+    fetch "/apibaseurl" [] |>
+    Promise.bind (fun x -> x.text())
 
-let private loadExpenses account =
-    fetch (sprintf "%s?account=%s" getExpensesUrl account) [] |>
+let init _ =
+    emptyModel, Cmd.OfPromise.perform loadConfig () SetApiBaseUrl
+
+let private loadExpenses (account, apiBaseUrl) =
+    fetch (sprintf "%s?account=%s" (getExpensesUrl apiBaseUrl) account) [] |>
     Promise.bind (fun x -> x.text()) |>
     Promise.map Expense.ParseArray
 
-let private loadExpensesCmd account =
-    Cmd.OfPromise.perform loadExpenses account ShowExpensesLoaded
+let private loadExpensesCmd account apiBaseUrl =
+    Cmd.OfPromise.perform loadExpenses (account, apiBaseUrl) ShowExpensesLoaded
 
-let private addExpense model =
+let private addExpense (model, apiBaseUrl) =
     let dateString =
         model.Date.ToString "O"
         
@@ -54,12 +58,12 @@ let private addExpense model =
                      tagsCsv
                      newId
     
-    Fetch.fetch addExpenseUrl
+    Fetch.fetch (addExpenseUrl apiBaseUrl)
                 [ Method HttpMethod.POST
                   Body <| U3.Case3 body ]
 
-let private removeExpense (id, account) =
-    Fetch.fetch (sprintf "%s?id=%s&account=%s" deleteExpenseUrl id account)
+let private removeExpense (id, account, apiBaseUrl) =
+    Fetch.fetch (sprintf "%s?id=%s&account=%s" (deleteExpenseUrl apiBaseUrl) id account)
                 [ Method HttpMethod.DELETE ]
     
 let private toModel (expense : Expense) =
@@ -76,7 +80,7 @@ let private toModel (expense : Expense) =
 
 let private changeTabTo tab model =
     match tab with
-    | ShowExpenses -> { model with CurrentTab = tab }, loadExpensesCmd model.ShowAccount
+    | ShowExpenses -> { model with CurrentTab = tab }, loadExpensesCmd model.ShowAccount model.ApiBaseUrl
     | AddExpense   -> emptyModel, Cmd.none
     | _            -> { model with CurrentTab = tab }, Cmd.none
 
@@ -93,20 +97,22 @@ let private addTagOnEnter key tag model =
 let private withoutTag tagName expense =
     { expense with Tags = expense.Tags |> List.except [ tagName ] }
 
-let addExpenseCmd expense =
-    Cmd.OfPromise.perform addExpense expense (fun _ -> ChangeToTab AddExpense)
+let addExpenseCmd expense apiBaseUrl =
+    Cmd.OfPromise.perform addExpense (expense, apiBaseUrl) (fun _ -> ChangeToTab AddExpense)
 
-let removeExpenseCmd expId account =
-    Cmd.OfPromise.perform removeExpense (expId, account) (fun _ -> ChangeToTab ShowExpenses)
+let removeExpenseCmd expId account apiBaseUrl =
+    Cmd.OfPromise.perform removeExpense (expId, account, apiBaseUrl) (fun _ -> ChangeToTab ShowExpenses)
 
-let fileUploadCmd blob name length =
-    Cmd.OfPromise.perform fileUpload (blob, name, length) (fun blobName -> ReceiptUploaded blobName)
+let fileUploadCmd blob name length apiBaseUrl =
+    Cmd.OfPromise.perform fileUpload (blob, name, length, apiBaseUrl) (fun blobName -> ReceiptUploaded blobName)
 
-let receiptParseCmd blobName =
-    Cmd.OfPromise.perform receiptParse blobName (fun result -> ShowParsedExpense result)
+let receiptParseCmd blobName apiBaseUrl =
+    Cmd.OfPromise.perform receiptParse (blobName, apiBaseUrl) (fun result -> ShowParsedExpense result)
 
 let update message model =
     match message with
+    | SetApiBaseUrl apiHost     -> { model with ApiBaseUrl = apiHost }, Cmd.none
+    
     | ChangeToTab newTab     -> changeTabTo newTab model
                                 
     | TagsKeyDown (key, tag) -> addTagOnEnter key tag model
@@ -122,13 +128,13 @@ let update message model =
                                                             | "" | null -> Option.None
                                                             | fileName  -> Some fileName }, Cmd.none
     | FileUpload (b, n, l)   -> { model with ReceiptAnalysis = { model.ReceiptAnalysis with Status = InProgress } },
-                                fileUploadCmd b n l
-    | ReceiptUploaded blob   -> model, receiptParseCmd blob
+                                fileUploadCmd b n l model.ApiBaseUrl
+    | ReceiptUploaded blob   -> model, receiptParseCmd blob model.ApiBaseUrl
     | ShowParsedExpense exp  -> { model with Expense = exp
                                              ReceiptAnalysis = { model.ReceiptAnalysis with Status = Completed } },
                                 Cmd.none
     
-    | AddNewExpense          -> emptyModel, addExpenseCmd model.Expense
+    | AddNewExpense          -> emptyModel, addExpenseCmd model.Expense model.ApiBaseUrl
                              
     | ChangePayee text       -> { model with Expense = { model.Expense with Payee = text } }, Cmd.none
     | ChangeDate newDate     -> { model with Expense = { model.Expense with Date = DateTime.Parse(newDate) } },
@@ -142,8 +148,8 @@ let update message model =
                              
     | ChangeShowAccount acc  -> match model.ShowAccount = acc with
                                 | true  -> model, Cmd.none
-                                | false -> { model with ShowAccount = acc }, loadExpensesCmd acc
+                                | false -> { model with ShowAccount = acc }, loadExpensesCmd acc model.ApiBaseUrl
                                 
-    | DeleteExpense expId    -> model, removeExpenseCmd expId model.ShowAccount
+    | DeleteExpense expId    -> model, removeExpenseCmd expId model.ShowAccount model.ApiBaseUrl
     | EditExpense expense    -> { model with Expense = expense |> toModel
                                              CurrentTab = Tab.EditExpense }, Cmd.none

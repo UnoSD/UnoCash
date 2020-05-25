@@ -7,10 +7,10 @@ open UnoCash.Fulma.Models
 open Thoth.Json
 open System
 
-let receiptParse blobName =
+let receiptParse (blobName, apiBaseUrl) =
     promise {
         let url =
-            sprintf "%s?blobName=%s" getReceiptDataUrl blobName
+            sprintf "%s?blobName=%s" (getReceiptDataUrl apiBaseUrl) blobName
             
         let! response =
             Fetch.fetch url []
@@ -42,10 +42,10 @@ let receiptParse blobName =
     }
 
 
-let fileUpload (blob, name, contentLength) =
+let fileUpload (blob, name, contentLength, apiBaseUrl) =
     promise {
         let! response =
-            Fetch.fetch receiptUploadSasTokenUrl []
+            Fetch.fetch (receiptUploadSasTokenUrl apiBaseUrl) []
         
         let! sasToken =
             response.text()
