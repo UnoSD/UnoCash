@@ -247,14 +247,29 @@ stages:
                   
                   echo "##vso[task.setvariable variable=StorageAccount]$(pulumi stack output StorageAccount -C UnoCash.Pulumi)"
 
-            - task: AzureFileCopy@4
+            #- task: AzureFileCopy@4
+            #  displayName: Publish static website to blob storage
+            #  inputs:
+            #    SourcePath: $(System.ArtifactsDirectory)/UnoCash.Fulma
+            #    azureSubscription: ${{ parameters.azure_subscription }}
+            #    Destination: AzureBlob
+            #    storage: $(StorageAccount)
+            #    ContainerName: '$web'
+            - task: AzureCLI@2
               displayName: Publish static website to blob storage
+              env:
+                PULUMI_CONFIG_PASSPHRASE:
+                AZURE_STORAGE_ACCOUNT: ${{ parameters.backend_storage_account_name }}
               inputs:
-                SourcePath: $(System.ArtifactsDirectory)/UnoCash.Fulma
                 azureSubscription: ${{ parameters.azure_subscription }}
-                Destination: AzureBlob
-                storage: $(StorageAccount)
-                ContainerName: '$web'
+                scriptType: bash
+                scriptLocation: inlineScript
+                inlineScript: |
+                  az storage blob upload-batch \
+                    -d '$web' \
+                    --account-name $(StorageAccount) \
+                    -s "$(System.ArtifactsDirectory)/UnoCash.Fulma"
+            
 
 - stage: Development_destroy
   displayName: Development destroy
