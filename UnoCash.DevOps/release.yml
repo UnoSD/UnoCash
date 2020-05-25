@@ -248,6 +248,7 @@ stages:
                   echo "##vso[task.setvariable variable=StorageAccount]$(pulumi stack output StorageAccount -C UnoCash.Pulumi)"
 
             - task: AzureFileCopy@4
+              displayName: Publish static website to blob storage
               inputs:
                 SourcePath: $(System.ArtifactsDirectory)/UnoCash.Fulma
                 azureSubscription: ${{ parameters.azure_subscription }}
