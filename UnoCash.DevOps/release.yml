@@ -105,6 +105,8 @@ stages:
   jobs:
     - job: Preview
       steps:
+        - checkout: self
+          
         - task: DownloadBuildArtifacts@0
           displayName: Download build artifacts for API
           inputs:
@@ -166,6 +168,8 @@ stages:
         runOnce:
           deploy:
             steps:
+            - checkout: self                
+                
             - task: DownloadBuildArtifacts@0
               displayName: Download build artifacts for API
               inputs:
