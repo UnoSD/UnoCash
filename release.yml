@@ -102,3 +102,27 @@ stages:
               --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
       
             pulumi preview -C UnoCash.Pulumi
+
+- stage: Preview
+  displayName: Pulumi preview
+  dependsOn: Set_up
+  jobs:
+    - job: Pulumi_preview
+    - deployment: Preview
+      environment: dev
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            - task: AzureCLI@2
+                displayName: Pulumi preview
+                env:
+                  PULUMI_CONFIG_PASSPHRASE:
+                  AZURE_STORAGE_ACCOUNT: ${{ parameters.backend_storage_account_name }}
+                inputs:
+                  azureSubscription: ${{ parameters.azure_subscription }}
+                  scriptType: bash
+                  scriptLocation: inlineScript
+                  addSpnToEnvironment: true
+                  inlineScript: |
+                    echo "Placeholder"
