@@ -95,4 +95,4 @@ steps:
         -C UnoCash.Pulumi \
         --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
 
-      pulumi up -C UnoCash.Pulumi --yes
+      pulumi preview -C UnoCash.Pulumi

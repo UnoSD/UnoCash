@@ -8,7 +8,7 @@ open Pulumi.Azure.Core
 open Pulumi.Azure.Storage
 
 let infra () =
-    (*let resourceGroup = ResourceGroup "UnoCash"
+    let resourceGroup = ResourceGroup "UnoCash"
 
     let storageAccount =
         Account("unocashstorage",
@@ -33,7 +33,7 @@ let infra () =
              BlobArgs(StorageAccountName = io storageAccount.Name,
                       StorageContainerName = io storageContainer.Name,
                       Type = input "block",
-                      Source = input (FileArchive("UnoCash.Api/bin/Debug/netcoreapp3.1/publish") :> AssetOrArchive)))
+                      Source = input (FileArchive("../UnoCash.Api/bin/Debug/netcoreapp3.1/publish") :> AssetOrArchive)))
     
     let codeBlobUrl =
         SharedAccessSignature.SignedBlobReadUrl(blob, storageAccount)
@@ -49,8 +49,7 @@ let infra () =
     
     dict [
         ("Hostname", app.DefaultHostname :> obj)
-    ]*)
-    dict [ ("wd", System.Environment.CurrentDirectory :> obj) ]
+    ]
 
 [<EntryPoint>]
 let main _ =
