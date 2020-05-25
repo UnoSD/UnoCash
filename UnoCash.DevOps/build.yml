@@ -1,6 +1,7 @@
 trigger:
   branches: 
-    include: master
+    include:
+    - master
   paths:
     exclude:
     - UnoCash.Pulumi/*
