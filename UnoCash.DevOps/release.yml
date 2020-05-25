@@ -34,19 +34,6 @@ stages:
   jobs:
     - job: Pulumi
       steps:
-
-      - task: DownloadBuildArtifacts@0
-        displayName: Download build artifacts for API
-        inputs:
-          buildType: specific
-          project: '44f232b3-0809-4f97-bac6-30d169f0187d'
-          pipeline: '4'
-          specificBuildWithTriggering: true
-          buildVersionToDownload: latest
-          downloadType: single
-          artifactName: UnoCash.Api
-          downloadPath: $(System.ArtifactsDirectory)
-
       - task: AzureCLI@2
         displayName: Create backend storage
         env:
@@ -118,6 +105,18 @@ stages:
   jobs:
     - job: Preview
       steps:
+        - task: DownloadBuildArtifacts@0
+          displayName: Download build artifacts for API
+          inputs:
+            buildType: specific
+            project: '44f232b3-0809-4f97-bac6-30d169f0187d'
+            pipeline: '4'
+            specificBuildWithTriggering: true
+            buildVersionToDownload: latest
+            downloadType: single
+            artifactName: UnoCash.Api
+            downloadPath: $(System.ArtifactsDirectory)
+          
         - task: AzureCLI@2
           displayName: Pulumi preview
           env:
@@ -167,6 +166,18 @@ stages:
         runOnce:
           deploy:
             steps:
+            - task: DownloadBuildArtifacts@0
+              displayName: Download build artifacts for API
+              inputs:
+                buildType: specific
+                project: '44f232b3-0809-4f97-bac6-30d169f0187d'
+                pipeline: '4'
+                specificBuildWithTriggering: true
+                buildVersionToDownload: latest
+                downloadType: single
+                artifactName: UnoCash.Api
+                downloadPath: $(System.ArtifactsDirectory)
+                
             - task: AzureCLI@2
               displayName: Pulumi up
               env:
