@@ -43,7 +43,7 @@ stages:
           zipAfterPublish: false
           
       - task: AzureCLI@2
-        displayName: Create Pulumi backend storage
+        displayName: Create backend storage
         env:
           PULUMI_CONFIG_PASSPHRASE:
           AZURE_STORAGE_ACCOUNT: ${{ parameters.backend_storage_account_name }}
@@ -104,9 +104,10 @@ stages:
             pulumi preview -C UnoCash.Pulumi
       
       - task: Cache@2
+        displayName: Cache Pulumi installation
         inputs:
-          key: 'pulumi'
-          path: '/home/vsts/.pulumi'
+          key: pulumi
+          path: /home/vsts/.pulumi
 
 - stage: Development_preview
   displayName: Development preview
@@ -125,6 +126,8 @@ stages:
             scriptLocation: inlineScript
             addSpnToEnvironment: true
             inlineScript: |
+              export PATH="$PATH:/home/vsts/.pulumi/bin"
+              ls /home/vsts/.pulumi
               pulumi preview -C UnoCash.Pulumi
 
 - stage: Development_deploy
