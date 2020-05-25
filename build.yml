@@ -11,4 +11,10 @@ steps:
     command: publish
     publishWebProjects: false
     projects: UnoCash.Api/UnoCash.Api.csproj
-    zipAfterPublish: false
+    arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: true
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathtoPublish: $(Build.ArtifactStagingDirectory)
+    artifactName: UnoCash.Api
