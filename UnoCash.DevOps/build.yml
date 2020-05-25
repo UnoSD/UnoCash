@@ -5,6 +5,36 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: custom
+      custom: new
+      arguments: tool-manifest
+      workingDirectory: UnoCash.Fulma
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: custom
+      custom: tool
+      arguments: install fake-cli
+      workingDirectory: UnoCash.Fulma
+      
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: custom
+      custom: fake
+      arguments: build
+      workingDirectory: UnoCash.Fulma
+    
+  - task: DotNetCoreCLI@2
+    displayName: Build Function API
+    inputs:
+      command: publish
+      publishWebProjects: false
+      projects: UnoCash.Api/UnoCash.Api.csproj
+      arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
+      zipAfterPublish: true
+  
 - task: DotNetCoreCLI@2
   displayName: Build Function API
   inputs:

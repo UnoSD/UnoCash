@@ -1,6 +1,7 @@
 ﻿module Program
 
 open Pulumi
+open Pulumi.Azure.AppInsights
 open Pulumi.Azure.AppService
 open Pulumi.Azure.AppService.Inputs
 open Pulumi.FSharp
@@ -8,7 +9,8 @@ open Pulumi.Azure.Core
 open Pulumi.Azure.Storage
 
 let infra () =
-    let resourceGroup = ResourceGroup "UnoCash"
+    let resourceGroup =
+        ResourceGroup "unocash"
 
     let storageAccount =
         Account("unocashstorage",
@@ -17,7 +19,7 @@ let infra () =
                             AccountTier = input "Standard"))
 
     let storageContainer =
-        Container("zips",
+        Container("unocashbuild",
                   ContainerArgs(StorageAccountName = io storageAccount.Name,
                                 ContainerAccessType = input "private"))
     
@@ -29,7 +31,7 @@ let infra () =
                                                Size = input "Y1"))))
     
     let blob =
-        Blob("zip",
+        Blob("unocashapi",
              BlobArgs(StorageAccountName = io storageAccount.Name,
                       StorageContainerName = io storageContainer.Name,
                       Type = input "Block",
@@ -38,12 +40,21 @@ let infra () =
     let codeBlobUrl =
         SharedAccessSignature.SignedBlobReadUrl(blob, storageAccount)
     
+    let appInsights =
+        Insights("unocashai",
+                 InsightsArgs(ResourceGroupName = io resourceGroup.Name,
+                              ApplicationType = input "web"))
+    
     let app =
         FunctionApp("unocashapp",
                     FunctionAppArgs(ResourceGroupName = io resourceGroup.Name,
                                     AppServicePlanId = io appServicePlan.Id,
                                     AppSettings = inputMap [ "runtime", input "dotnet"
-                                                             "WEBSITE_RUN_FROM_PACKAGE", io codeBlobUrl ],
+                                                             "WEBSITE_RUN_FROM_PACKAGE", io codeBlobUrl
+                                                             "APPINSIGHTS_INSTRUMENTATIONKEY", io appInsights.InstrumentationKey
+                                                             "StorageAccountConnectionString", io storageAccount.PrimaryConnectionString
+                                                             "FormRecognizerKey", input ""
+                                                             "FormRecognizerEndpoint", input "" ],
                                     StorageAccountName = io storageAccount.Name,
                                     StorageAccountAccessKey = io storageAccount.PrimaryAccessKey,
                                     Version = input "~3"))
