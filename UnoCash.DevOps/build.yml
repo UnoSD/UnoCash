@@ -6,6 +6,7 @@ pool:
 
 steps:
 - task: DotNetCoreCLI@2
+  displayName: Create tool manifest
   inputs:
     command: custom
     custom: new
@@ -13,13 +14,23 @@ steps:
     workingDirectory: UnoCash.Fulma
 
 - task: DotNetCoreCLI@2
+  displayName: Install FAKE
   inputs:
     command: custom
     custom: tool
     arguments: install fake-cli
     workingDirectory: UnoCash.Fulma
+
+- task: DotNetCoreCLI@2
+  displayName: Install Paket
+  inputs:
+    command: custom
+    custom: tool
+    arguments: install paket
+    workingDirectory: UnoCash.Fulma
     
 - task: DotNetCoreCLI@2
+  displayName: Build Fable project
   inputs:
     command: custom
     custom: fake
