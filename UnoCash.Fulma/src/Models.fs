@@ -7,7 +7,7 @@ open UnoCash.Fulma.Helpers
 open UnoCash.Fulma.Config
 
 type Expense =
-    JsonProvider.Generator<expenseSampleUrl>
+    JsonProvider.Generator<"GetExpenses.json">
 
 type Tab =
     | AddExpense
