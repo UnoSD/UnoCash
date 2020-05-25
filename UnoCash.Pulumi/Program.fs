@@ -61,6 +61,7 @@ let infra () =
     
     dict [
         ("Hostname", app.DefaultHostname :> obj)
+        ("StorageAccount", storageAccount.Name :> obj)
     ]
 
 [<EntryPoint>]

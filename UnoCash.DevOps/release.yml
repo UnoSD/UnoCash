@@ -108,6 +108,18 @@ stages:
         - checkout: self
           
         - task: DownloadBuildArtifacts@0
+          displayName: Download build artifacts for Fable
+          inputs:
+            buildType: specific
+            project: '44f232b3-0809-4f97-bac6-30d169f0187d'
+            pipeline: '4'
+            specificBuildWithTriggering: true
+            buildVersionToDownload: latest
+            downloadType: single
+            artifactName: UnoCash.Fulma
+            downloadPath: $(System.ArtifactsDirectory)
+            
+        - task: DownloadBuildArtifacts@0
           displayName: Download build artifacts for API
           inputs:
             buildType: specific
@@ -182,6 +194,18 @@ stages:
                 artifactName: UnoCash.Api
                 downloadPath: $(System.ArtifactsDirectory)
                 
+            - task: DownloadBuildArtifacts@0
+              displayName: Download build artifacts for Fable
+              inputs:
+                buildType: specific
+                project: '44f232b3-0809-4f97-bac6-30d169f0187d'
+                pipeline: '4'
+                specificBuildWithTriggering: true
+                buildVersionToDownload: latest
+                downloadType: single
+                artifactName: UnoCash.Fulma
+                downloadPath: $(System.ArtifactsDirectory)
+                
             - task: AzureCLI@2
               displayName: Pulumi up
               env:
@@ -220,6 +244,16 @@ stages:
                   pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
     
                   pulumi up -C UnoCash.Pulumi --yes
+                  
+                  echo "##vso[task.setvariable variable=StorageAccount]$(pulumi stack output StorageAccount -C UnoCash.Pulumi)"
+
+            - task: AzureFileCopy@4
+              inputs:
+                SourcePath: $(System.ArtifactsDirectory)/UnoCash.Fulma
+                azureSubscription: ${{ parameters.azure_subscription }}
+                Destination: AzureBlob
+                storage: $(StorageAccount)
+                ContainerName: '$web'
 
 - stage: Development_destroy
   displayName: Development destroy
