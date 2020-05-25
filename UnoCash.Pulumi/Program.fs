@@ -44,7 +44,8 @@ let infra () =
                                     AppServicePlanId = io appServicePlan.Id,
                                     AppSettings = inputMap [ "runtime", input "dotnet"
                                                              "WEBSITE_RUN_FROM_PACKAGE", io codeBlobUrl ],
-                                    StorageConnectionString = io storageAccount.PrimaryConnectionString,
+                                    StorageAccountName = io storageAccount.Name,
+                                    StorageAccountAccessKey = io storageAccount.PrimaryAccessKey,
                                     Version = input "~3"))
     
     dict [
