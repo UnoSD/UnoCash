@@ -14,7 +14,7 @@ let infra () =
         ResourceGroup "unocash"
 
     let whitelistIp =
-        input (Config().Require("WhitelistIp"))
+        input (Config().Require("WhitelistIp") + "/32")
     
     let networkRules =
         Inputs.AccountNetworkRulesArgs(IpRules = inputList [ whitelistIp ],
