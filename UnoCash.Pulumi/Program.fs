@@ -14,11 +14,7 @@ let infra () =
         ResourceGroup "unocash"
 
     let whitelistIp =
-        input (Config().Require("WhitelistIp") + "/32")
-    
-    let networkRules =
-        Inputs.AccountNetworkRulesArgs(IpRules = inputList [ whitelistIp ],
-                                       DefaultAction = input "Allow")
+        Config().Require("WhitelistIp")
     
     let storageAccount =
         Account("unocashstorage",
@@ -26,8 +22,14 @@ let infra () =
                             AccountReplicationType = input "LRS",
                             AccountTier = input "Standard",
                             EnableHttpsTrafficOnly = input true,
-                            StaticWebsite = input (AccountStaticWebsiteArgs(IndexDocument = input "index.html")),
-                            NetworkRules = input networkRules))
+                            StaticWebsite = input (AccountStaticWebsiteArgs(IndexDocument = input "index.html"))))
+        
+    let _ =
+        AccountNetworkRules("unocashsafw",
+                            AccountNetworkRulesArgs(IpRules = inputList [ input whitelistIp ],
+                                                    DefaultAction = input "Allow",
+                                                    StorageAccountName = io storageAccount.Name,
+                                                    ResourceGroupName = io resourceGroup.Name))
         
     let storageContainer =
         Container("unocashbuild",
@@ -54,7 +56,8 @@ let infra () =
     let appInsights =
         Insights("unocashai",
                  InsightsArgs(ResourceGroupName = io resourceGroup.Name,
-                              ApplicationType = input "web"))
+                              ApplicationType = input "web",
+                              RetentionInDays = input 90))
     
     let app =
         FunctionApp("unocashapp",
@@ -70,7 +73,7 @@ let infra () =
                                     StorageAccountAccessKey = io storageAccount.PrimaryAccessKey,
                                     Version = input "~3",
                                     SiteConfig = input (FunctionAppSiteConfigArgs(IpRestrictions = inputList [
-                                        input (FunctionAppSiteConfigIpRestrictionArgs(IpAddress = whitelistIp))
+                                        input (FunctionAppSiteConfigIpRestrictionArgs(IpAddress = input (whitelistIp + "/32")))
                                     ]))))
     
     let _ =
@@ -83,6 +86,10 @@ let infra () =
                                                                        sprintf "https://%s" |>
                                                                        StringAsset :>
                                                                        AssetOrArchive))))
+    
+    //let apiManagement =
+    //    Service("unocashapim",
+    //            ServiceArgs())
     
     dict [
         ("Hostname", app.DefaultHostname :> obj)
