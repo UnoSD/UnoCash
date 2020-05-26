@@ -13,8 +13,11 @@ let infra () =
     let resourceGroup =
         ResourceGroup "unocash"
 
+    let whitelistIp =
+        input (Config().Require("WhitelistIp"))
+    
     let networkRules =
-        Inputs.AccountNetworkRulesArgs(IpRules = inputList [ input (Config().Require("WhitelistIp")) ])
+        Inputs.AccountNetworkRulesArgs(IpRules = inputList [ whitelistIp ])
     
     let storageAccount =
         Account("unocashstorage",
@@ -64,7 +67,10 @@ let infra () =
                                                              "FormRecognizerEndpoint", input "" ],
                                     StorageAccountName = io storageAccount.Name,
                                     StorageAccountAccessKey = io storageAccount.PrimaryAccessKey,
-                                    Version = input "~3"))
+                                    Version = input "~3",
+                                    SiteConfig = input (FunctionAppSiteConfigArgs(IpRestrictions = inputList [
+                                        input (FunctionAppSiteConfigIpRestrictionArgs(IpAddress = whitelistIp))
+                                    ]))))
     
     let _ =
         Blob("unocashwebconfig",
