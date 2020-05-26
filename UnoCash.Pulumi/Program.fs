@@ -17,7 +17,8 @@ let infra () =
         input (Config().Require("WhitelistIp"))
     
     let networkRules =
-        Inputs.AccountNetworkRulesArgs(IpRules = inputList [ whitelistIp ])
+        Inputs.AccountNetworkRulesArgs(IpRules = inputList [ whitelistIp ],
+                                       DefaultAction = input "Allow")
     
     let storageAccount =
         Account("unocashstorage",
