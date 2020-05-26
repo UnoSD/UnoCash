@@ -13,24 +13,22 @@ let infra () =
     let resourceGroup =
         ResourceGroup "unocash"
 
+    let networkRules =
+        Inputs.AccountNetworkRulesArgs(IpRules = inputList [ input (Config().Require("WhitelistIp")) ])
+    
     let storageAccount =
         Account("unocashstorage",
                 AccountArgs(ResourceGroupName = io resourceGroup.Name,
                             AccountReplicationType = input "LRS",
                             AccountTier = input "Standard",
                             EnableHttpsTrafficOnly = input true,
-                            StaticWebsite = input (AccountStaticWebsiteArgs(IndexDocument = input "index.html"))))
-
+                            StaticWebsite = input (AccountStaticWebsiteArgs(IndexDocument = input "index.html")),
+                            NetworkRules = input networkRules))
+        
     let storageContainer =
         Container("unocashbuild",
                   ContainerArgs(StorageAccountName = io storageAccount.Name,
                                 ContainerAccessType = input "private"))
-    
-    //let staticWebsiteStorageContainer =
-    //    Container("unocashweb",
-    //              ContainerArgs(StorageAccountName = io storageAccount.Name,
-    //                            Name = input "$web",
-    //                            ContainerAccessType = input "blob"))
     
     let appServicePlan =
         Plan("unocashasp",
@@ -44,7 +42,7 @@ let infra () =
              BlobArgs(StorageAccountName = io storageAccount.Name,
                       StorageContainerName = io storageContainer.Name,
                       Type = input "Block",
-                      Source = input ((Pulumi.Config().Require("ApiBuild") |> FileAsset) :> AssetOrArchive)))
+                      Source = input ((Config().Require("ApiBuild") |> FileAsset) :> AssetOrArchive)))
     
     let codeBlobUrl =
         SharedAccessSignature.SignedBlobReadUrl(blob, storageAccount)
@@ -71,7 +69,7 @@ let infra () =
     let _ =
         Blob("unocashwebconfig",
              BlobArgs(StorageAccountName = io storageAccount.Name,
-                      StorageContainerName = input "$web", //io staticWebsiteStorageContainer.Name,
+                      StorageContainerName = input "$web",
                       Type = input "Block",
                       Name = input "apibaseurl",
                       Source = io (app.DefaultHostname.Apply (fun x -> x |>

@@ -23,6 +23,10 @@ parameters:
     type: string
     default: $(azure-subscription)
 
+  - name: whitelist_ip
+    type: string
+    default: $(whitelist-ip)
+
 pool:
   vmImage: ubuntu-latest
 
@@ -166,6 +170,7 @@ stages:
                 -C UnoCash.Pulumi \
                 --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
   
+              pulumi config set WhitelistIp "${{ parameters.whitelist_ip }}" -C UnoCash.Pulumi
               pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
               
               pulumi preview -C UnoCash.Pulumi
@@ -240,21 +245,14 @@ stages:
                   pulumi stack select dev \
                     -C UnoCash.Pulumi \
                     --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
-    
+
+                  pulumi config set WhitelistIp "${{ parameters.whitelist_ip }}" -C UnoCash.Pulumi
                   pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
     
                   pulumi up -C UnoCash.Pulumi --yes
                   
                   echo "##vso[task.setvariable variable=StorageAccount]$(pulumi stack output StorageAccount -C UnoCash.Pulumi)"
 
-            #- task: AzureFileCopy@4
-            #  displayName: Publish static website to blob storage
-            #  inputs:
-            #    SourcePath: $(System.ArtifactsDirectory)/UnoCash.Fulma
-            #    azureSubscription: ${{ parameters.azure_subscription }}
-            #    Destination: AzureBlob
-            #    storage: $(StorageAccount)
-            #    ContainerName: '$web'
             - task: AzureCLI@2
               displayName: Publish static website to blob storage
               env:
