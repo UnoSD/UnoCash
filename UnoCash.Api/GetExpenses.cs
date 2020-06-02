@@ -13,7 +13,7 @@ namespace UnoCash.Api
     {
         [FunctionName("GetExpenses")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)]
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)]
             HttpRequest req,
             ILogger log)
         {
