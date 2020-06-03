@@ -20,7 +20,9 @@ let init _ =
     emptyModel, Cmd.OfPromise.perform loadConfig emptyModel.ApiBaseUrl SetApiBaseUrl
 
 let private loadExpenses (account, apiBaseUrl) =
-    fetch (sprintf "%s?account=%s" (getExpensesUrl apiBaseUrl) account) [] |>
+    fetch (sprintf "%s?account=%s" (getExpensesUrl apiBaseUrl) account) [
+        Credentials RequestCredentials.Include
+    ] |>
     Promise.bind (fun x -> x.text()) |>
     Promise.map Expense.ParseArray
 

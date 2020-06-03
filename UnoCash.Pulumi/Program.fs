@@ -59,6 +59,15 @@ let infra () =
                               ApplicationType = input "web",
                               RetentionInDays = input 90))
     
+    let functionAppCors =
+        input (FunctionAppSiteConfigCorsArgs(AllowedOrigins = inputList [ io storageAccount.PrimaryWebEndpoint ],
+                                             SupportCredentials = input true))
+    
+    let functionAppIpRestrictions =
+        inputList [
+            input (FunctionAppSiteConfigIpRestrictionArgs(IpAddress = input (whitelistIp + "/32")))
+        ]
+    
     let app =
         FunctionApp("unocashapp",
                     FunctionAppArgs(ResourceGroupName = io resourceGroup.Name,
@@ -72,9 +81,8 @@ let infra () =
                                     StorageAccountName = io storageAccount.Name,
                                     StorageAccountAccessKey = io storageAccount.PrimaryAccessKey,
                                     Version = input "~3",
-                                    SiteConfig = input (FunctionAppSiteConfigArgs(IpRestrictions = inputList [
-                                        input (FunctionAppSiteConfigIpRestrictionArgs(IpAddress = input (whitelistIp + "/32")))
-                                    ]))))
+                                    SiteConfig = input (FunctionAppSiteConfigArgs(IpRestrictions = functionAppIpRestrictions,
+                                                                                  Cors = functionAppCors))))
     
     let _ =
         Blob("unocashwebconfig",
@@ -90,6 +98,10 @@ let infra () =
     //let apiManagement =
     //    Service("unocashapim",
     //            ServiceArgs())
+    //let x =
+    //    CustomProviderAction()
+    //let cp =
+    //    CustomProvider("", CustomProviderArgs(Actions = inputList [ x ]))
     
     dict [
         ("Hostname", app.DefaultHostname :> obj)
