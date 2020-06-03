@@ -21,7 +21,7 @@ let init _ =
 
 let private loadExpenses (account, apiBaseUrl) =
     fetch (sprintf "%s?account=%s" (getExpensesUrl apiBaseUrl) account) [
-        Credentials RequestCredentials.Omit
+        Credentials RequestCredentials.Include
     ] |>
     Promise.bind (fun x -> x.text()) |>
     Promise.map Expense.ParseArray
