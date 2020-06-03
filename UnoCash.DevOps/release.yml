@@ -173,7 +173,7 @@ stages:
               pulumi config set WhitelistIp "${{ parameters.whitelist_ip }}" -C UnoCash.Pulumi
               pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
               
-              pulumi preview -C UnoCash.Pulumi
+              pulumi preview -C UnoCash.Pulumi -v --diff
 
 - stage: Development_deploy
   displayName: Development deploy
