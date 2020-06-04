@@ -1,0 +1,333 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "apiManagementServiceName": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2019-01-01",
+      "name": "[parameters('apiManagementServiceName')]",
+      "type": "Microsoft.ApiManagement/service",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "properties": {
+        "publisherEmail": "info@uno.cash",
+        "publisherName": "UnoSD"
+      },
+      "sku": {
+        "name": "Consumption"
+      },
+      "resources": [
+        {
+          "apiVersion": "2017-03-01",
+          "type": "policies",
+          "name": "policy",
+          "dependsOn": [
+            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
+          ],
+          "properties": {
+            "policyContent": ""
+          }
+        },
+        {
+          "apiVersion": "2017-03-01",
+          "type": "apis",
+          "name": "exampleApi",
+          "dependsOn": [
+            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
+          ],
+          "properties": {
+            "displayName": "Example API Name",
+            "description": "Description for example API",
+            "serviceUrl": "https://example.net",
+            "path": "exampleapipath",
+            "protocols": [
+              "HTTPS"
+            ]
+          },
+          "resources": [
+            {
+              "apiVersion": "2017-03-01",
+              "type": "operations",
+              "name": "exampleOperationsGETStar",
+              "dependsOn": [
+                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/exampleApi')]"
+              ],
+              "properties": {
+                "displayName": "GET",
+                "method": "GET",
+                "urlTemplate": "/*"
+              }
+            },
+            {
+              "apiVersion": "2017-03-01",
+              "type": "operations",
+              "name": "exampleOperationsGET",
+              "dependsOn": [
+                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/exampleApi')]"
+              ],
+              "properties": {
+                "displayName": "GET index",
+                "method": "GET",
+                "urlTemplate": "/"
+              },
+              "resources": [
+                {
+                  "apiVersion": "2017-03-01",
+                  "type": "policies",
+                  "name": "policy",
+                  "dependsOn": [
+                    "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]",
+                    "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/exampleApi')]",
+                    "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/exampleApi/operations/exampleOperationsGET')]"
+                  ],
+                  "properties": {
+                    "policyContent": "<policies>
+    <inbound>
+        <base />
+        <rewrite-uri template=\"index.html\" />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "apiVersion": "2017-03-01",
+          "type": "apis",
+          "name": "exampleApiWithPolicy",
+          "dependsOn": [
+            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
+          ],
+          "properties": {
+            "displayName": "Example API Name with Policy",
+            "description": "Description for example API with policy",
+            "serviceUrl": "https://exampleapiwithpolicy.net",
+            "path": "exampleapiwithpolicypath",
+            "protocols": [
+              "HTTPS"
+            ]
+          },
+          "resources": [
+            {
+              "apiVersion": "2017-03-01",
+              "type": "policies",
+              "name": "policy",
+              "dependsOn": [
+                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]",
+                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/exampleApiWithPolicy')]"
+              ],
+              "properties": {
+                "policyContent": "[format('<policies>
+    <inbound>
+        <base />
+        <choose>
+            <when condition=\"@(context.Request.OriginalUrl.Scheme.ToLower() == \"http\")\">
+                <return-response>
+                    <set-status code=\"303\" reason=\"See Other\" />
+                    <set-header name=\"Location\" exists-action=\"override\">
+                        <value>@(\"https://{0}.azure-api.net/\" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>
+                    </set-header>
+                </return-response>
+            </when>
+        </choose>
+        <set-query-parameter name=\"sv\" exists-action=\"override\">
+            <value>{1}</value>
+        </set-query-parameter>
+        <set-query-parameter name=\"ss\" exists-action=\"override\">
+            <value>{2}</value>
+        </set-query-parameter>
+        <set-query-parameter name=\"srt\" exists-action=\"override\">
+            <value>{3}</value>
+        </set-query-parameter>
+        <set-query-parameter name=\"sp\" exists-action=\"override\">
+            <value>{4}</value>
+        </set-query-parameter>
+        <set-query-parameter name=\"se\" exists-action=\"override\">
+            <value>{5}</value>
+        </set-query-parameter>
+        <set-query-parameter name=\"st\" exists-action=\"override\">
+            <value>{6}</value>
+        </set-query-parameter>
+        <set-query-parameter name=\"spr\" exists-action=\"override\">
+            <value>{7}</value>
+        </set-query-parameter>
+        <set-query-parameter name=\"sig\" exists-action=\"override\">
+            <value>{8}</value>
+        </set-query-parameter>
+        <!--        <set-variable name=\"APIVersion\" value=\"2012-02-12\" />
+        <set-variable name=\"UTCNow\" value=\"@(DateTime.UtcNow.ToString(\"R\"))\" />
+        <set-variable name=\"RequestPath\" value=\"@(context.Request.Url.Path)\" />
+        <set-header name=\"x-ms-date\" exists-action=\"override\">
+            <value>@(context.Variables.GetValueOrDefault<string>(\"UTCNow\"))</value>
+        </set-header>
+        <set-header name=\"Authorization\" exists-action=\"override\">
+            <value>@{
+                    var account = \"STORAGE ACCOUNT NAME\";
+                    var key = \"STORAGE ACCOUNT KEY\";
+                    var splitPath = context.Variables.GetValueOrDefault<string>(\"RequestPath\").Split(''/'');
+                    var container = \"$web\";
+                    var file = splitPath.Last();
+                    var dateToSign = context.Variables.GetValueOrDefault<string>(\"UTCNow\");
+                    var stringToSign = string.Format(\"GET\n\n\n{0}\n/{1}/{2}/{3}\", dateToSign, account, container, file);
+                    string signature;
+                    var unicodeKey = Convert.FromBase64String(key);
+                    using (var hmacSha256 = new HMACSHA256(unicodeKey))
+                    {
+                        var dataToHmac = Encoding.UTF8.GetBytes(stringToSign);
+                        signature = Convert.ToBase64String(hmacSha256.ComputeHash(dataToHmac));
+                    }
+                    var authorizationHeader = string.Format(
+                        \"{0} {1}:{2}\",
+                        \"SharedKey\",
+                        account,
+                        signature);
+                    return authorizationHeader;
+                }</value>
+        </set-header>-->
+        <rate-limit calls=\"100\" renewal-period=\"300\" />
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>', '', '', '', '', '', '', '', '')]"
+              }
+            }
+          ]
+        },
+        {
+          "apiVersion": "2017-03-01",
+          "type": "products",
+          "name": "exampleProduct",
+          "dependsOn": [
+            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
+          ],
+          "properties": {
+            "displayName": "Example Product Name",
+            "description": "Description for example product",
+            "terms": "Terms for example product",
+            "subscriptionRequired": true,
+            "approvalRequired": false,
+            "subscriptionsLimit": 1,
+            "state": "published"
+          },
+          "resources": [
+            {
+              "apiVersion": "2017-03-01",
+              "type": "apis",
+              "name": "exampleApi",
+              "dependsOn": [
+                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]",
+                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/exampleApi')]",
+                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/products/exampleProduct')]"
+              ]
+            }
+          ]
+        },
+        {
+          "apiVersion": "2017-03-01",
+          "type": "users",
+          "name": "exampleUser1",
+          "dependsOn": [
+            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
+          ],
+          "properties": {
+            "firstName": "ExampleFirstName1",
+            "lastName": "ExampleLastName1",
+            "email": "ExampleFirst1@example.com",
+            "state": "active",
+            "note": "note for example user 1"
+          }
+        },
+        {
+          "apiVersion": "2017-03-01",
+          "type": "users",
+          "name": "exampleUser2",
+          "dependsOn": [
+            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
+          ],
+          "properties": {
+            "firstName": "ExampleFirstName2",
+            "lastName": "ExampleLastName2",
+            "email": "ExampleFirst2@example.com",
+            "state": "active",
+            "note": "note for example user 2"
+          }
+        },
+        {
+          "apiVersion": "2017-03-01",
+          "type": "users",
+          "name": "exampleUser3",
+          "dependsOn": [
+            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
+          ],
+          "properties": {
+            "firstName": "ExampleFirstName3",
+            "lastName": "ExampleLastName3",
+            "email": "ExampleFirst3@example.com",
+            "state": "active",
+            "note": "note for example user 3"
+          }
+        },
+        {
+          "apiVersion": "2017-03-01",
+          "type": "properties",
+          "name": "exampleproperties",
+          "dependsOn": [
+            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
+          ],
+          "properties": {
+            "displayName": "propertyExampleName",
+            "value": "propertyExampleValue",
+            "tags": [
+              "exampleTag"
+            ]
+          }
+        },
+        {
+          "apiVersion": "2017-03-01",
+          "type": "groups",
+          "name": "exampleGroup",
+          "dependsOn": [
+            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
+          ],
+          "properties": {
+            "displayName": "Example Group Name",
+            "description": "Example group description"
+          },
+          "resources": [
+            {
+              "apiVersion": "2017-03-01",
+              "type": "users",
+              "name": "exampleUser3",
+              "dependsOn": [
+                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]",
+                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/groups/exampleGroup')]"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
