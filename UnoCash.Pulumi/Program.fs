@@ -217,7 +217,8 @@ let infra () =
                                                                                       .ToString("u")
                                                                                       .Replace(' ', 'T'),
                                                                       Expiry = DateTime.Now
-                                                                                       .AddYears(1)
+                                                                                       //.AddYears(1)
+                                                                                       .AddSeconds(20.)
                                                                                        .ToString("u")
                                                                                        .Replace(' ', 'T'),
                                                                       Permissions = containerPermissions))
@@ -282,6 +283,7 @@ let infra () =
         ("StorageAccount", storageAccount.Name :> obj)
         ("SiteEndpoint", storageAccount.PrimaryWebEndpoint :> obj)
         ("ApiManagementEndpoint", apiManagement.GatewayUrl :> obj)
+        ("Debug", sasToken :> obj)
     ]
 
 [<EntryPoint>]
