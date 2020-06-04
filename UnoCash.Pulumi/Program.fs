@@ -1,8 +1,6 @@
 ﻿module Program
 
-open System
 open System.Runtime.CompilerServices
-open System.Threading.Tasks
 open Pulumi
 open Pulumi.Azure.ApiManagement
 open Pulumi.Azure.AppInsights
@@ -102,7 +100,7 @@ let infra () =
     let apiManagement =
         Service("unocashapim",
                 ServiceArgs(ResourceGroupName = io resourceGroup.Name,
-                            SkuName = input "Consumption",
+                            SkuName = input "Consumption_1",
                             PublisherName = input "UnoSD",
                             PublisherEmail = input "info"))
     
@@ -121,7 +119,7 @@ let infra () =
                     Revision = input "1",
                     ServiceUrl = io webContainerUrl))
 
-    let tokenToPolicy (taskTokenResult : Task<GetAccountBlobContainerSASResult>) =
+    let tokenToPolicy (tokenResult : GetAccountBlobContainerSASResult) =
         sprintf """
 <policies>
     <inbound>
@@ -203,27 +201,22 @@ let infra () =
     </on-error>
 </policies>
 """
-         (taskTokenResult.Result.Expiry)
-         (taskTokenResult.Result.Start)
-         (taskTokenResult.Result.Sas)
+         tokenResult.Expiry
+         tokenResult.Start
+         tokenResult.Sas
         
     let sasToken =
-        GetAccountBlobContainerSASArgs() |>
-        GetAccountBlobContainerSAS.InvokeAsync |>
-        (fun t -> t.ContinueWith(Func<Task<GetAccountBlobContainerSASResult>, string>(tokenToPolicy)))
-        
-    let x =
-        Func<string, Task<string>>(fun _ -> sasToken)
-        
-    let y =
-        Pulumi.InputExtensions.Apply<string, string>(input "", x)
-        
+        storageAccount.PrimaryConnectionString
+                      .Apply(fun cs -> GetAccountBlobContainerSASArgs(ConnectionString = cs))
+                      .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
+                      .Apply(tokenToPolicy)
+
     let _ =
         ApiPolicy("unocashapimapipolicy",
                   ApiPolicyArgs(ResourceGroupName = io resourceGroup.Name,
                                 ApiManagementName = io apiManagement.Name,
                                 ApiName = io api.Name,
-                                XmlContent = io y))
+                                XmlContent = io sasToken))
         
     let indexApiOperation =
         ApiOperation("unocashapimindexoperation",
