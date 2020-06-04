@@ -121,6 +121,12 @@ let infra () =
                     ServiceUrl = io webContainerUrl))
 
     let tokenToPolicy (tokenResult : GetAccountBlobContainerSASResult) =
+        let queryString =
+            tokenResult.Sas.Substring(1).Split('&') |>
+            Array.map (fun pair -> pair.Split('=')) |>
+            Array.map (fun arr -> (arr.[0], arr.[1])) |>
+            Map.ofArray
+            
         sprintf """
 <policies>
     <inbound>
@@ -130,22 +136,22 @@ let infra () =
                 <return-response>
                     <set-status code="303" reason="See Other" />
                     <set-header name="Location" exists-action="override">
-                        <value>@("https://pizza.azure-api.net/" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>
+                        <value>@("https://%s.azure-api.net/" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>
                     </set-header>
                 </return-response>
             </when>
         </choose>
         <set-query-parameter name="sv" exists-action="override">
-            <value>2019-10-10</value>
+            <value>%s</value>
         </set-query-parameter>
         <set-query-parameter name="ss" exists-action="override">
-            <value>b</value>
+            <value>%s</value>
         </set-query-parameter>
         <set-query-parameter name="srt" exists-action="override">
-            <value>sco</value>
+            <value>%s</value>
         </set-query-parameter>
         <set-query-parameter name="sp" exists-action="override">
-            <value>rx</value>
+            <value>%s</value>
         </set-query-parameter>
         <set-query-parameter name="se" exists-action="override">
             <value>%s</value>
@@ -154,7 +160,7 @@ let infra () =
             <value>%s</value>
         </set-query-parameter>
         <set-query-parameter name="spr" exists-action="override">
-            <value>https</value>
+            <value>%s</value>
         </set-query-parameter>
         <set-query-parameter name="sig" exists-action="override">
             <value>%s</value>
@@ -202,9 +208,15 @@ let infra () =
     </on-error>
 </policies>
 """
-         tokenResult.Expiry
-         tokenResult.Start
-         tokenResult.Sas
+         "unocash"
+         queryString.["sv"]
+         queryString.["ss"]
+         queryString.["srt"]
+         queryString.["sp"]
+         queryString.["se"]
+         queryString.["st"]
+         queryString.["spr"]
+         queryString.["sig"]
         
     let containerPermissions =
         GetAccountBlobContainerSASPermissionsArgs(Read = true)
@@ -283,7 +295,6 @@ let infra () =
         ("StorageAccount", storageAccount.Name :> obj)
         ("SiteEndpoint", storageAccount.PrimaryWebEndpoint :> obj)
         ("ApiManagementEndpoint", apiManagement.GatewayUrl :> obj)
-        ("Debug", sasToken :> obj)
     ]
 
 [<EntryPoint>]
