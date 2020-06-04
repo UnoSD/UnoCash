@@ -206,11 +206,16 @@ let infra () =
          tokenResult.Start
          tokenResult.Sas
         
+    let containerPermissions =
+        GetAccountBlobContainerSASPermissionsArgs(Read = true)
+        
     let sasToken =
         storageAccount.PrimaryConnectionString
                       .Apply(fun cs -> GetAccountBlobContainerSASArgs(ConnectionString = cs,
                                                                       ContainerName = "$web",
-                                                                      Expiry = DateTime.Now.AddYears(1).ToString("u")))
+                                                                      Start = DateTime.Now.ToString("u"),
+                                                                      Expiry = DateTime.Now.AddYears(1).ToString("u"),
+                                                                      Permissions = containerPermissions))
                       .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
                       .Apply(tokenToPolicy)
 
