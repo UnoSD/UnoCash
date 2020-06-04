@@ -85,21 +85,7 @@
                     "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/exampleApi/operations/exampleOperationsGET')]"
                   ],
                   "properties": {
-                    "policyContent": "<policies>
-    <inbound>
-        <base />
-        <rewrite-uri template=\"index.html\" />
-    </inbound>
-    <backend>
-        <base />
-    </backend>
-    <outbound>
-        <base />
-    </outbound>
-    <on-error>
-        <base />
-    </on-error>
-</policies>"
+                    "policyContent": "<policies>\n    <inbound>\n        <base />\n        <rewrite-uri template=\"index.html\" />\n    </inbound>\n    <backend>\n        <base />\n    </backend>\n    <outbound>\n        <base />\n    </outbound>\n    <on-error>\n        <base />\n    </on-error>\n</policies>"
                   }
                 }
               ]
@@ -132,85 +118,7 @@
                 "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/exampleApiWithPolicy')]"
               ],
               "properties": {
-                "policyContent": "[format('<policies>
-    <inbound>
-        <base />
-        <choose>
-            <when condition=\"@(context.Request.OriginalUrl.Scheme.ToLower() == \"http\")\">
-                <return-response>
-                    <set-status code=\"303\" reason=\"See Other\" />
-                    <set-header name=\"Location\" exists-action=\"override\">
-                        <value>@(\"https://{0}.azure-api.net/\" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>
-                    </set-header>
-                </return-response>
-            </when>
-        </choose>
-        <set-query-parameter name=\"sv\" exists-action=\"override\">
-            <value>{1}</value>
-        </set-query-parameter>
-        <set-query-parameter name=\"ss\" exists-action=\"override\">
-            <value>{2}</value>
-        </set-query-parameter>
-        <set-query-parameter name=\"srt\" exists-action=\"override\">
-            <value>{3}</value>
-        </set-query-parameter>
-        <set-query-parameter name=\"sp\" exists-action=\"override\">
-            <value>{4}</value>
-        </set-query-parameter>
-        <set-query-parameter name=\"se\" exists-action=\"override\">
-            <value>{5}</value>
-        </set-query-parameter>
-        <set-query-parameter name=\"st\" exists-action=\"override\">
-            <value>{6}</value>
-        </set-query-parameter>
-        <set-query-parameter name=\"spr\" exists-action=\"override\">
-            <value>{7}</value>
-        </set-query-parameter>
-        <set-query-parameter name=\"sig\" exists-action=\"override\">
-            <value>{8}</value>
-        </set-query-parameter>
-        <!--        <set-variable name=\"APIVersion\" value=\"2012-02-12\" />
-        <set-variable name=\"UTCNow\" value=\"@(DateTime.UtcNow.ToString(\"R\"))\" />
-        <set-variable name=\"RequestPath\" value=\"@(context.Request.Url.Path)\" />
-        <set-header name=\"x-ms-date\" exists-action=\"override\">
-            <value>@(context.Variables.GetValueOrDefault<string>(\"UTCNow\"))</value>
-        </set-header>
-        <set-header name=\"Authorization\" exists-action=\"override\">
-            <value>@{
-                    var account = \"STORAGE ACCOUNT NAME\";
-                    var key = \"STORAGE ACCOUNT KEY\";
-                    var splitPath = context.Variables.GetValueOrDefault<string>(\"RequestPath\").Split(''/'');
-                    var container = \"$web\";
-                    var file = splitPath.Last();
-                    var dateToSign = context.Variables.GetValueOrDefault<string>(\"UTCNow\");
-                    var stringToSign = string.Format(\"GET\n\n\n{0}\n/{1}/{2}/{3}\", dateToSign, account, container, file);
-                    string signature;
-                    var unicodeKey = Convert.FromBase64String(key);
-                    using (var hmacSha256 = new HMACSHA256(unicodeKey))
-                    {
-                        var dataToHmac = Encoding.UTF8.GetBytes(stringToSign);
-                        signature = Convert.ToBase64String(hmacSha256.ComputeHash(dataToHmac));
-                    }
-                    var authorizationHeader = string.Format(
-                        \"{0} {1}:{2}\",
-                        \"SharedKey\",
-                        account,
-                        signature);
-                    return authorizationHeader;
-                }</value>
-        </set-header>-->
-        <rate-limit calls=\"100\" renewal-period=\"300\" />
-    </inbound>
-    <backend>
-        <base />
-    </backend>
-    <outbound>
-        <base />
-    </outbound>
-    <on-error>
-        <base />
-    </on-error>
-</policies>', '', '', '', '', '', '', '', '')]"
+                "policyContent": "[format('<policies>\n    <inbound>\n        <base />\n        <choose>\n            <when condition=\"@(context.Request.OriginalUrl.Scheme.ToLower() == \"http\")\">\n                <return-response>\n                    <set-status code=\"303\" reason=\"See Other\" />\n                    <set-header name=\"Location\" exists-action=\"override\">\n                        <value>@(\"https://{0}.azure-api.net/\" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>\n                    </set-header>\n                </return-response>\n            </when>\n        </choose>\n        <set-query-parameter name=\"sv\" exists-action=\"override\">\n            <value>{1}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"ss\" exists-action=\"override\">\n            <value>{2}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"srt\" exists-action=\"override\">\n            <value>{3}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"sp\" exists-action=\"override\">\n            <value>{4}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"se\" exists-action=\"override\">\n            <value>{5}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"st\" exists-action=\"override\">\n            <value>{6}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"spr\" exists-action=\"override\">\n            <value>{7}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"sig\" exists-action=\"override\">\n            <value>{8}</value>\n        </set-query-parameter>\n        <!--        <set-variable name=\"APIVersion\" value=\"2012-02-12\" />\n        <set-variable name=\"UTCNow\" value=\"@(DateTime.UtcNow.ToString(\"R\"))\" />\n        <set-variable name=\"RequestPath\" value=\"@(context.Request.Url.Path)\" />\n        <set-header name=\"x-ms-date\" exists-action=\"override\">\n            <value>@(context.Variables.GetValueOrDefault<string>(\"UTCNow\"))</value>\n        </set-header>\n        <set-header name=\"Authorization\" exists-action=\"override\">\n            <value>@{\n                    var account = \"STORAGE ACCOUNT NAME\";\n                    var key = \"STORAGE ACCOUNT KEY\";\n                    var splitPath = context.Variables.GetValueOrDefault<string>(\"RequestPath\").Split(''/'');\n                    var container = \"$web\";\n                    var file = splitPath.Last();\n                    var dateToSign = context.Variables.GetValueOrDefault<string>(\"UTCNow\");\n                    var stringToSign = string.Format(\"GET\n\n\n{0}\n/{1}/{2}/{3}\", dateToSign, account, container, file);\n                    string signature;\n                    var unicodeKey = Convert.FromBase64String(key);\n                    using (var hmacSha256 = new HMACSHA256(unicodeKey))\n                    {\n                        var dataToHmac = Encoding.UTF8.GetBytes(stringToSign);\n                        signature = Convert.ToBase64String(hmacSha256.ComputeHash(dataToHmac));\n                    }\n                    var authorizationHeader = string.Format(\n                        \"{0} {1}:{2}\",\n                        \"SharedKey\",\n                        account,\n                        signature);\n                    return authorizationHeader;\n                }</value>\n        </set-header>-->\n        <rate-limit calls=\"100\" renewal-period=\"300\" />\n    </inbound>\n    <backend>\n        <base />\n    </backend>\n    <outbound>\n        <base />\n    </outbound>\n    <on-error>\n        <base />\n    </on-error>\n</policies>', '', '', '', '', '', '', '', '')]"
               }
             }
           ]
