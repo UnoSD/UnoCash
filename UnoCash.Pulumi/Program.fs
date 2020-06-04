@@ -1,5 +1,6 @@
 ﻿module Program
 
+open System
 open System.Runtime.CompilerServices
 open Pulumi
 open Pulumi.Azure.ApiManagement
@@ -208,7 +209,8 @@ let infra () =
     let sasToken =
         storageAccount.PrimaryConnectionString
                       .Apply(fun cs -> GetAccountBlobContainerSASArgs(ConnectionString = cs,
-                                                                      ContainerName = "$web"))
+                                                                      ContainerName = "$web",
+                                                                      Expiry = DateTime.Now.AddYears(1).ToString("u")))
                       .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
                       .Apply(tokenToPolicy)
 
