@@ -207,7 +207,8 @@ let infra () =
         
     let sasToken =
         storageAccount.PrimaryConnectionString
-                      .Apply(fun cs -> GetAccountBlobContainerSASArgs(ConnectionString = cs))
+                      .Apply(fun cs -> GetAccountBlobContainerSASArgs(ConnectionString = cs,
+                                                                      ContainerName = "$web"))
                       .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
                       .Apply(tokenToPolicy)
 
