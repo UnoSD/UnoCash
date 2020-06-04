@@ -213,8 +213,13 @@ let infra () =
         storageAccount.PrimaryConnectionString
                       .Apply(fun cs -> GetAccountBlobContainerSASArgs(ConnectionString = cs,
                                                                       ContainerName = "$web",
-                                                                      Start = DateTime.Now.ToString("u"),
-                                                                      Expiry = DateTime.Now.AddYears(1).ToString("u"),
+                                                                      Start = DateTime.Now
+                                                                                      .ToString("u")
+                                                                                      .Replace(' ', 'T'),
+                                                                      Expiry = DateTime.Now
+                                                                                       .AddYears(1)
+                                                                                       .ToString("u")
+                                                                                       .Replace(' ', 'T'),
                                                                       Permissions = containerPermissions))
                       .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
                       .Apply(tokenToPolicy)
