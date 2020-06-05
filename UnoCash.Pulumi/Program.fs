@@ -136,7 +136,7 @@ let infra () =
                     Revision = input "1",
                     ServiceUrl = io webContainerUrl))
 
-    let tokenToPolicy (tokenResult : GetAccountBlobContainerSASResult) =
+    let tokenToPolicy (tokenResult : GetAccountBlobContainerSASResult) gatewayUrl =
         let queryString =
             tokenResult.Sas.Substring(1).Split('&') |>
             Array.map (fun pair -> pair.Split('=')) |>
@@ -152,7 +152,7 @@ let infra () =
                 <return-response>
                     <set-status code="303" reason="See Other" />
                     <set-header name="Location" exists-action="override">
-                        <value>@("https://%s.azure-api.net/" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>
+                        <value>@("%s/" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>
                     </set-header>
                 </return-response>
             </when>
@@ -224,10 +224,10 @@ let infra () =
     </on-error>
 </policies>
 """
-         "unocash"
+         gatewayUrl
          queryString.["sv"]
-         queryString.["ss"]
-         queryString.["srt"]
+         "b" //queryString.["ss"] // Signed service
+         queryString.["sr"] //queryString.["srt"] // Signed resource type
          queryString.["sp"]
          queryString.["se"]
          queryString.["st"]
@@ -237,28 +237,32 @@ let infra () =
     let containerPermissions =
         GetAccountBlobContainerSASPermissionsArgs(Read = true)
         
-    let sasToken =
-        storageAccount.PrimaryConnectionString
-                      .Apply(fun cs -> GetAccountBlobContainerSASArgs(ConnectionString = cs,
-                                                                      ContainerName = "$web",
-                                                                      Start = DateTime.Now
-                                                                                      .ToString("u")
-                                                                                      .Replace(' ', 'T'),
-                                                                      Expiry = DateTime.Now
-                                                                                       //.AddYears(1)
-                                                                                       .AddSeconds(20.)
-                                                                                       .ToString("u")
-                                                                                       .Replace(' ', 'T'),
-                                                                      Permissions = containerPermissions))
-                      .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
-                      .Apply(tokenToPolicy)
+    let apiPolicyXml =
+        let sasToken =
+            storageAccount.PrimaryConnectionString
+                          .Apply(fun cs -> GetAccountBlobContainerSASArgs(ConnectionString = cs,
+                                                                          ContainerName = "$web",
+                                                                          Start = DateTime.Now
+                                                                                          .ToString("u")
+                                                                                          .Replace(' ', 'T'),
+                                                                          Expiry = DateTime.Now
+                                                                                           //.AddYears(1)
+                                                                                           .AddSeconds(20.)
+                                                                                           .ToString("u")
+                                                                                           .Replace(' ', 'T'),
+                                                                          Permissions = containerPermissions))
+                          .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
+                          
+        Output.Tuple(apiManagement.GatewayUrl, sasToken)
+              .Apply<string>(Func<struct (string*GetAccountBlobContainerSASResult), string>
+                                 (fun struct (gatewayUrl, st) -> tokenToPolicy st gatewayUrl))
 
     let _ =
         ApiPolicy("unocashapimapipolicy",
                   ApiPolicyArgs(ResourceGroupName = io resourceGroup.Name,
                                 ApiManagementName = io apiManagement.Name,
                                 ApiName = io api.Name,
-                                XmlContent = io sasToken))
+                                XmlContent = io apiPolicyXml))
         
     let indexApiOperation =
         ApiOperation("unocashapimindexoperation",

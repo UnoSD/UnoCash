@@ -1,0 +1,2 @@
+module UnoCash.Pulumi.ApiManagement
+
