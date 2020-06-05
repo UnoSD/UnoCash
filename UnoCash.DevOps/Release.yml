@@ -263,10 +263,20 @@ stages:
                 scriptType: bash
                 scriptLocation: inlineScript
                 inlineScript: |
+                  az storage account update \
+                    --default-action Allow \
+                    --bypass None \
+                    --name $(StorageAccount)
+                  
                   az storage blob upload-batch \
                     -d '$web' \
                     --account-name $(StorageAccount) \
                     -s "$(System.ArtifactsDirectory)/UnoCash.Fulma"
+
+                  az storage account update \
+                    --default-action Deny \
+                    --bypass None \
+                    --name $(StorageAccount)
             
 
 - stage: Development_destroy
