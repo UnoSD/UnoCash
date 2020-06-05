@@ -7,12 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="..\UnoCash.DevOps\build.yml">
-      <Link>build.yml</Link>
-    </Content>
-    <Content Include="..\UnoCash.DevOps\release.yml">
-      <Link>release.yml</Link>
-    </Content>
+    <Content Include="ApiManagement.json" />
     <Content Include="Pulumi.yaml" />
     <Content Include="Pulumi.dev.yaml" />
     <Compile Include="Program.fs" />

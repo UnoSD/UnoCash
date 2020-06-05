@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "apiManagementServiceName": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": "2019-01-01",
+      "name": "[parameters('apiManagementServiceName')]",
+      "type": "Microsoft.ApiManagement/service",
+      "location": "[parameters('location')]",
+      "tags": {},
+      "properties": {
+        "publisherEmail": "info@uno.cash",
+        "publisherName": "UnoSD"
+      },
+      "sku": {
+        "name": "Consumption"
+      }
+    }
+  ],
+  "outputs": {
+    "name": {
+      "type": "string",
+      "value": "[parameters('apiManagementServiceName')]"
+    },
+    "gatewayUrl": {
+      "type": "string",
+      "value": "[reference(parameters('apiManagementServiceName')).gatewayUrl]"
+    }
+  }
+}

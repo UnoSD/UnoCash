@@ -97,14 +97,30 @@ let infra () =
                                                                        sprintf "https://%s" |>
                                                                        StringAsset :>
                                                                        AssetOrArchive))))
-    
+    (*
     let apiManagement =
         Service("unocashapim",
                 ServiceArgs(ResourceGroupName = io resourceGroup.Name,
                             SkuName = input "Consumption_1",
                             PublisherName = input "UnoSD",
-                            PublisherEmail = input "info"))
+                            PublisherEmail = input "info@uno.cash"))
+    *)
     
+    let apiManagement =
+        let outputs =
+            TemplateDeployment("unocashapim",
+                               TemplateDeploymentArgs(ResourceGroupName = io resourceGroup.Name,
+                                                      TemplateBody = input (IO.File.ReadAllText("ApiManagement.json")),
+                                                      Parameters = inputMap [
+                                                          ("apiManagementServiceName", input "")
+                                                          ("location", io resourceGroup.Location)
+                                                      ],
+                                                      DeploymentMode = input "Incremental")).Outputs
+        {|
+            Name = outputs.Apply(fun d -> d.["name"])
+            GatewayUrl = outputs.Apply(fun d -> d.["gatewayUrl"])
+        |}
+        
     let webContainerUrl =
         FormattableStringFactory.Create("https://{0}.blob.core.windows.net/$web", storageAccount.Name) |>
         Output.Format
@@ -292,6 +308,7 @@ let infra () =
     
     dict [
         ("Hostname", app.DefaultHostname :> obj)
+        ("ResourceGroup", resourceGroup.Name :> obj)
         ("StorageAccount", storageAccount.Name :> obj)
         ("SiteEndpoint", storageAccount.PrimaryWebEndpoint :> obj)
         ("ApiManagementEndpoint", apiManagement.GatewayUrl :> obj)
