@@ -112,7 +112,7 @@ let infra () =
                                TemplateDeploymentArgs(ResourceGroupName = io resourceGroup.Name,
                                                       TemplateBody = input (IO.File.ReadAllText("ApiManagement.json")),
                                                       Parameters = inputMap [
-                                                          ("apiManagementServiceName", input "")
+                                                          ("apiManagementServiceName", input "unocashapim")
                                                           ("location", io resourceGroup.Location)
                                                       ],
                                                       DeploymentMode = input "Incremental")).Outputs
