@@ -251,8 +251,9 @@ stages:
                   pulumi config set WhitelistIp "${{ parameters.whitelist_ip }}" -C UnoCash.Pulumi
                   pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
 
-                  export STORAGE_ACCOUNT=$(pulumi stack output StorageAccount -C UnoCash.Pulumi)
-      
+                  export STORAGE_ACCOUNT=$(pulumi stack output StorageAccount -C UnoCash.Pulumi || echo -n "None")
+
+                  [[ "$STORAGE_ACCOUNT" == "None" ]] ||
                   az storage account update \
                     --default-action Allow \
                     --bypass None \
