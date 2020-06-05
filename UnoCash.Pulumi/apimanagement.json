@@ -118,7 +118,7 @@
                 "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/apis/exampleApiWithPolicy')]"
               ],
               "properties": {
-                "policyContent": "[format('<policies>\n    <inbound>\n        <base />\n        <choose>\n            <when condition=\"@(context.Request.OriginalUrl.Scheme.ToLower() == \"http\")\">\n                <return-response>\n                    <set-status code=\"303\" reason=\"See Other\" />\n                    <set-header name=\"Location\" exists-action=\"override\">\n                        <value>@(\"https://{0}.azure-api.net/\" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>\n                    </set-header>\n                </return-response>\n            </when>\n        </choose>\n        <set-query-parameter name=\"sv\" exists-action=\"override\">\n            <value>{1}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"ss\" exists-action=\"override\">\n            <value>{2}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"srt\" exists-action=\"override\">\n            <value>{3}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"sp\" exists-action=\"override\">\n            <value>{4}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"se\" exists-action=\"override\">\n            <value>{5}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"st\" exists-action=\"override\">\n            <value>{6}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"spr\" exists-action=\"override\">\n            <value>{7}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"sig\" exists-action=\"override\">\n            <value>{8}</value>\n        </set-query-parameter>\n        <!--        <set-variable name=\"APIVersion\" value=\"2012-02-12\" />\n        <set-variable name=\"UTCNow\" value=\"@(DateTime.UtcNow.ToString(\"R\"))\" />\n        <set-variable name=\"RequestPath\" value=\"@(context.Request.Url.Path)\" />\n        <set-header name=\"x-ms-date\" exists-action=\"override\">\n            <value>@(context.Variables.GetValueOrDefault<string>(\"UTCNow\"))</value>\n        </set-header>\n        <set-header name=\"Authorization\" exists-action=\"override\">\n            <value>@{\n                    var account = \"STORAGE ACCOUNT NAME\";\n                    var key = \"STORAGE ACCOUNT KEY\";\n                    var splitPath = context.Variables.GetValueOrDefault<string>(\"RequestPath\").Split(''/'');\n                    var container = \"$web\";\n                    var file = splitPath.Last();\n                    var dateToSign = context.Variables.GetValueOrDefault<string>(\"UTCNow\");\n                    var stringToSign = string.Format(\"GET\n\n\n{0}\n/{1}/{2}/{3}\", dateToSign, account, container, file);\n                    string signature;\n                    var unicodeKey = Convert.FromBase64String(key);\n                    using (var hmacSha256 = new HMACSHA256(unicodeKey))\n                    {\n                        var dataToHmac = Encoding.UTF8.GetBytes(stringToSign);\n                        signature = Convert.ToBase64String(hmacSha256.ComputeHash(dataToHmac));\n                    }\n                    var authorizationHeader = string.Format(\n                        \"{0} {1}:{2}\",\n                        \"SharedKey\",\n                        account,\n                        signature);\n                    return authorizationHeader;\n                }</value>\n        </set-header>-->\n        <rate-limit calls=\"100\" renewal-period=\"300\" />\n    </inbound>\n    <backend>\n        <base />\n    </backend>\n    <outbound>\n        <base />\n    </outbound>\n    <on-error>\n        <base />\n    </on-error>\n</policies>', '', '', '', '', '', '', '', '')]"
+                "policyContent": "[format('<policies>\n    <inbound>\n        <base />\n        <choose>\n            <when condition=\"@(context.Request.OriginalUrl.Scheme.ToLower() == \"http\")\">\n                <return-response>\n                    <set-status code=\"303\" reason=\"See Other\" />\n                    <set-header name=\"Location\" exists-action=\"override\">\n                        <value>@(\"https://{0}.azure-api.net/\" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>\n                    </set-header>\n                </return-response>\n            </when>\n        </choose>\n        <set-query-parameter name=\"sv\" exists-action=\"override\">\n            <value>{1}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"ss\" exists-action=\"override\">\n            <value>{2}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"srt\" exists-action=\"override\">\n            <value>{3}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"sp\" exists-action=\"override\">\n            <value>{4}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"se\" exists-action=\"override\">\n            <value>{5}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"st\" exists-action=\"override\">\n            <value>{6}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"spr\" exists-action=\"override\">\n            <value>{7}</value>\n        </set-query-parameter>\n        <set-query-parameter name=\"sig\" exists-action=\"override\">\n            <value>{8}</value>\n        </set-query-parameter>\n        <!--        <set-variable name=\"APIVersion\" value=\"2012-02-12\" />\n        <set-variable name=\"UTCNow\" value=\"@(DateTime.UtcNow.ToString(\"R\"))\" />\n        <set-variable name=\"RequestPath\" value=\"@(context.Request.Url.Path)\" />\n        <set-header name=\"x-ms-date\" exists-action=\"override\">\n            <value>@(context.Variables.GetValueOrDefault<string>(\"UTCNow\"))</value>\n        </set-header>\n        <set-header name=\"Authorization\" exists-action=\"override\">\n            <value>@{\n                    var account = \"STORAGE ACCOUNT NAME\";\n                    var key = \"STORAGE ACCOUNT KEY\";\n                    var splitPath = context.Variables.GetValueOrDefault<string>(\"RequestPath\").Split(''/'');\n                    var container = \"$web\";\n                    var file = splitPath.Last();\n                    var dateToSign = context.Variables.GetValueOrDefault<string>(\"UTCNow\");\n                    var stringToSign = string.Format(\"GET\n\n\n{0}\n/{1}/{2}/{3}\", dateToSign, account, container, file);\n                    string signature;\n                    var unicodeKey = Convert.FromBase64String(key);\n                    using (var hmacSha256 = new HMACSHA256(unicodeKey))\n                    {\n                        var dataToHmac = Encoding.UTF8.GetBytes(stringToSign);\n                        signature = Convert.ToBase64String(hmacSha256.ComputeHash(dataToHmac));\n                    }\n                    var authorizationHeader = string.Format(\n                        \"{0} {1}:{2}\",\n                        \"SharedKey\",\n                        account,\n                        signature);\n                    return authorizationHeader;\n                }</value>\n        </set-header>-->\n        <rate-limit calls=\"100\" renewal-period=\"300\" />\n    </inbound>\n    <backend>\n        <base />\n    </backend>\n    <outbound>\n        <base />\n    </outbound>\n    <on-error>\n        <base />\n    </on-error>\n</policies>', 'x', 'y', 'z', 'a', 'b', 'c', 'd', 'e')]"
               }
             }
           ]
@@ -154,51 +154,6 @@
         },
         {
           "apiVersion": "2017-03-01",
-          "type": "users",
-          "name": "exampleUser1",
-          "dependsOn": [
-            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
-          ],
-          "properties": {
-            "firstName": "ExampleFirstName1",
-            "lastName": "ExampleLastName1",
-            "email": "ExampleFirst1@example.com",
-            "state": "active",
-            "note": "note for example user 1"
-          }
-        },
-        {
-          "apiVersion": "2017-03-01",
-          "type": "users",
-          "name": "exampleUser2",
-          "dependsOn": [
-            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
-          ],
-          "properties": {
-            "firstName": "ExampleFirstName2",
-            "lastName": "ExampleLastName2",
-            "email": "ExampleFirst2@example.com",
-            "state": "active",
-            "note": "note for example user 2"
-          }
-        },
-        {
-          "apiVersion": "2017-03-01",
-          "type": "users",
-          "name": "exampleUser3",
-          "dependsOn": [
-            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
-          ],
-          "properties": {
-            "firstName": "ExampleFirstName3",
-            "lastName": "ExampleLastName3",
-            "email": "ExampleFirst3@example.com",
-            "state": "active",
-            "note": "note for example user 3"
-          }
-        },
-        {
-          "apiVersion": "2017-03-01",
           "type": "properties",
           "name": "exampleproperties",
           "dependsOn": [
@@ -211,29 +166,6 @@
               "exampleTag"
             ]
           }
-        },
-        {
-          "apiVersion": "2017-03-01",
-          "type": "groups",
-          "name": "exampleGroup",
-          "dependsOn": [
-            "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]"
-          ],
-          "properties": {
-            "displayName": "Example Group Name",
-            "description": "Example group description"
-          },
-          "resources": [
-            {
-              "apiVersion": "2017-03-01",
-              "type": "users",
-              "name": "exampleUser3",
-              "dependsOn": [
-                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'))]",
-                "[concat('Microsoft.ApiManagement/service/', parameters('apiManagementServiceName'), '/groups/exampleGroup')]"
-              ]
-            }
-          ]
         }
       ]
     }
