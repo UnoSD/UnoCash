@@ -173,6 +173,8 @@ stages:
               pulumi config set WhitelistIp "${{ parameters.whitelist_ip }}" -C UnoCash.Pulumi
               pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
               
+              pulumi preview -C UnoCash.Pulumi
+              
               pulumi preview -C UnoCash.Pulumi --diff
 
 - stage: Development_deploy
@@ -248,8 +250,18 @@ stages:
 
                   pulumi config set WhitelistIp "${{ parameters.whitelist_ip }}" -C UnoCash.Pulumi
                   pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
-    
+
+                  az storage account update \
+                    --default-action Allow \
+                    --bypass None \
+                    --name $(StorageAccount)
+
                   pulumi up -C UnoCash.Pulumi --yes
+
+                  az storage account update \
+                    --default-action Deny \
+                    --bypass None \
+                    --name $(StorageAccount)
                   
                   echo "##vso[task.setvariable variable=StorageAccount]$(pulumi stack output StorageAccount -C UnoCash.Pulumi)"
 
