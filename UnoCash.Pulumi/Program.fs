@@ -162,19 +162,16 @@ let infra () =
         <set-query-parameter name="sv" exists-action="override">
             <value>%s</value>
         </set-query-parameter>
-        <set-query-parameter name="ss" exists-action="override">
+        <set-query-parameter name="sr" exists-action="override">
             <value>%s</value>
         </set-query-parameter>
-        <set-query-parameter name="srt" exists-action="override">
-            <value>%s</value>
-        </set-query-parameter>
-        <set-query-parameter name="sp" exists-action="override">
+        <set-query-parameter name="st" exists-action="override">
             <value>%s</value>
         </set-query-parameter>
         <set-query-parameter name="se" exists-action="override">
             <value>%s</value>
         </set-query-parameter>
-        <set-query-parameter name="st" exists-action="override">
+        <set-query-parameter name="sp" exists-action="override">
             <value>%s</value>
         </set-query-parameter>
         <set-query-parameter name="spr" exists-action="override">
@@ -229,11 +226,10 @@ let infra () =
          tokenResult.Sas
          gatewayUrl
          queryString.["sv"]
-         "b" //queryString.["ss"] // Signed service
-         queryString.["sr"] //queryString.["srt"] // Signed resource type
-         queryString.["sp"]
-         queryString.["se"]
+         queryString.["sr"]
          queryString.["st"]
+         queryString.["se"]
+         queryString.["sp"]
          queryString.["spr"]
          queryString.["sig"]
         
