@@ -253,7 +253,24 @@ stages:
 
                   pulumi up -C UnoCash.Pulumi --yes
 
+                  echo "##vso[task.setvariable variable=ResourceGroup]$(pulumi stack output ResourceGroup -C UnoCash.Pulumi)"
                   echo "##vso[task.setvariable variable=StorageAccount]$(pulumi stack output StorageAccount -C UnoCash.Pulumi)"
+                  echo "##vso[task.setvariable variable=ApiManagement]$(pulumi stack output ApiManagement -C UnoCash.Pulumi)"
+                  echo "##vso[task.setvariable variable=StaticWebsiteApi]$(pulumi stack output StaticWebsiteApi -C UnoCash.Pulumi)"
+
+            - task: AzureCLI@2
+              displayName: Remove subscription required from API Management
+              inputs:
+                azureSubscription: ${{ parameters.azure_subscription }}
+                scriptType: bash
+                scriptLocation: inlineScript
+                inlineScript: |
+                  CURRENT_SUBSCRIPTION=$(az account show --query id -o tsv)
+
+                  az rest \
+                    --method patch \
+                    --uri https://management.azure.com/subscriptions/$CURRENT_SUBSCRIPTION/resourceGroups/$(ResourceGroup)/providers/Microsoft.ApiManagement/service/$(ApiManagement)/apis/$(StaticWebsiteApi)?api-version=2019-12-01 \
+                    --body '{"properties":{"subscriptionRequired":false}}'
 
             - task: AzureCLI@2
               displayName: Publish static website to blob storage

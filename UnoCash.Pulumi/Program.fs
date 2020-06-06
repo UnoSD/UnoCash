@@ -271,6 +271,8 @@ let infra () =
         ("ResourceGroup", resourceGroup.Name :> obj)
         ("StorageAccount", storageAccount.Name :> obj)
         ("ApiManagementEndpoint", apiManagement.GatewayUrl :> obj)
+        ("ApiManagement", apiManagement.Name :> obj)
+        ("StaticWebsiteApi", api.Name :> obj)
     ]
 
 [<EntryPoint>]
