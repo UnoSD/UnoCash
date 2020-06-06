@@ -27,7 +27,7 @@ let infra () =
                             EnableHttpsTrafficOnly = input true))
         
     let webContainer =
-        Container("unocashbuild",
+        Container("unocashweb",
                   ContainerArgs(StorageAccountName = io storageAccount.Name,
                                 ContainerAccessType = input "private",
                                 Name = input "$web"))
