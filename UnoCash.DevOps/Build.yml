@@ -5,7 +5,7 @@ trigger:
   paths:
     exclude:
     - UnoCash.Pulumi/*
-    - UnoCash.DevOps/release.yml
+    - UnoCash.DevOps/Release.yml
 
 pool:
   vmImage: ubuntu-latest
