@@ -62,41 +62,6 @@ let infra () =
                               ApplicationType = input "web",
                               RetentionInDays = input 90))
     
-    let functionAppCors =
-        input (FunctionAppSiteConfigCorsArgs(AllowedOrigins = inputList [ io storageAccount.PrimaryWebEndpoint ],
-                                             SupportCredentials = input true))
-    
-    let functionAppIpRestrictions =
-        inputList [
-            input (FunctionAppSiteConfigIpRestrictionArgs(IpAddress = input (whitelistIp + "/32")))
-        ]
-    
-    let app =
-        FunctionApp("unocashapp",
-                    FunctionAppArgs(ResourceGroupName = io resourceGroup.Name,
-                                    AppServicePlanId = io appServicePlan.Id,
-                                    AppSettings = inputMap [ "runtime", input "dotnet"
-                                                             "WEBSITE_RUN_FROM_PACKAGE", io codeBlobUrl
-                                                             "APPINSIGHTS_INSTRUMENTATIONKEY", io appInsights.InstrumentationKey
-                                                             "StorageAccountConnectionString", io storageAccount.PrimaryConnectionString
-                                                             "FormRecognizerKey", input ""
-                                                             "FormRecognizerEndpoint", input "" ],
-                                    StorageAccountName = io storageAccount.Name,
-                                    StorageAccountAccessKey = io storageAccount.PrimaryAccessKey,
-                                    Version = input "~3",
-                                    SiteConfig = input (FunctionAppSiteConfigArgs(IpRestrictions = functionAppIpRestrictions,
-                                                                                  Cors = functionAppCors))))
-    
-    let _ =
-        Blob("unocashwebconfig",
-             BlobArgs(StorageAccountName = io storageAccount.Name,
-                      StorageContainerName = input "$web",
-                      Type = input "Block",
-                      Name = input "apibaseurl",
-                      Source = io (app.DefaultHostname.Apply (fun x -> x |>
-                                                                       sprintf "https://%s" |>
-                                                                       StringAsset :>
-                                                                       AssetOrArchive))))
     (*
     let apiManagement =
         Service("unocashapim",
@@ -146,7 +111,6 @@ let infra () =
             
         sprintf """
 <policies>
-    <!-- Debug: %s -->
     <inbound>
         <base />
         <choose>
@@ -180,36 +144,6 @@ let infra () =
         <set-query-parameter name="sig" exists-action="override">
             <value>%s</value>
         </set-query-parameter>
-        <!--        <set-variable name="APIVersion" value="2012-02-12" />
-        <set-variable name="UTCNow" value="@(DateTime.UtcNow.ToString("R"))" />
-        <set-variable name="RequestPath" value="@(context.Request.Url.Path)" />
-        <set-header name="x-ms-date" exists-action="override">
-            <value>@(context.Variables.GetValueOrDefault<string>("UTCNow"))</value>
-        </set-header>
-        <set-header name="Authorization" exists-action="override">
-            <value>@{
-                    var account = "STORAGE ACCOUNT NAME";
-                    var key = "STORAGE ACCOUNT KEY";
-                    var splitPath = context.Variables.GetValueOrDefault<string>("RequestPath").Split('/');
-                    var container = "$web";
-                    var file = splitPath.Last();
-                    var dateToSign = context.Variables.GetValueOrDefault<string>("UTCNow");
-                    var stringToSign = string.Format("GET\n\n\n{0}\n/{1}/{2}/{3}", dateToSign, account, container, file);
-                    string signature;
-                    var unicodeKey = Convert.FromBase64String(key);
-                    using (var hmacSha256 = new HMACSHA256(unicodeKey))
-                    {
-                        var dataToHmac = Encoding.UTF8.GetBytes(stringToSign);
-                        signature = Convert.ToBase64String(hmacSha256.ComputeHash(dataToHmac));
-                    }
-                    var authorizationHeader = string.Format(
-                        "{0} {1}:{2}",
-                        "SharedKey",
-                        account,
-                        signature);
-                    return authorizationHeader;
-                }</value>
-        </set-header>-->
         <rate-limit calls="100" renewal-period="300" />
     </inbound>
     <backend>
@@ -223,7 +157,6 @@ let infra () =
     </on-error>
 </policies>
 """
-         tokenResult.Sas
          gatewayUrl
          queryString.["sv"]
          queryString.["sr"]
@@ -307,6 +240,42 @@ let infra () =
                                                   ApiName = io api.Name,
                                                   OperationId = io indexApiOperation.OperationId,
                                                   XmlContent = input indexPolicyXml))
+    
+    let functionAppCors =
+        input (FunctionAppSiteConfigCorsArgs(AllowedOrigins = inputList [ io apiManagement.GatewayUrl ],
+                                             SupportCredentials = input true))
+    
+    let functionAppIpRestrictions =
+        inputList [
+            input (FunctionAppSiteConfigIpRestrictionArgs(IpAddress = input (whitelistIp + "/32")))
+        ]
+    
+    let app =
+        FunctionApp("unocashapp",
+                    FunctionAppArgs(ResourceGroupName = io resourceGroup.Name,
+                                    AppServicePlanId = io appServicePlan.Id,
+                                    AppSettings = inputMap [ "runtime", input "dotnet"
+                                                             "WEBSITE_RUN_FROM_PACKAGE", io codeBlobUrl
+                                                             "APPINSIGHTS_INSTRUMENTATIONKEY", io appInsights.InstrumentationKey
+                                                             "StorageAccountConnectionString", io storageAccount.PrimaryConnectionString
+                                                             "FormRecognizerKey", input ""
+                                                             "FormRecognizerEndpoint", input "" ],
+                                    StorageAccountName = io storageAccount.Name,
+                                    StorageAccountAccessKey = io storageAccount.PrimaryAccessKey,
+                                    Version = input "~3",
+                                    SiteConfig = input (FunctionAppSiteConfigArgs(IpRestrictions = functionAppIpRestrictions,
+                                                                                  Cors = functionAppCors))))
+    
+    let _ =
+        Blob("unocashwebconfig",
+             BlobArgs(StorageAccountName = io storageAccount.Name,
+                      StorageContainerName = input "$web",
+                      Type = input "Block",
+                      Name = input "apibaseurl",
+                      Source = io (app.DefaultHostname.Apply (fun x -> x |>
+                                                                       sprintf "https://%s" |>
+                                                                       StringAsset :>
+                                                                       AssetOrArchive))))
     
     dict [
         ("Hostname", app.DefaultHostname :> obj)
