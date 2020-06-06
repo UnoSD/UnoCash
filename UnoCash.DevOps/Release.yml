@@ -251,24 +251,9 @@ stages:
                   pulumi config set WhitelistIp "${{ parameters.whitelist_ip }}" -C UnoCash.Pulumi
                   pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
 
-                  export STORAGE_ACCOUNT=$(pulumi stack output StorageAccount -C UnoCash.Pulumi || echo -n "None")
-
-                  [[ "$STORAGE_ACCOUNT" == "None" ]] ||
-                  az storage account update \
-                    --default-action Allow \
-                    --bypass None \
-                    --name $STORAGE_ACCOUNT
-
                   pulumi up -C UnoCash.Pulumi --yes
 
-                  export STORAGE_ACCOUNT=$(pulumi stack output StorageAccount -C UnoCash.Pulumi)
-
-                  az storage account update \
-                    --default-action Deny \
-                    --bypass None \
-                    --name $STORAGE_ACCOUNT
-                  
-                  echo "##vso[task.setvariable variable=StorageAccount]$STORAGE_ACCOUNT"
+                  echo "##vso[task.setvariable variable=StorageAccount]$(pulumi stack output StorageAccount -C UnoCash.Pulumi)"
 
             - task: AzureCLI@2
               displayName: Publish static website to blob storage
@@ -280,20 +265,10 @@ stages:
                 scriptType: bash
                 scriptLocation: inlineScript
                 inlineScript: |
-                  az storage account update \
-                    --default-action Allow \
-                    --bypass None \
-                    --name $(StorageAccount)
-                  
                   az storage blob upload-batch \
                     -d '$web' \
                     --account-name $(StorageAccount) \
                     -s "$(System.ArtifactsDirectory)/UnoCash.Fulma"
-
-                  az storage account update \
-                    --default-action Deny \
-                    --bypass None \
-                    --name $(StorageAccount)
             
 
 - stage: Development_destroy

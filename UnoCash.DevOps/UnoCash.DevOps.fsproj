@@ -8,7 +8,6 @@
     <ItemGroup>
         <Content Include="Build.yml" />
         <Content Include="Release.yml" />
-        <Content Include="EnableSaNetworkFiltering.sh" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
