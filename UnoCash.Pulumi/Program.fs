@@ -24,15 +24,13 @@ let infra () =
                 AccountArgs(ResourceGroupName = io resourceGroup.Name,
                             AccountReplicationType = input "LRS",
                             AccountTier = input "Standard",
-                            EnableHttpsTrafficOnly = input true,
-                            StaticWebsite = input (AccountStaticWebsiteArgs(IndexDocument = input "index.html"))))
+                            EnableHttpsTrafficOnly = input true))
         
-    let _ =
-        AccountNetworkRules("unocashsafw",
-                            AccountNetworkRulesArgs(IpRules = inputList [ input whitelistIp ],
-                                                    DefaultAction = input "Allow",
-                                                    StorageAccountName = io storageAccount.Name,
-                                                    ResourceGroupName = io resourceGroup.Name))
+    let webContainer =
+        Container("unocashbuild",
+                  ContainerArgs(StorageAccountName = io storageAccount.Name,
+                                ContainerAccessType = input "private",
+                                Name = input "$web"))
         
     let storageContainer =
         Container("unocashbuild",
@@ -61,16 +59,7 @@ let infra () =
                  InsightsArgs(ResourceGroupName = io resourceGroup.Name,
                               ApplicationType = input "web",
                               RetentionInDays = input 90))
-    
-    (*
-    let apiManagement =
-        Service("unocashapim",
-                ServiceArgs(ResourceGroupName = io resourceGroup.Name,
-                            SkuName = input "Consumption_1",
-                            PublisherName = input "UnoSD",
-                            PublisherEmail = input "info@uno.cash"))
-    *)
-    
+   
     let apiManagement =
         let outputs =
             TemplateDeployment("unocashapim",
@@ -87,7 +76,7 @@ let infra () =
         |}
         
     let webContainerUrl =
-        FormattableStringFactory.Create("https://{0}.blob.core.windows.net/$web", storageAccount.Name) |>
+        FormattableStringFactory.Create("https://{0}.blob.core.windows.net/{1}", storageAccount.Name, webContainer.Name) |>
         Output.Format
     
     let api =
@@ -171,22 +160,22 @@ let infra () =
         
     let apiPolicyXml =
         let sasToken =
-            storageAccount.PrimaryConnectionString
-                          .Apply(fun cs -> GetAccountBlobContainerSASArgs(ConnectionString = cs,
-                                                                          ContainerName = "$web",
-                                                                          Start = DateTime.Now
-                                                                                          .ToString("u")
-                                                                                          .Replace(' ', 'T'),
-                                                                          Expiry = DateTime.Now
-                                                                                           .AddYears(1)
-                                                                                           .ToString("u")
-                                                                                           .Replace(' ', 'T'),
-                                                                          Permissions = containerPermissions))
+            Output.Tuple(storageAccount.PrimaryConnectionString, webContainer.Name)
+                          .Apply(fun struct (cs, cn) ->
+                                     GetAccountBlobContainerSASArgs(ConnectionString = cs,
+                                                                    ContainerName = cn,
+                                                                    Start = DateTime.Now
+                                                                                    .ToString("u")
+                                                                                    .Replace(' ', 'T'),
+                                                                    Expiry = DateTime.Now
+                                                                                     .AddYears(1)
+                                                                                     .ToString("u")
+                                                                                     .Replace(' ', 'T'),
+                                                                    Permissions = containerPermissions))
                           .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
                           
         Output.Tuple(apiManagement.GatewayUrl, sasToken)
-              .Apply<string>(Func<struct (string*GetAccountBlobContainerSASResult), string>
-                                 (fun struct (gatewayUrl, st) -> tokenToPolicy st gatewayUrl))
+              .Apply(fun struct (gatewayUrl, st) -> tokenToPolicy st gatewayUrl)
 
     let _ =
         ApiPolicy("unocashapimapipolicy",
@@ -269,7 +258,7 @@ let infra () =
     let _ =
         Blob("unocashwebconfig",
              BlobArgs(StorageAccountName = io storageAccount.Name,
-                      StorageContainerName = input "$web",
+                      StorageContainerName = io webContainer.Name,
                       Type = input "Block",
                       Name = input "apibaseurl",
                       Source = io (app.DefaultHostname.Apply (fun x -> x |>

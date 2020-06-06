@@ -10,7 +10,7 @@
     }
   },
   "variables": {
-    "apiManagementServiceName": "[concat(parameters('apiManagementServiceName'), uniqueString(resourceGroup().id))]"
+    "apiManagementServiceName": "[concat(parameters('apiManagementServiceName'), '0', substring(uniqueString(resourceGroup().id)), 0, 7)]"
   },
   "resources": [
     {
