@@ -26,6 +26,18 @@ parameters:
   - name: whitelist_ip
     type: string
     default: $(whitelist-ip)
+    
+  - name: dns_zone_resource_group
+    type: string
+    default: $(dns-zone-resource-group)
+    
+  - name: dns_zone_name
+    type: string
+    default: $(dns-zone-name)
+               
+  - name: dns_record_name
+    type: string
+    default: $(dns-record-name)
 
 pool:
   vmImage: ubuntu-latest
@@ -286,7 +298,28 @@ stages:
                     -d '$web' \
                     --account-name $(StorageAccount) \
                     -s "$(System.ArtifactsDirectory)/UnoCash.Fulma"
-            
+                  
+            - task: AzureCLI@2
+              displayName: Add CNAME for API Management
+              end:
+                ZONE_NAME: ${{ parameters.dns_zone_name }}
+                ZONE_RG: ${{ parameters.dns_zone_resource_group }}
+                RECORD_NAME: ${{ parameters.dns_record_name }}
+              inputs:
+                azureSubscription: ${{ parameters.azure_subscription }}
+                scriptType: bash
+                scriptLocation: inlineScript
+                inlineScript: |
+                  az network dns record-set cname create \
+                    --resource-group $ZONE_RG \
+                    --zone-name $ZONE_NAME \
+                    --name $RECORD_NAME
+
+                  az network dns record-set cname set-record \
+                    --resource-group $ZONE_RG \
+                    --zone-name $ZONE_NAME \
+                    --record-set-name $RECORD_NAME \
+                    --cname $(ApiManagement).azure-api.net
 
 - stage: Development_destroy
   displayName: Development destroy
