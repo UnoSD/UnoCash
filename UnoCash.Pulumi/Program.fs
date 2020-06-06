@@ -270,7 +270,6 @@ let infra () =
         ("Hostname", app.DefaultHostname :> obj)
         ("ResourceGroup", resourceGroup.Name :> obj)
         ("StorageAccount", storageAccount.Name :> obj)
-        ("SiteEndpoint", storageAccount.PrimaryWebEndpoint :> obj)
         ("ApiManagementEndpoint", apiManagement.GatewayUrl :> obj)
     ]
 
