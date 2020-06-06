@@ -134,7 +134,8 @@ let infra () =
                     Path = input "",
                     Protocols = inputList [ input "https"; input "http" ],
                     Revision = input "1",
-                    ServiceUrl = io webContainerUrl))
+                    ServiceUrl = io webContainerUrl(*,
+                    SubscriptionRequired = false*)))
 
     let tokenToPolicy (tokenResult : GetAccountBlobContainerSASResult) gatewayUrl =
         let queryString =
@@ -145,6 +146,7 @@ let infra () =
             
         sprintf """
 <policies>
+    <!-- Debug: %s -->
     <inbound>
         <base />
         <choose>
@@ -224,6 +226,7 @@ let infra () =
     </on-error>
 </policies>
 """
+         tokenResult.Sas
          gatewayUrl
          queryString.["sv"]
          "b" //queryString.["ss"] // Signed service
@@ -246,8 +249,7 @@ let infra () =
                                                                                           .ToString("u")
                                                                                           .Replace(' ', 'T'),
                                                                           Expiry = DateTime.Now
-                                                                                           //.AddYears(1)
-                                                                                           .AddSeconds(20.)
+                                                                                           .AddYears(1)
                                                                                            .ToString("u")
                                                                                            .Replace(' ', 'T'),
                                                                           Permissions = containerPermissions))
