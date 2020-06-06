@@ -301,7 +301,7 @@ stages:
                   
             - task: AzureCLI@2
               displayName: Add CNAME for API Management
-              end:
+              env:
                 ZONE_NAME: ${{ parameters.dns_zone_name }}
                 ZONE_RG: ${{ parameters.dns_zone_resource_group }}
                 RECORD_NAME: ${{ parameters.dns_record_name }}
