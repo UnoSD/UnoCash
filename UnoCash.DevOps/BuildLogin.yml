@@ -3,9 +3,7 @@ trigger:
     include:
     - master
   paths:
-    exclude:
-    - UnoCash.Pulumi/*
-    - UnoCash.DevOps/Release.yml
+    include:
     - UnoCash.Login/*
 
 pool:
@@ -18,7 +16,7 @@ steps:
     command: custom
     custom: new
     arguments: tool-manifest --force
-    workingDirectory: UnoCash.Fulma
+    workingDirectory: UnoCash.Login
 
 - task: DotNetCoreCLI@2
   displayName: Install FAKE
@@ -26,7 +24,7 @@ steps:
     command: custom
     custom: tool
     arguments: install fake-cli
-    workingDirectory: UnoCash.Fulma
+    workingDirectory: UnoCash.Login
 
 - task: DotNetCoreCLI@2
   displayName: Install Paket
@@ -34,7 +32,7 @@ steps:
     command: custom
     custom: tool
     arguments: install paket
-    workingDirectory: UnoCash.Fulma
+    workingDirectory: UnoCash.Login
     
 - task: DotNetCoreCLI@2
   displayName: Build Fable project
@@ -42,25 +40,10 @@ steps:
     command: custom
     custom: fake
     arguments: build
-    workingDirectory: UnoCash.Fulma
+    workingDirectory: UnoCash.Login
 
 - task: PublishBuildArtifacts@1
   displayName: Publish Fable project
   inputs:
-    pathtoPublish: UnoCash.Fulma/output
-    artifactName: UnoCash.Fulma
-  
-- task: DotNetCoreCLI@2
-  displayName: Build Function API
-  inputs:
-    command: publish
-    publishWebProjects: false
-    projects: UnoCash.Api/UnoCash.Api.csproj
-    arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
-    zipAfterPublish: true
-  
-- task: PublishBuildArtifacts@1
-  displayName: Publish Function API
-  inputs:
-    pathtoPublish: $(Build.ArtifactStagingDirectory)
-    artifactName: UnoCash.Api
+    pathtoPublish: UnoCash.Login/output
+    artifactName: UnoCash.Login
