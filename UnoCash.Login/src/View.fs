@@ -1,8 +1,9 @@
 module UnoCash.Login.View
 
 open Feliz
-open Fable.React
-open UnoCash.Login.Models
+open UnoCash.Login.Messages
 
-let view model _ =
-    Html.div [ str model.ApiBaseUrl ]
+let view _ dispatch =
+    Html.div [ Html.button [
+               prop.text "Login"
+               prop.onClick (fun _ -> dispatch Login) ] ]
