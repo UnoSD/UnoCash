@@ -8,6 +8,7 @@ open Pulumi.Azure.AppInsights
 open Pulumi.Azure.AppService
 open Pulumi.Azure.AppService.Inputs
 open Pulumi.Azure.Storage.Inputs
+open Pulumi.AzureAD
 open Pulumi.FSharp
 open Pulumi.Azure.Core
 open Pulumi.Azure.Storage
@@ -266,6 +267,11 @@ let infra () =
                                                                        StringAsset :>
                                                                        AssetOrArchive))))
     
+    let spaAdApplication =
+        Application("unocashspaaadapp",
+                    ApplicationArgs(ReplyUrls = inputList [ io apiManagement.GatewayUrl ],
+                                    Oauth2AllowImplicitFlow = input true))
+    
     dict [
         ("Hostname", app.DefaultHostname :> obj)
         ("ResourceGroup", resourceGroup.Name :> obj)
@@ -273,6 +279,7 @@ let infra () =
         ("ApiManagementEndpoint", apiManagement.GatewayUrl :> obj)
         ("ApiManagement", apiManagement.Name :> obj)
         ("StaticWebsiteApi", api.Name :> obj)
+        ("ApplicationId", spaAdApplication.ApplicationId :> obj)
     ]
 
 [<EntryPoint>]
