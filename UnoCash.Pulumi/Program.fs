@@ -384,6 +384,55 @@ let infra () =
                                     SiteConfig = input (FunctionAppSiteConfigArgs(IpRestrictions = functionAppIpRestrictions,
                                                                                   Cors = functionAppCors))))
     
+    let apiFunction =
+        Api("unocashapimapifunction",
+            ApiArgs(ResourceGroupName = io resourceGroup.Name,
+                    ApiManagementName = io apiManagement.Name,
+                    DisplayName = input "API",
+                    Name = input "api",
+                    Path = input "api",
+                    Protocols = inputList [ input "https" ],
+                    Revision = input "1",
+                    ServiceUrl = io app.DefaultHostname))
+    
+    let apiFunctionPolicyXml applicationId =
+        sprintf """
+<policies>
+    <inbound>
+        <base />
+        
+        <validate-jwt token-value="@(context.Request.Headers.TryGetValue("Cookie", out var value) ? value?.SingleOrDefault(x => x.StartsWith("jwtToken="))?.Substring(9) : "")"
+                      failed-validation-httpcode="401"
+                      failed-validation-error-message="Unauthorized. Access token is missing or invalid."
+                      output-token-variable-name="jwt">
+            <openid-config url="https://login.microsoftonline.com/%s/v2.0/.well-known/openid-configuration" />
+            <audiences>
+                <audience>%s</audience>
+            </audiences>
+        </validate-jwt>
+        
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+    </on-error>
+</policies>
+"""
+         Config.TenantId
+         applicationId
+    
+    let _ =
+        ApiPolicy("unocashapimapifunctionpolicy",
+                  ApiPolicyArgs(ResourceGroupName = io resourceGroup.Name,
+                                ApiManagementName = io apiManagement.Name,
+                                ApiName = io apiFunction.Name,
+                                XmlContent = (spaAdApplication.ApplicationId.Apply apiFunctionPolicyXml |> io)))
+    
     let _ =
         Blob("unocashwebconfig",
              BlobArgs(StorageAccountName = io storageAccount.Name,
