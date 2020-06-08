@@ -287,7 +287,7 @@ stages:
                   az rest \
                     --method PATCH \
                     --uri https://graph.microsoft.com/v1.0/applications/$OBJECT_ID \
-                    --body "$(envsubst < AADSpaApplicationManifest.json)"
+                    --body "$(envsubst < UnoCash.DevOps/AADSpaApplicationManifest.json)"
 
             - task: AzureCLI@2
               displayName: Remove subscription required from API Management
