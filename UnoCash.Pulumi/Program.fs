@@ -12,6 +12,7 @@ open Pulumi.AzureAD
 open Pulumi.FSharp
 open Pulumi.Azure.Core
 open Pulumi.Azure.Storage
+open System.Collections.Generic
 
 let infra () =
     let resourceGroup =
@@ -25,7 +26,15 @@ let infra () =
                 AccountArgs(ResourceGroupName = io resourceGroup.Name,
                             AccountReplicationType = input "LRS",
                             AccountTier = input "Standard",
-                            EnableHttpsTrafficOnly = input true))
+                            EnableHttpsTrafficOnly = input true),
+                CustomResourceOptions(AdditionalSecretOutputs = List<string>([
+                    "PrimaryAccessKey"
+                    "SecondaryAccessKey"
+                    "PrimaryConnectionString"
+                    "PrimaryBlobConnectionString"
+                    "SecondaryConnectionString"
+                    "SecondaryBlobConnectionString"
+                ])))
         
     let webContainer =
         Container("unocashweb",
