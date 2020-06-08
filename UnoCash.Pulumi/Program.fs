@@ -267,7 +267,8 @@ let infra () =
                            ApiOperationPolicyArgs(XmlContent = (spaAdApplication.ApplicationId.Apply getPolicy |> io),
                                                   ApiName = io api.Name,
                                                   ApiManagementName = io apiManagement.Name,
-                                                  OperationId = io getApiOperation.OperationId))
+                                                  OperationId = io getApiOperation.OperationId,
+                                                  ResourceGroupName = io resourceGroup.Name))
     
     let postApiOperation =
         ApiOperation("unocashapimpostoperation",
@@ -329,7 +330,8 @@ let infra () =
                            ApiOperationPolicyArgs(XmlContent = (spaAdApplication.ApplicationId.Apply postPolicy |> io),
                                                   ApiName = io api.Name,
                                                   ApiManagementName = io apiManagement.Name,
-                                                  OperationId = io postApiOperation.OperationId))
+                                                  OperationId = io postApiOperation.OperationId,
+                                                  ResourceGroupName = io resourceGroup.Name))
     
     let indexPolicyXml = """
 <policies>
