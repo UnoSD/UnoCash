@@ -6,6 +6,8 @@ trigger:
     exclude:
     - UnoCash.Pulumi/*
     - UnoCash.DevOps/Release.yml
+    - UnoCash.DevOps/Destroy.yml
+    - UnoCash.DevOps/DevOps.fsproj
     - UnoCash.Login/*
 
 pool:
