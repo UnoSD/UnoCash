@@ -295,7 +295,7 @@ let infra () =
         <return-response>
             <set-status code="303" reason="See Other" />
             <set-header name="Set-Cookie" exists-action="override">
-                <value>@("jwtToken=" + context.Variables["jwt"] + "; HttpOnly")</value>
+                <value>@(&#34;jwtToken=&#34; + context.Variables[&#34;jwt&#34;] + &#34;; HttpOnly&#34;)</value>
             </set-header>
             <set-header name="Location" exists-action="override">
                 <value>@(context.Request.OriginalUrl.ToString())</value>
@@ -401,7 +401,7 @@ let infra () =
     <inbound>
         <base />
         
-        <validate-jwt token-value="@(context.Request.Headers.TryGetValue(&#34;Cookie&#34;, out var value) ? value?.SingleOrDefault(x => x.StartsWith(&#34;jwtToken=&#34;))?.Substring(9) : &#34;&#34;)"
+        <validate-jwt token-value="@(context.Request.Headers.TryGetValue(&#34;Cookie&#34;, out var value) ? value?.SingleOrDefault(x &#61;&#62; x.StartsWith(&#34;jwtToken=&#34;))?.Substring(9) : &#34;&#34;)"
                       failed-validation-httpcode="401"
                       failed-validation-error-message="Unauthorized. Access token is missing or invalid."
                       output-token-variable-name="jwt">
@@ -433,17 +433,15 @@ let infra () =
                                 ApiName = io apiFunction.Name,
                                 XmlContent = (spaAdApplication.ApplicationId.Apply apiFunctionPolicyXml |> io)))
     
-    // pass custom domain URL into base url
     let _ =
         Blob("unocashwebconfig",
              BlobArgs(StorageAccountName = io storageAccount.Name,
                       StorageContainerName = io webContainer.Name,
                       Type = input "Block",
                       Name = input "apibaseurl",
-                      Source = io (app.DefaultHostname.Apply (fun x -> x |>
-                                                                       sprintf "https://%s" |>
-                                                                       StringAsset :>
-                                                                       AssetOrArchive))))
+                      Source = input (Config().Require("ApiEndpoint") |>
+                                      StringAsset :>
+                                      AssetOrArchive)))
     
     dict [
         ("Hostname", app.DefaultHostname :> obj)
