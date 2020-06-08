@@ -249,7 +249,7 @@ let infra () =
                 <return-response>
                     <set-status code="303" reason="See Other" />
                     <set-header name="Location" exists-action="override">
-                        <value>@($"https://login.microsoftonline.com/%s/oauth2/v2.0/authorize?client_id=%s&response_type=id_token&redirect_uri={System.Net.WebUtility.UrlEncode(context.Request.OriginalUrl.ToString())}&response_mode=form_post&scope=openid&nonce={Guid.NewGuid().ToString("n")}")</value>
+                        <value>@($"https://login.microsoftonline.com/%s/oauth2/v2.0/authorize?client_id=%s&response_type=id_token&redirect_uri={System.Net.WebUtility.UrlEncode(context.Request.OriginalUrl.ToString())}&response_mode=form_post&scope=openid&nonce={Guid.NewGuid().ToString(&#34;n&#34;)}")</value>
                     </set-header>
                 </return-response>
             </when>
@@ -285,7 +285,7 @@ let infra () =
 <policies>
     <inbound>
         <base />
-        <validate-jwt token-value="@(context.Request.Body.As&#60;string&#62;().Split('&')[0].Split('=')[1])" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized. Access token is missing or invalid." output-token-variable-name="jwt">
+        <validate-jwt token-value="@(context.Request.Body.As&#60;string&#62;().Split(&#39;&&#39;)[0].Split(&#39;=&#39;)[1])" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized. Access token is missing or invalid." output-token-variable-name="jwt">
             <openid-config url="https://login.microsoftonline.com/%s/v2.0/.well-known/openid-configuration" />
             <audiences>
                 <audience>%s</audience>
@@ -433,6 +433,7 @@ let infra () =
                                 ApiName = io apiFunction.Name,
                                 XmlContent = (spaAdApplication.ApplicationId.Apply apiFunctionPolicyXml |> io)))
     
+    // pass custom domain URL into base url
     let _ =
         Blob("unocashwebconfig",
              BlobArgs(StorageAccountName = io storageAccount.Name,
