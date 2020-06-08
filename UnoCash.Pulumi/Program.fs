@@ -168,6 +168,11 @@ let infra () =
     let containerPermissions =
         GetAccountBlobContainerSASPermissionsArgs(Read = true)
         
+    let spaAdApplication =
+        Application("unocashspaaadapp",
+                    ApplicationArgs(ReplyUrls = inputList [ io apiManagement.GatewayUrl ],
+                                    Oauth2AllowImplicitFlow = input true))
+    
     let apiPolicyXml =
         let sasToken =
             Output.Tuple(storageAccount.PrimaryConnectionString, webContainer.Name)
@@ -204,7 +209,7 @@ let infra () =
                                       DisplayName = input "GET index",
                                       OperationId = input "get-index"))
         
-    let _ =
+    let getApiOperation =
         ApiOperation("unocashapimoperation",
                      ApiOperationArgs(ResourceGroupName = io resourceGroup.Name,
                                       ApiManagementName = io apiManagement.Name,
@@ -213,6 +218,118 @@ let infra () =
                                       Method = input "GET",
                                       DisplayName = input "GET",
                                       OperationId = input "get"))
+    
+    let getPolicy applicationId =
+        sprintf """
+<policies>
+    <inbound>
+        <base />
+        
+        <validate-jwt token-value="@(context.Request.Headers.TryGetValue("Cookie", out var value) ? value?.SingleOrDefault(x => x.StartsWith("jwtToken="))?.Substring(9) : "")"
+                      failed-validation-httpcode="401"
+                      failed-validation-error-message="Unauthorized. Access token is missing or invalid."
+                      output-token-variable-name="jwt">
+            <openid-config url="https://login.microsoftonline.com/%s/v2.0/.well-known/openid-configuration" />
+            <audiences>
+                <audience>%s</audience>
+            </audiences>
+        </validate-jwt>
+        
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+        <choose>
+            <when condition="@(context.Response.StatusCode == 401)">
+                <return-response>
+                    <set-status code="303" reason="See Other" />
+                    <set-header name="Location" exists-action="override">
+                        <value>@($"https://login.microsoftonline.com/%s/oauth2/v2.0/authorize?client_id=%s&response_type=id_token&redirect_uri={System.Net.WebUtility.UrlEncode(context.Request.OriginalUrl.ToString())}&response_mode=form_post&scope=openid&nonce={Guid.NewGuid().ToString("n")}")</value>
+                    </set-header>
+                </return-response>
+            </when>
+        </choose>
+    </on-error>
+</policies>
+"""
+         Config.TenantId
+         applicationId
+         Config.TenantId
+         applicationId
+    
+    let _ =
+        ApiOperationPolicy("unocashapimgetoperationspolicy",
+                           ApiOperationPolicyArgs(XmlContent = (spaAdApplication.ApplicationId.Apply getPolicy |> io),
+                                                  ApiName = io api.Name,
+                                                  ApiManagementName = io apiManagement.Name,
+                                                  OperationId = io getApiOperation.OperationId))
+    
+    let postApiOperation =
+        ApiOperation("unocashapimpostoperation",
+                     ApiOperationArgs(ResourceGroupName = io resourceGroup.Name,
+                                      ApiManagementName = io apiManagement.Name,
+                                      ApiName = io api.Name,
+                                      UrlTemplate = input "/",
+                                      Method = input "POST",
+                                      DisplayName = input "POST AAD token",
+                                      OperationId = input "post-aad-token"))
+    
+    let postPolicy applicationId =
+        sprintf """
+<policies>
+    <inbound>
+        <base />
+        <validate-jwt token-value="@(context.Request.Body.As<string>().Split('&')[0].Split('=')[1])" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized. Access token is missing or invalid." output-token-variable-name="jwt">
+            <openid-config url="https://login.microsoftonline.com/%s/v2.0/.well-known/openid-configuration" />
+            <audiences>
+                <audience>%s</audience>
+            </audiences>
+        </validate-jwt>
+        
+        <return-response>
+            <set-status code="303" reason="See Other" />
+            <set-header name="Set-Cookie" exists-action="override">
+                <value>@("jwtToken=" + context.Variables["jwt"] + "; HttpOnly")</value>
+            </set-header>
+            <set-header name="Location" exists-action="override">
+                <value>@(context.Request.OriginalUrl.ToString())</value>
+            </set-header>
+        </return-response>
+        
+    </inbound>
+    <backend>
+        <base />
+    </backend>
+    <outbound>
+        <base />
+    </outbound>
+    <on-error>
+        <base />
+        <choose>
+            <when condition="@(context.Response.StatusCode == 401)">
+                <return-response>
+                    <set-status code="401" reason="See Other" />
+                    <set-body>Non puoi, rosa!</set-body>
+                </return-response>
+            </when>
+        </choose>
+    </on-error>
+</policies>
+"""
+         Config.TenantId
+         applicationId
+    
+    let _ =
+        ApiOperationPolicy("unocashapimpostoperationpolicy",
+                           ApiOperationPolicyArgs(XmlContent = (spaAdApplication.ApplicationId.Apply postPolicy |> io),
+                                                  ApiName = io api.Name,
+                                                  ApiManagementName = io apiManagement.Name,
+                                                  OperationId = io postApiOperation.OperationId))
     
     let indexPolicyXml = """
 <policies>
@@ -275,11 +392,6 @@ let infra () =
                                                                        sprintf "https://%s" |>
                                                                        StringAsset :>
                                                                        AssetOrArchive))))
-    
-    let spaAdApplication =
-        Application("unocashspaaadapp",
-                    ApplicationArgs(ReplyUrls = inputList [ io apiManagement.GatewayUrl ],
-                                    Oauth2AllowImplicitFlow = input true))
     
     dict [
         ("Hostname", app.DefaultHostname :> obj)
