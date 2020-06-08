@@ -1,0 +1,9 @@
+{
+    "spa": {
+        "redirectUris": [
+            "http://localhost:8080",
+            "$APPLICATION_URL",
+            "https://jwt.ms"
+        ]
+    }
+}

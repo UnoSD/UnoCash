@@ -268,7 +268,26 @@ stages:
                   echo "##vso[task.setvariable variable=ResourceGroup]$(pulumi stack output ResourceGroup -C UnoCash.Pulumi)"
                   echo "##vso[task.setvariable variable=StorageAccount]$(pulumi stack output StorageAccount -C UnoCash.Pulumi)"
                   echo "##vso[task.setvariable variable=ApiManagement]$(pulumi stack output ApiManagement -C UnoCash.Pulumi)"
+                  echo "##vso[task.setvariable variable=ApiManagementEndpoint]$(pulumi stack output ApiManagementEndpoint -C UnoCash.Pulumi)"
                   echo "##vso[task.setvariable variable=StaticWebsiteApi]$(pulumi stack output StaticWebsiteApi -C UnoCash.Pulumi)"
+                  echo "##vso[task.setvariable variable=ApplicationId]$(pulumi stack output ApplicationId -C UnoCash.Pulumi)"
+
+            - task: AzureCLI@2
+              displayName: Update Azure AD application manifest
+              env:
+                APPLICATION_ID: $(ApplicationId)
+                APPLICATION_URL: $(ApiManagementEndpoint)
+              inputs:
+                azureSubscription: ${{ parameters.azure_subscription }}
+                scriptType: bash
+                scriptLocation: inlineScript
+                inlineScript: |
+                  export OBJECT_ID=$(az ad app show --id $APPLICATION_ID --query objectId -o tsv)
+
+                  az rest \
+                    --method PATCH \
+                    --uri https://graph.microsoft.com/v1.0/applications/$OBJECT_ID \
+                    --body "$(envsubst < AADSpaApplicationManifest.json)"
 
             - task: AzureCLI@2
               displayName: Remove subscription required from API Management
