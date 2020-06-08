@@ -113,7 +113,7 @@ let infra () =
     <inbound>
         <base />
         <choose>
-            <when condition="@(context.Request.OriginalUrl.Scheme.ToLower() == "http")">
+            <when condition="@(context.Request.OriginalUrl.Scheme.ToLower() == &#34;http&#34;)">
                 <return-response>
                     <set-status code="303" reason="See Other" />
                     <set-header name="Location" exists-action="override">
@@ -225,7 +225,7 @@ let infra () =
     <inbound>
         <base />
         
-        <validate-jwt token-value="@(context.Request.Headers.TryGetValue("Cookie", out var value) ? value?.SingleOrDefault(x => x.StartsWith("jwtToken="))?.Substring(9) : "")"
+        <validate-jwt token-value="@(context.Request.Headers.TryGetValue(&#34;Cookie&#34;, out var value) ? value?.SingleOrDefault(x => x.StartsWith(&#34;jwtToken=&#34;))?.Substring(9) : &#34;&#34;)"
                       failed-validation-httpcode="401"
                       failed-validation-error-message="Unauthorized. Access token is missing or invalid."
                       output-token-variable-name="jwt">
@@ -285,7 +285,7 @@ let infra () =
 <policies>
     <inbound>
         <base />
-        <validate-jwt token-value="@(context.Request.Body.As<string>().Split('&')[0].Split('=')[1])" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized. Access token is missing or invalid." output-token-variable-name="jwt">
+        <validate-jwt token-value="@(context.Request.Body.As&#60;string&#62;().Split('&')[0].Split('=')[1])" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized. Access token is missing or invalid." output-token-variable-name="jwt">
             <openid-config url="https://login.microsoftonline.com/%s/v2.0/.well-known/openid-configuration" />
             <audiences>
                 <audience>%s</audience>
@@ -401,7 +401,7 @@ let infra () =
     <inbound>
         <base />
         
-        <validate-jwt token-value="@(context.Request.Headers.TryGetValue("Cookie", out var value) ? value?.SingleOrDefault(x => x.StartsWith("jwtToken="))?.Substring(9) : "")"
+        <validate-jwt token-value="@(context.Request.Headers.TryGetValue(&#34;Cookie&#34;, out var value) ? value?.SingleOrDefault(x => x.StartsWith(&#34;jwtToken=&#34;))?.Substring(9) : &#34;&#34;)"
                       failed-validation-httpcode="401"
                       failed-validation-error-message="Unauthorized. Access token is missing or invalid."
                       output-token-variable-name="jwt">
