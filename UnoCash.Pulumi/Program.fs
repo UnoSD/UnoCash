@@ -113,7 +113,7 @@ let infra () =
     <inbound>
         <base />
         <choose>
-            <when condition="@(context.Request.OriginalUrl.Scheme.ToLower() == &#34;http&#34;)">
+            <when condition="@(context.Request.OriginalUrl.Scheme.ToLower() == "http")">
                 <return-response>
                     <set-status code="303" reason="See Other" />
                     <set-header name="Location" exists-action="override">
@@ -173,6 +173,35 @@ let infra () =
                     ApplicationArgs(ReplyUrls = inputList [ io apiManagement.GatewayUrl ],
                                     Oauth2AllowImplicitFlow = input true))
     
+    let policyBlob name (appIdToPolicyXml : string -> string) =
+        Blob("unocash" + name + "policyblob",
+             BlobArgs(StorageAccountName = io storageAccount.Name,
+                      StorageContainerName = io storageContainer.Name,
+                      Type = input "Block",
+                      Source = (appIdToPolicyXml |>
+                                spaAdApplication.ApplicationId.Apply |>
+                                (fun o -> o.Apply (fun x -> x |> StringAsset :> AssetOrArchive)) |>
+                                io)))
+    
+    let getSas connectionString containerName =
+        GetAccountBlobContainerSASArgs(ConnectionString = connectionString,
+                                       ContainerName = containerName,
+                                       Start = DateTime.Now
+                                                       .ToString("u")
+                                                       .Replace(' ', 'T'),
+                                       Expiry = DateTime.Now
+                                                        .AddHours(1.)
+                                                        .ToString("u")
+                                                        .Replace(' ', 'T'),
+                                       Permissions = containerPermissions) |>
+        GetAccountBlobContainerSAS.InvokeAsync
+    
+    let withSas blobUrl =
+        Output.Tuple(storageAccount.PrimaryConnectionString, storageContainer.Name, blobUrl)
+              .Apply<string>(fun struct (cs, cn, bu) ->
+                  Output.Create<GetAccountBlobContainerSASResult>(getSas cs cn)
+                        .Apply(fun res -> bu + res.Sas))
+    
     let apiPolicyXml =
         let sasToken =
             Output.Tuple(storageAccount.PrimaryConnectionString, webContainer.Name)
@@ -192,12 +221,18 @@ let infra () =
         Output.Tuple(apiManagement.GatewayUrl, sasToken)
               .Apply(fun struct (gatewayUrl, st) -> tokenToPolicy st gatewayUrl)
 
+    let mainApiPolicyBlobLink =
+        apiPolicyXml.Apply(fun p -> policyBlob "mainapi" (fun _ -> p))
+                    .Apply<string>(fun b -> b.Url) |>
+        withSas |>
+        io
+    
     let _ =
         ApiPolicy("unocashapimapipolicy",
                   ApiPolicyArgs(ResourceGroupName = io resourceGroup.Name,
                                 ApiManagementName = io apiManagement.Name,
                                 ApiName = io api.Name,
-                                XmlContent = io apiPolicyXml))
+                                XmlLink = mainApiPolicyBlobLink))
         
     let indexApiOperation =
         ApiOperation("unocashapimindexoperation",
@@ -225,7 +260,7 @@ let infra () =
     <inbound>
         <base />
         
-        <validate-jwt token-value="@(context.Request.Headers.TryGetValue(&#34;Cookie&#34;, out var value) ? value?.SingleOrDefault(x &#61;&#62; x.StartsWith(&#34;jwtToken&#61;&#34;))?.Substring(9) : &#34;&#34;)"
+        <validate-jwt token-value="@(context.Request.Headers.TryGetValue("Cookie", out var value) ? value?.SingleOrDefault(x => x.StartsWith("jwtToken="))?.Substring(9) : "")"
                       failed-validation-httpcode="401"
                       failed-validation-error-message="Unauthorized. Access token is missing or invalid."
                       output-token-variable-name="jwt">
@@ -249,7 +284,7 @@ let infra () =
                 <return-response>
                     <set-status code="303" reason="See Other" />
                     <set-header name="Location" exists-action="override">
-                        <value>@($"https://login.microsoftonline.com/%s/oauth2/v2.0/authorize?client_id=%s&response_type=id_token&redirect_uri={System.Net.WebUtility.UrlEncode(context.Request.OriginalUrl.ToString())}&response_mode=form_post&scope=openid&nonce={Guid.NewGuid().ToString(&#34;n&#34;)}")</value>
+                        <value>@($"https://login.microsoftonline.com/%s/oauth2/v2.0/authorize?client_id=%s&response_type=id_token&redirect_uri={System.Net.WebUtility.UrlEncode(context.Request.OriginalUrl.ToString())}&response_mode=form_post&scope=openid&nonce={Guid.NewGuid().ToString("n")}")</value>
                     </set-header>
                 </return-response>
             </when>
@@ -262,9 +297,15 @@ let infra () =
          Config.TenantId
          applicationId
     
+    let getPolicyBlobLink =
+        policyBlob "get" getPolicy |>
+        (fun pb -> pb.Url) |>
+        withSas |>
+        io
+    
     let _ =
         ApiOperationPolicy("unocashapimgetoperationspolicy",
-                           ApiOperationPolicyArgs(XmlContent = (spaAdApplication.ApplicationId.Apply getPolicy |> io),
+                           ApiOperationPolicyArgs(XmlLink = getPolicyBlobLink,
                                                   ApiName = io api.Name,
                                                   ApiManagementName = io apiManagement.Name,
                                                   OperationId = io getApiOperation.OperationId,
@@ -285,7 +326,7 @@ let infra () =
 <policies>
     <inbound>
         <base />
-        <validate-jwt token-value="@(context.Request.Body.As&#60;string&#62;().Split(&#39;&&#39;)[0].Split(&#39;&#61;&#39;)[1])" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized. Access token is missing or invalid." output-token-variable-name="jwt">
+        <validate-jwt token-value="@(context.Request.Body.As<string>().Split('&')[0].Split('=')[1])" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized. Access token is missing or invalid." output-token-variable-name="jwt">
             <openid-config url="https://login.microsoftonline.com/%s/v2.0/.well-known/openid-configuration" />
             <audiences>
                 <audience>%s</audience>
@@ -295,7 +336,7 @@ let infra () =
         <return-response>
             <set-status code="303" reason="See Other" />
             <set-header name="Set-Cookie" exists-action="override">
-                <value>@(&#34;jwtToken=&#34; + context.Variables[&#34;jwt&#34;] + &#34;; HttpOnly&#34;)</value>
+                <value>@("jwtToken=" + context.Variables["jwt"] + "; HttpOnly")</value>
             </set-header>
             <set-header name="Location" exists-action="override">
                 <value>@(context.Request.OriginalUrl.ToString())</value>
@@ -325,9 +366,15 @@ let infra () =
          Config.TenantId
          applicationId
     
+    let apiFunctionPolicyBlobLink =
+        policyBlob "post" postPolicy |>
+        (fun pb -> pb.Url) |>
+        withSas |>
+        io
+    
     let _ =
         ApiOperationPolicy("unocashapimpostoperationpolicy",
-                           ApiOperationPolicyArgs(XmlContent = (spaAdApplication.ApplicationId.Apply postPolicy |> io),
+                           ApiOperationPolicyArgs(XmlLink = apiFunctionPolicyBlobLink,
                                                   ApiName = io api.Name,
                                                   ApiManagementName = io apiManagement.Name,
                                                   OperationId = io postApiOperation.OperationId,
@@ -401,7 +448,7 @@ let infra () =
     <inbound>
         <base />
         
-        <validate-jwt token-value="@(context.Request.Headers.TryGetValue(&#34;Cookie&#34;, out var value) ? value?.SingleOrDefault(x &#61;&#62; x.StartsWith(&#34;jwtToken=&#34;))?.Substring(9) : &#34;&#34;)"
+        <validate-jwt token-value="@(context.Request.Headers.TryGetValue("Cookie", out var value) ? value?.SingleOrDefault(x => x.StartsWith("jwtToken="))?.Substring(9) : "")"
                       failed-validation-httpcode="401"
                       failed-validation-error-message="Unauthorized. Access token is missing or invalid."
                       output-token-variable-name="jwt">
@@ -426,12 +473,18 @@ let infra () =
          Config.TenantId
          applicationId
     
+    let apiFunctionPolicyBlobLink =
+        policyBlob "apifunction" apiFunctionPolicyXml |>
+        (fun pb -> pb.Url) |>
+        withSas |>
+        io
+    
     let _ =
         ApiPolicy("unocashapimapifunctionpolicy",
                   ApiPolicyArgs(ResourceGroupName = io resourceGroup.Name,
                                 ApiManagementName = io apiManagement.Name,
                                 ApiName = io apiFunction.Name,
-                                XmlContent = (spaAdApplication.ApplicationId.Apply apiFunctionPolicyXml |> io)))
+                                XmlLink = apiFunctionPolicyBlobLink))
     
     let _ =
         Blob("unocashwebconfig",
