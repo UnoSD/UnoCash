@@ -440,7 +440,7 @@ let infra () =
                     Path = input "api",
                     Protocols = inputList [ input "https" ],
                     Revision = input "1",
-                    ServiceUrl = io app.DefaultHostname))
+                    ServiceUrl = io (app.DefaultHostname.Apply<string>(fun hn -> sprintf "https://%s/api" hn))))
     
     let apiFunctionPolicyXml applicationId =
         sprintf """
