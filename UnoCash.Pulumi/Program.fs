@@ -87,7 +87,7 @@ let infra () =
         |}
         
     let _ =
-        Logger("unocashapimlogger",
+        Logger("unocashapimlog",
                LoggerArgs(ApiManagementName = io apiManagement.Name,
                           ResourceGroupName = io resourceGroup.Name,
                           ApplicationInsights = input (LoggerApplicationInsightsArgs(InstrumentationKey = io appInsights.InstrumentationKey))))
