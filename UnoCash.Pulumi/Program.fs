@@ -370,7 +370,10 @@ let infra () =
         <base />
         <rewrite-uri template="/index.html" />
         
-        <validate-jwt token-value="@(context.Request.Body.As<string>().Split('&')[0].Split('=')[1])" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized. Access token is missing or invalid." output-token-variable-name="jwt">
+        <validate-jwt token-value="@(context.Request.Headers.TryGetValue("Cookie", out var value) ? value?.SingleOrDefault(x => x.StartsWith("jwtToken="))?.Substring(9) : "")"
+                      failed-validation-httpcode="401"
+                      failed-validation-error-message="Unauthorized. Access token is missing or invalid."
+                      output-token-variable-name="jwt">
             <openid-config url="https://login.microsoftonline.com/%s/v2.0/.well-known/openid-configuration" />
             <audiences>
                 <audience>%s</audience>
