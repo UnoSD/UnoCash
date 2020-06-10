@@ -462,6 +462,20 @@ let infra () =
                     Revision = input "1",
                     ServiceUrl = io (app.DefaultHostname.Apply<string>(fun hn -> sprintf "https://%s/api" hn))))
     
+    let apiOperation method =
+        ApiOperation("unocashapimapifunction" + method,
+                     ApiOperationArgs(ResourceGroupName = io resourceGroup.Name,
+                                      ApiManagementName = io apiManagement.Name,
+                                      ApiName = io apiFunction.Name,
+                                      UrlTemplate = input "/*",
+                                      Method = input (method.ToUpper()),
+                                      DisplayName = input (method.ToUpper()),
+                                      OperationId = input method))
+    
+    let _ =
+        [ "get"; "post"; "delete"; "put" ] |>
+        List.map apiOperation
+    
     let apiFunctionPolicyXml applicationId =
         sprintf """
 <policies>
