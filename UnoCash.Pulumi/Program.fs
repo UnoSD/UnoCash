@@ -509,7 +509,7 @@ let infra () =
         ("ApiManagementEndpoint", apiManagement.GatewayUrl :> obj)
         ("ApiManagement", apiManagement.Name :> obj)
         ("StaticWebsiteApi", api.Name :> obj)
-        ("StaticWebsiteApi", apiFunction.Name :> obj)
+        ("FunctionApi", apiFunction.Name :> obj)
         ("ApplicationId", spaAdApplication.ApplicationId :> obj)
         ("FunctionName", app.Name :> obj)
         
