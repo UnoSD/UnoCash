@@ -273,6 +273,30 @@ stages:
                   echo "##vso[task.setvariable variable=ApiManagementEndpoint]$(pulumi stack output ApiManagementEndpoint -C UnoCash.Pulumi)"
                   echo "##vso[task.setvariable variable=StaticWebsiteApi]$(pulumi stack output StaticWebsiteApi -C UnoCash.Pulumi)"
                   echo "##vso[task.setvariable variable=ApplicationId]$(pulumi stack output ApplicationId -C UnoCash.Pulumi)"
+                  echo "##vso[task.setvariable variable=FunctionName]$(pulumi stack output FunctionName -C UnoCash.Pulumi)"
+
+            - task: AzureCLI@2
+              displayName: Update API Management function keys
+              env:
+                RESOURCE_GROUP: $(ResourceGroup)
+                FUNCTION_NAME: $(FunctionName)
+                APIM: $(ApiManagement)
+              inputs:
+                azureSubscription: ${{ parameters.azure_subscription }}
+                scriptType: bash
+                scriptLocation: inlineScript
+                inlineScript: |
+                  CURRENT_SUBSCRIPTION=$(az account show --query id -o tsv)
+                  
+                  az rest \
+                    --method post \
+                    --uri "/subscriptions/$CURRENT_SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.Web/sites/$FUNCTION_NAME/host/default/listKeys?api-version=2018-11-01" \
+                    --query functionKeys.default \
+                    -o tsv |
+                  xargs -I{} az rest \
+                    --method put \
+                    --uri https://management.azure.com/subscriptions/$CURRENT_SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ApiManagement/service/$APIM/namedValues/FunctionKey?api-version=2019-12-01 \
+                    --body '{"properties":{"displayName":"FunctionKey","value": "{}","secret":true}}'
 
             - task: AzureCLI@2
               displayName: Update Azure AD application manifest

@@ -460,7 +460,7 @@ let infra () =
                     Path = input "api",
                     Protocols = inputList [ input "https" ],
                     Revision = input "1",
-                    ServiceUrl = io (app.DefaultHostname.Apply<string>(fun hn -> sprintf "https://%s/api" hn))))
+                    ServiceUrl = io (app.DefaultHostname.Apply<string>(fun hn -> sprintf "https://%s/api?code={{FunctionKey}}" hn))))
     
     let apiOperation method =
         ApiOperation("unocashapimapifunction" + method,
@@ -538,6 +538,7 @@ let infra () =
         ("ApiManagement", apiManagement.Name :> obj)
         ("StaticWebsiteApi", api.Name :> obj)
         ("ApplicationId", spaAdApplication.ApplicationId :> obj)
+        ("FunctionName", app.Name :> obj)
     ]
 
 [<EntryPoint>]
