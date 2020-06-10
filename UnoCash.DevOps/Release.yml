@@ -184,7 +184,7 @@ stages:
   
               pulumi config set WhitelistIp "${{ parameters.whitelist_ip }}" -C UnoCash.Pulumi
               pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
-              pulumi config set ApiEndpoint "https://${{ parameters.dns_record_name }}.${{ parameters.dns_zone_name }}/api" -C UnoCash.Pulumi
+              pulumi config set WebEndpoint "https://${{ parameters.dns_record_name }}.${{ parameters.dns_zone_name }}" -C UnoCash.Pulumi
               
               pulumi preview -C UnoCash.Pulumi
               
@@ -263,7 +263,7 @@ stages:
 
                   pulumi config set WhitelistIp "${{ parameters.whitelist_ip }}" -C UnoCash.Pulumi
                   pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
-                  pulumi config set ApiEndpoint "https://${{ parameters.dns_record_name }}.${{ parameters.dns_zone_name }}/api" -C UnoCash.Pulumi
+                  pulumi config set WebEndpoint "https://${{ parameters.dns_record_name }}.${{ parameters.dns_zone_name }}" -C UnoCash.Pulumi
 
                   pulumi up -C UnoCash.Pulumi --yes
 

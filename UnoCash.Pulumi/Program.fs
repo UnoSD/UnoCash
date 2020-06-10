@@ -117,7 +117,7 @@ let infra () =
                 <return-response>
                     <set-status code="303" reason="See Other" />
                     <set-header name="Location" exists-action="override">
-                        <value>@("%s/" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>
+                        <value>@("%s" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>
                     </set-header>
                 </return-response>
             </when>
@@ -218,8 +218,7 @@ let infra () =
                                                                     Permissions = containerPermissions))
                           .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
                           
-        Output.Tuple(apiManagement.GatewayUrl, sasToken)
-              .Apply(fun struct (gatewayUrl, st) -> tokenToPolicy st gatewayUrl)
+        sasToken.Apply(fun st -> tokenToPolicy st (Config().Require("WebEndpoint")))
 
     let mainApiPolicyBlobLink =
         apiPolicyXml.Apply(fun p -> policyBlob "mainapi" (fun _ -> p))
@@ -526,7 +525,7 @@ let infra () =
                       StorageContainerName = io webContainer.Name,
                       Type = input "Block",
                       Name = input "apibaseurl",
-                      Source = input (Config().Require("ApiEndpoint") |>
+                      Source = input (Config().Require("WebEndpoint") + "/api" |>
                                       StringAsset :>
                                       AssetOrArchive)))
     
