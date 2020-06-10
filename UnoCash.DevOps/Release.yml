@@ -178,7 +178,6 @@ stages:
                 -C UnoCash.Pulumi \
                 --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
   
-              pulumi config set WhitelistIp "${{ parameters.whitelist_ip }}" -C UnoCash.Pulumi
               pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
               pulumi config set WebEndpoint "https://${{ parameters.dns_record_name }}.${{ parameters.dns_zone_name }}" -C UnoCash.Pulumi
               
