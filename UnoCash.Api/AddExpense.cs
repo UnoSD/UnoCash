@@ -17,7 +17,7 @@ namespace UnoCash.Api
     {
         [FunctionName(Constants.AddFunction)]
         public static Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]
+            [HttpTrigger(AuthorizationLevel.Function, "post")]
             HttpRequest req,
             ILogger log) =>
             req.Tap(_ => log.LogInformation("Adding a new expense"))

@@ -15,7 +15,7 @@ namespace UnoCash.Api
         // Take function name from constant and use the same in the front end URL
         [FunctionName(Constants.DeleteExpense)]
         public static Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "delete")]
+            [HttpTrigger(AuthorizationLevel.Function, "delete")]
             HttpRequest req,
             ILogger log) =>
             req.Tap(_ => log.LogInformation("Deleting expense"))

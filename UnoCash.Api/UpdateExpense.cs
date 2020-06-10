@@ -15,7 +15,7 @@ namespace UnoCash.Api
         // Upsert and delete add?
         [FunctionName("UpdateExpense")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = null)]
+            [HttpTrigger(AuthorizationLevel.Function, "patch", Route = null)]
             HttpRequest req,
             ILogger log)
         {

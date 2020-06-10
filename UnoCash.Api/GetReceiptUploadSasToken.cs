@@ -16,7 +16,7 @@ namespace UnoCash.Api
     {
         [FunctionName(nameof(GetReceiptUploadSasToken))]
         public static Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)]
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)]
             HttpRequest req,
             ILogger log) =>
             ConfigurationReader.GetAsync(StorageAccountConnectionString)
