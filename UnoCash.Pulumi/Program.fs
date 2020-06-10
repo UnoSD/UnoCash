@@ -518,7 +518,7 @@ let infra () =
          applicationId
     
     let apiFunctionPolicyBlobLink =
-        policyBlob "apifunction" apiFunctionPolicyXml |>
+        policyBlob "getindex" apiFunctionPolicyXml |>
         (fun pb -> pb.Url) |>
         withSas |>
         io
