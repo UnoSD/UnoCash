@@ -379,7 +379,8 @@ let infra () =
                                                   OperationId = io postApiOperation.OperationId,
                                                   ResourceGroupName = io resourceGroup.Name))
     
-    let indexPolicyXml = """
+    let indexPolicyXml applicationId =
+        sprintf """
 <policies>
     <inbound>
         <base />
@@ -416,6 +417,16 @@ let infra () =
     
 </policies>
 """
+         Config.TenantId
+         applicationId
+         Config.TenantId
+         applicationId
+    
+    let indexPolicyBlobLink =
+        policyBlob "apifunction" indexPolicyXml |>
+        (fun pb -> pb.Url) |>
+        withSas |>
+        io
     
     let _ =
         ApiOperationPolicy("unocashapimiopolicy",
@@ -423,7 +434,7 @@ let infra () =
                                                   ApiManagementName = io apiManagement.Name,
                                                   ApiName = io api.Name,
                                                   OperationId = io indexApiOperation.OperationId,
-                                                  XmlContent = input indexPolicyXml))
+                                                  XmlLink = indexPolicyBlobLink))
     
     let functionAppCors =
         input (FunctionAppSiteConfigCorsArgs(AllowedOrigins = inputList [ io apiManagement.GatewayUrl ],
