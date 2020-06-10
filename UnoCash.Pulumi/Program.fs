@@ -220,20 +220,13 @@ let infra () =
                           
         sasToken.Apply(fun st -> tokenToPolicy st (Config().Require("WebEndpoint")))
 
-    let mainApiPolicyBlobLink =
+    let swApiPolicyBlobLink =
         apiPolicyXml.Apply(fun p -> policyBlob "mainapi" (fun _ -> p))
                     .Apply<string>(fun b -> b.Url) |>
         withSas |>
         io
     
     let _ =
-        ApiPolicy("unocashapimapipolicy",
-                  ApiPolicyArgs(ResourceGroupName = io resourceGroup.Name,
-                                ApiManagementName = io apiManagement.Name,
-                                ApiName = io api.Name,
-                                XmlLink = mainApiPolicyBlobLink))
-        
-    let indexApiOperation =
         ApiOperation("unocashapimindexoperation",
                      ApiOperationArgs(ResourceGroupName = io resourceGroup.Name,
                                       ApiManagementName = io apiManagement.Name,
@@ -243,7 +236,7 @@ let infra () =
                                       DisplayName = input "GET index",
                                       OperationId = input "get-index"))
         
-    let getApiOperation =
+    let _ =
         ApiOperation("unocashapimoperation",
                      ApiOperationArgs(ResourceGroupName = io resourceGroup.Name,
                                       ApiManagementName = io apiManagement.Name,
@@ -296,21 +289,13 @@ let infra () =
          Config.TenantId
          applicationId
     
-    let getPolicyBlobLink =
+    let swApiGetPolicyBlobLink =
         policyBlob "get" getPolicy |>
         (fun pb -> pb.Url) |>
         withSas |>
         io
     
     let _ =
-        ApiOperationPolicy("unocashapimgetoperationspolicy",
-                           ApiOperationPolicyArgs(XmlLink = getPolicyBlobLink,
-                                                  ApiName = io api.Name,
-                                                  ApiManagementName = io apiManagement.Name,
-                                                  OperationId = io getApiOperation.OperationId,
-                                                  ResourceGroupName = io resourceGroup.Name))
-    
-    let postApiOperation =
         ApiOperation("unocashapimpostoperation",
                      ApiOperationArgs(ResourceGroupName = io resourceGroup.Name,
                                       ApiManagementName = io apiManagement.Name,
@@ -365,20 +350,12 @@ let infra () =
          Config.TenantId
          applicationId
     
-    let apiFunctionPolicyBlobLink =
+    let swApiPostPolicyBlobLink =
         policyBlob "post" postPolicy |>
         (fun pb -> pb.Url) |>
         withSas |>
         io
-    
-    let _ =
-        ApiOperationPolicy("unocashapimpostoperationpolicy",
-                           ApiOperationPolicyArgs(XmlLink = apiFunctionPolicyBlobLink,
-                                                  ApiName = io api.Name,
-                                                  ApiManagementName = io apiManagement.Name,
-                                                  OperationId = io postApiOperation.OperationId,
-                                                  ResourceGroupName = io resourceGroup.Name))
-    
+
     let indexPolicyXml applicationId =
         sprintf """
 <policies>
@@ -422,19 +399,11 @@ let infra () =
          Config.TenantId
          applicationId
     
-    let indexPolicyBlobLink =
-        policyBlob "apifunction" indexPolicyXml |>
+    let swApiGetIndexPolicyBlobLink =
+        policyBlob "getindex" indexPolicyXml |>
         (fun pb -> pb.Url) |>
         withSas |>
         io
-    
-    let _ =
-        ApiOperationPolicy("unocashapimiopolicy",
-                           ApiOperationPolicyArgs(ResourceGroupName = io resourceGroup.Name,
-                                                  ApiManagementName = io apiManagement.Name,
-                                                  ApiName = io api.Name,
-                                                  OperationId = io indexApiOperation.OperationId,
-                                                  XmlLink = indexPolicyBlobLink))
     
     let functionAppCors =
         input (FunctionAppSiteConfigCorsArgs(AllowedOrigins = inputList [ io apiManagement.GatewayUrl ],
@@ -517,18 +486,11 @@ let infra () =
          Config.TenantId
          applicationId
     
-    let apiFunctionPolicyBlobLink =
-        policyBlob "getindex" apiFunctionPolicyXml |>
+    let functionApiPolicyBlobLink =
+        policyBlob "functionapi" apiFunctionPolicyXml |>
         (fun pb -> pb.Url) |>
         withSas |>
         io
-    
-    let _ =
-        ApiPolicy("unocashapimapifunctionpolicy",
-                  ApiPolicyArgs(ResourceGroupName = io resourceGroup.Name,
-                                ApiManagementName = io apiManagement.Name,
-                                ApiName = io apiFunction.Name,
-                                XmlLink = apiFunctionPolicyBlobLink))
     
     let _ =
         Blob("unocashwebconfig",
@@ -549,6 +511,12 @@ let infra () =
         ("StaticWebsiteApi", api.Name :> obj)
         ("ApplicationId", spaAdApplication.ApplicationId :> obj)
         ("FunctionName", app.Name :> obj)
+        
+        ("StaticWebsiteApiPolicyLink", swApiPolicyBlobLink :> obj)
+        ("StaticWebsiteApiPostPolicyLink", swApiPostPolicyBlobLink :> obj)
+        ("StaticWebsiteApiGetPolicyLink", swApiGetPolicyBlobLink :> obj)
+        ("StaticWebsiteApiGetIndexPolicyLink", swApiGetIndexPolicyBlobLink :> obj)
+        ("FunctionApiPolicyLink", functionApiPolicyBlobLink :> obj)
     ]
 
 [<EntryPoint>]

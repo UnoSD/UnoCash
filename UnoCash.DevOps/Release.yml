@@ -275,6 +275,69 @@ stages:
                   echo "##vso[task.setvariable variable=ApplicationId]$(pulumi stack output ApplicationId -C UnoCash.Pulumi)"
                   echo "##vso[task.setvariable variable=FunctionName]$(pulumi stack output FunctionName -C UnoCash.Pulumi)"
 
+                  for i in \
+                    StaticWebsiteApiPolicyLink \
+                    StaticWebsiteApiPostPolicyLink \
+                    StaticWebsiteApiGetPolicyLink \
+                    StaticWebsiteApiGetIndexPolicyLink \
+                    FunctionApiPolicyLink; do
+                    echo "##vso[task.setvariable variable=$i;issecret=true]$(pulumi stack output $i -C UnoCash.Pulumi)"
+                  done
+
+            - task: AzureCLI@2
+              displayName: Update API Management policies
+              env:
+                RESOURCE_GROUP: $(ResourceGroup)
+                FUNCTION_NAME: $(FunctionName)
+                APIM: $(ApiManagement)
+              inputs:
+                azureSubscription: ${{ parameters.azure_subscription }}
+                scriptType: bash
+                scriptLocation: inlineScript
+                inlineScript: |
+                  CURRENT_SUBSCRIPTION=$(az account show --query id -o tsv)
+                  
+                  API="staticwebsite"
+                  LINK="$(StaticWebsiteApiPolicyLink)"
+                  
+                  az rest \
+                    --method put \
+                    --uri https://management.azure.com/subscriptions/$CURRENT_SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ApiManagement/service/$APIM/apis/$API/policies/policy?api-version=2019-12-01 \
+                    --body "{\"properties\":{\"value\":\"$LINK\",\"format\":\"rawxml-link\"}}"
+
+                  OPERATION="get"
+                  LINK="$(StaticWebsiteApiGetPolicyLink)"
+
+                  az rest \
+                    --method put \
+                    --uri https://management.azure.com/subscriptions/$CURRENT_SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ApiManagement/service/$APIM/apis/$API/operations/$OPERATION/policies/policy?api-version=2019-12-01 \
+                    --body "{\"properties\":{\"value\":\"$LINK\",\"format\":\"rawxml-link\"}}"
+
+                  OPERATION="get-index"
+                  LINK="$(StaticWebsiteApiGetIndexPolicyLink)"
+
+                  az rest \
+                    --method put \
+                    --uri https://management.azure.com/subscriptions/$CURRENT_SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ApiManagement/service/$APIM/apis/$API/operations/$OPERATION/policies/policy?api-version=2019-12-01 \
+                    --body "{\"properties\":{\"value\":\"$LINK\",\"format\":\"rawxml-link\"}}"
+
+
+                  OPERATION="post-aad-token"
+                  LINK="$(StaticWebsiteApiPostPolicyLink)"
+
+                  az rest \
+                    --method put \
+                    --uri https://management.azure.com/subscriptions/$CURRENT_SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ApiManagement/service/$APIM/apis/$API/operations/$OPERATION/policies/policy?api-version=2019-12-01 \
+                    --body "{\"properties\":{\"value\":\"$LINK\",\"format\":\"rawxml-link\"}}"
+                  
+                  API="api"
+                  LINK="$(FunctionApiPolicyLink)"
+
+                  az rest \
+                    --method put \
+                    --uri https://management.azure.com/subscriptions/$CURRENT_SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ApiManagement/service/$APIM/apis/$API/policies/policy?api-version=2019-12-01 \
+                    --body "{\"properties\":{\"value\":\"$LINK\",\"format\":\"rawxml-link\"}}"
+
             - task: AzureCLI@2
               displayName: Update API Management function keys
               env:
