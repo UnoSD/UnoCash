@@ -19,9 +19,6 @@ let infra () =
     let resourceGroup =
         ResourceGroup "unocash"
 
-    let whitelistIp =
-        Config().Require("WhitelistIp")
-    
     let storageAccount =
         Account("unocashstorage",
                 AccountArgs(ResourceGroupName = io resourceGroup.Name,
@@ -419,11 +416,6 @@ let infra () =
         input (FunctionAppSiteConfigCorsArgs(AllowedOrigins = inputList [ io apiManagement.GatewayUrl ],
                                              SupportCredentials = input true))
     
-    let functionAppIpRestrictions =
-        inputList [
-            input (FunctionAppSiteConfigIpRestrictionArgs(IpAddress = input (whitelistIp + "/32")))
-        ]
-    
     let app =
         FunctionApp("unocashapp",
                     FunctionAppArgs(ResourceGroupName = io resourceGroup.Name,
@@ -437,8 +429,7 @@ let infra () =
                                     StorageAccountName = io storageAccount.Name,
                                     StorageAccountAccessKey = io storageAccount.PrimaryAccessKey,
                                     Version = input "~3",
-                                    SiteConfig = input (FunctionAppSiteConfigArgs(IpRestrictions = functionAppIpRestrictions,
-                                                                                  Cors = functionAppCors))))
+                                    SiteConfig = input (FunctionAppSiteConfigArgs(Cors = functionAppCors))))
     
     let apiFunction =
         Api("unocashapimapifunction",

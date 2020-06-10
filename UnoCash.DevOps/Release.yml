@@ -22,10 +22,6 @@ parameters:
   - name: azure_subscription
     type: string
     default: $(azure-subscription)
-
-  - name: whitelist_ip
-    type: string
-    default: $(whitelist-ip)
     
   - name: dns_zone_resource_group
     type: string
@@ -261,7 +257,6 @@ stages:
                     -C UnoCash.Pulumi \
                     --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
 
-                  pulumi config set WhitelistIp "${{ parameters.whitelist_ip }}" -C UnoCash.Pulumi
                   pulumi config set ApiBuild "$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip" -C UnoCash.Pulumi
                   pulumi config set WebEndpoint "https://${{ parameters.dns_record_name }}.${{ parameters.dns_zone_name }}" -C UnoCash.Pulumi
 
