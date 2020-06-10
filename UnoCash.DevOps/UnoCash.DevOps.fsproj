@@ -11,6 +11,7 @@
         <Content Include="Release.yml" />
         <Content Include="Destroy.yml" />
         <Compile Include="Program.fs" />
+        <Content Include="AADSpaApplicationManifest.json" />
     </ItemGroup>
 
     <ItemGroup>
