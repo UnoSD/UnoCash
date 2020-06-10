@@ -4,6 +4,7 @@ open System
 open System.Runtime.CompilerServices
 open Pulumi
 open Pulumi.Azure.ApiManagement
+open Pulumi.Azure.ApiManagement.Inputs
 open Pulumi.Azure.AppInsights
 open Pulumi.Azure.AppService
 open Pulumi.Azure.AppService.Inputs
@@ -84,6 +85,12 @@ let infra () =
             Name = outputs.Apply(fun d -> d.["name"])
             GatewayUrl = outputs.Apply(fun d -> d.["gatewayUrl"])
         |}
+        
+    let _ =
+        Logger("unocashapimlogger",
+               LoggerArgs(ApiManagementName = io apiManagement.Name,
+                          ResourceGroupName = io resourceGroup.Name,
+                          ApplicationInsights = input (LoggerApplicationInsightsArgs(InstrumentationKey = io appInsights.InstrumentationKey))))
         
     let webContainerUrl =
         FormattableStringFactory.Create("https://{0}.blob.core.windows.net/{1}", storageAccount.Name, webContainer.Name) |>
