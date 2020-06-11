@@ -357,7 +357,7 @@ stages:
                     --body '{"properties":{"displayName":"FunctionKey","value": "{}","secret":true}}'
 
             - task: AzureCLI@2
-              displayName: Update Azure AD application manifest
+              displayName: Update Azure AD application manifest and optional claims
               env:
                 APPLICATION_ID: $(ApplicationId)
               inputs:
@@ -372,6 +372,10 @@ stages:
                     --method PATCH \
                     --uri https://graph.microsoft.com/v1.0/applications/$OBJECT_ID \
                     --body "$(envsubst < UnoCash.DevOps/AADSpaApplicationManifest.json)"
+
+                  az ad app update \
+                    --id $APPLICATION_ID \
+                    --optional-claims '{"idToken":[{"name":"email"}]}'
 
             - task: AzureCLI@2
               displayName: Remove subscription required from API Management

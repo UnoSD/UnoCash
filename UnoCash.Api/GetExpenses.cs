@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -18,6 +19,18 @@ namespace UnoCash.Api
             ILogger log)
         {
             var account = req.Query["account"];
+
+            //var jwtToken = req.Cookies["jwtToken"];
+            log.LogWarning("** Claims **");
+            req.HttpContext
+               .User
+               .Claims
+               .ToList()
+               .ForEach(c => log.LogWarning($"{c.Value}:" +
+                                            $"{c.Subject.Name}:" +
+                                            $"{c.Properties.Select(p => $"{p.Key}:{p.Value}")}"));
+            log.LogWarning("** End claims **");
+            log.LogWarning(req.HttpContext.User.Identity.Name);
 
             log.LogWarning($"Fetching expense(s) for account: {account}");
 

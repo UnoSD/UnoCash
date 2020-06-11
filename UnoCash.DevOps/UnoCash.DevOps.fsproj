@@ -7,7 +7,6 @@
 
     <ItemGroup>
         <Content Include="Build.yml" />
-        <Content Include="BuildLogin.yml" />
         <Content Include="Release.yml" />
         <Content Include="Destroy.yml" />
         <Compile Include="Program.fs" />
