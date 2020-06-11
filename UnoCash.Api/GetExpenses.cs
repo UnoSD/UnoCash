@@ -22,18 +22,14 @@ namespace UnoCash.Api
             var account = req.Query["account"];
 
             var jwtToken = req.Cookies["jwtToken"];
-            log.LogWarning("** Claims **");
             
-            var reader = new JwtSecurityTokenHandler();
-            reader.ReadJwtToken(jwtToken)
-                  .Claims
-                  .ToList()
-                  .ForEach(c => log.LogWarning($"{c.Value}:" +
-                     $"{c.Subject.Name}:" +
-                     $"{string.Join("\n", c.Properties.Select(p => $"{p.Key}:{p.Value}"))}"));
-            log.LogWarning("** End claims **");
+            var email =
+                new JwtSecurityTokenHandler().ReadJwtToken(jwtToken)
+                                             .Claims
+                                             .SingleOrDefault(c => c.Type == "email")
+                                             .Value;
 
-            log.LogWarning($"Fetching expense(s) for account: {account}");
+            log.LogWarning($"Fetching expense(s) for account: {account}, user: {email}");
 
             return new OkObjectResult(Guid.TryParse(req.Query["id"], out var id) ?
                                       await ExpenseReader.GetAsync(account, id):
