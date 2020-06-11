@@ -62,9 +62,10 @@ module.exports = (env, options) => {
                 new MiniCssExtractPlugin({
                     filename: 'style.css'
                 }),
-                new CopyWebpackPlugin([
+                new CopyWebpackPlugin({
+                    patterns: [
                     { from: './static' }
-                ])
+                ]})
             ])
             : commonPlugins.concat([
                 new webpack.HotModuleReplacementPlugin(),
