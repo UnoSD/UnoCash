@@ -1,4 +1,5 @@
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -20,17 +21,17 @@ namespace UnoCash.Api
         {
             var account = req.Query["account"];
 
-            //var jwtToken = req.Cookies["jwtToken"];
+            var jwtToken = req.Cookies["jwtToken"];
             log.LogWarning("** Claims **");
-            req.HttpContext
-               .User
-               .Claims
-               .ToList()
-               .ForEach(c => log.LogWarning($"{c.Value}:" +
-                                            $"{c.Subject.Name}:" +
-                                            $"{c.Properties.Select(p => $"{p.Key}:{p.Value}")}"));
+            
+            var reader = new JwtSecurityTokenHandler();
+            reader.ReadJwtToken(jwtToken)
+                  .Claims
+                  .ToList()
+                  .ForEach(c => log.LogWarning($"{c.Value}:" +
+                     $"{c.Subject.Name}:" +
+                     $"{string.Join("\n", c.Properties.Select(p => $"{p.Key}:{p.Value}"))}"));
             log.LogWarning("** End claims **");
-            log.LogWarning(req.HttpContext.User.Identity.Name);
 
             log.LogWarning($"Fetching expense(s) for account: {account}");
 
