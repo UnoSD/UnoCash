@@ -12,7 +12,7 @@ namespace UnoCash.Core
                    .WriteAsync(nameof(Expense));
 
         static DynamicTableEntity ToTableEntity(this Expense expense, string email) =>
-            new DynamicTableEntity(expense.Account + email,
+            new DynamicTableEntity(email + "+" + expense.Account,
                 expense.Id.Coalesce(Guid.NewGuid()).ToString(),
                 "*",
                 new Dictionary<string, EntityProperty>

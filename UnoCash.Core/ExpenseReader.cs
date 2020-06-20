@@ -11,7 +11,7 @@ namespace UnoCash.Core
             GetAllAsync(account, email).WhereAsync(expense => expense.Id == id);
 
         public static Task<IEnumerable<Expense>> GetAllAsync(string account, string email) =>
-            AzureTableStorage.GetAllAsync(nameof(Expense), account + email)
+            AzureTableStorage.GetAllAsync(nameof(Expense), email + "+" + account)
                              .SelectAsync(ToExpense);
 
         static Expense ToExpense(this DynamicTableEntity expense) =>
