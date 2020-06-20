@@ -142,7 +142,7 @@ stages:
           inputs:
             buildType: specific
             project: resources.pipeline.Build.projectID
-            pipeline: resources.pipeline.Build.pipelineID
+            pipeline: $(resources.pipeline.Build.pipelineID)
             specificBuildWithTriggering: true
             buildVersionToDownload: latest
             downloadType: single
@@ -154,7 +154,7 @@ stages:
           inputs:
             buildType: specific
             project: resources.pipeline.Build.projectID
-            pipeline: resources.pipeline.Build.pipelineID
+            pipeline: $(resources.pipeline.Build.pipelineID)
             specificBuildWithTriggering: true
             buildVersionToDownload: latest
             downloadType: single
@@ -220,7 +220,7 @@ stages:
               inputs:
                 buildType: specific
                 project: resources.pipeline.Build.projectID
-                pipeline: resources.pipeline.Build.pipelineID
+                pipeline: $(resources.pipeline.Build.pipelineID)
                 specificBuildWithTriggering: true
                 buildVersionToDownload: latest
                 downloadType: single
@@ -232,7 +232,7 @@ stages:
               inputs:
                 buildType: specific
                 project: resources.pipeline.Build.projectID
-                pipeline: resources.pipeline.Build.pipelineID
+                pipeline: $(resources.pipeline.Build.pipelineID)
                 specificBuildWithTriggering: true
                 buildVersionToDownload: latest
                 downloadType: single
