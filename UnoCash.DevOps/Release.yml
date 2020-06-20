@@ -35,6 +35,24 @@ parameters:
     type: string
     default: $(dns-record-name)
 
+trigger:
+  branches:
+    include:
+      - master
+  paths:
+    include:
+      - UnoCash.Pulumi/*
+      - UnoCash.DevOps/Release.yml
+
+resources:
+  pipelines:
+    - pipeline: Build
+      source: Build
+      trigger:
+        branches:
+          include:
+            - master
+
 pool:
   vmImage: ubuntu-latest
 
