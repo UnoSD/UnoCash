@@ -141,8 +141,8 @@ stages:
           displayName: Download build artifacts for Fable
           inputs:
             buildType: specific
-            project: $(resources.pipeline.Build.projectID)
-            pipeline: $(resources.pipeline.Build.pipelineID)
+            project: $(resources.pipeline.Build-resource.projectID)
+            pipeline: $(resources.pipeline.Build-resource.pipelineID)
             specificBuildWithTriggering: true
             buildVersionToDownload: latest
             downloadType: single
@@ -153,8 +153,8 @@ stages:
           displayName: Download build artifacts for API
           inputs:
             buildType: specific
-            project: $(resources.pipeline.Build.projectID)
-            pipeline: $(resources.pipeline.Build.pipelineID)
+            project: $(resources.pipeline.Build-resource.projectID)
+            pipeline: $(resources.pipeline.Build-resource.pipelineID)
             specificBuildWithTriggering: true
             buildVersionToDownload: latest
             downloadType: single
@@ -219,8 +219,8 @@ stages:
               displayName: Download build artifacts for API
               inputs:
                 buildType: specific
-                project: $(resources.pipeline.Build.projectID)
-                pipeline: $(resources.pipeline.Build.pipelineID)
+                project: $(resources.pipeline.Build-resource.projectID)
+                pipeline: $(resources.pipeline.Build-resource.pipelineID)
                 specificBuildWithTriggering: true
                 buildVersionToDownload: latest
                 downloadType: single
@@ -231,8 +231,8 @@ stages:
               displayName: Download build artifacts for Fable
               inputs:
                 buildType: specific
-                project: $(resources.pipeline.Build.projectID)
-                pipeline: $(resources.pipeline.Build.pipelineID)
+                project: $(resources.pipeline.Build-resource.projectID)
+                pipeline: $(resources.pipeline.Build-resource.pipelineID)
                 specificBuildWithTriggering: true
                 buildVersionToDownload: latest
                 downloadType: single
