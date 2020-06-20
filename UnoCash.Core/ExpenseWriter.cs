@@ -7,12 +7,12 @@ namespace UnoCash.Core
 {
     public static class ExpenseWriter
     {
-        public static Task<bool> WriteAsync(this Expense expense) =>
-            expense.ToTableEntity()
+        public static Task<bool> WriteAsync(this Expense expense, string email) =>
+            expense.ToTableEntity(email)
                    .WriteAsync(nameof(Expense));
 
-        static DynamicTableEntity ToTableEntity(this Expense expense) =>
-            new DynamicTableEntity(expense.Account/*Escape characters*/,
+        static DynamicTableEntity ToTableEntity(this Expense expense, string email) =>
+            new DynamicTableEntity(expense.Account + email,
                 expense.Id.Coalesce(Guid.NewGuid()).ToString(),
                 "*",
                 new Dictionary<string, EntityProperty>
@@ -27,7 +27,7 @@ namespace UnoCash.Core
                     [nameof(Expense.Tags)] = EntityProperty.GeneratePropertyForString(expense.Tags)
                 });
 
-        public static Task<bool> DeleteAsync(string account, Guid id) => 
-            AzureTableStorage.DeleteAsync(nameof(Expense), account, id.ToString());
+        public static Task<bool> DeleteAsync(string account, string email, Guid id) => 
+            AzureTableStorage.DeleteAsync(nameof(Expense), account + email, id.ToString());
     }
 }

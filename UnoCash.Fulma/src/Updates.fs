@@ -63,12 +63,14 @@ let private addExpense (model, apiBaseUrl) =
                      newId
     
     Fetch.fetch (addExpenseUrl apiBaseUrl)
-                [ Method HttpMethod.POST
+                [ Credentials RequestCredentials.Include
+                  Method HttpMethod.POST
                   Body <| U3.Case3 body ]
 
 let private removeExpense (id, account, apiBaseUrl) =
     Fetch.fetch (sprintf "%s?id=%s&account=%s" (deleteExpenseUrl apiBaseUrl) id account)
-                [ Method HttpMethod.DELETE ]
+                [ Method HttpMethod.DELETE
+                  Credentials RequestCredentials.Include ]
     
 let private toModel (expense : Expense) =
     {

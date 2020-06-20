@@ -25,7 +25,7 @@ namespace UnoCash.Api
                                      .ExtractSingleStringValue("account")
                                      .Map(account => (expenseId, account)))
                .RTap(t => log.LogWarning($"Deleting expense with ID: {t.expenseId} from {t.account}"))
-               .Match(t => ExpenseWriter.DeleteAsync(t.account, t.expenseId)
+               .Match(t => ExpenseWriter.DeleteAsync(t.account, req.GetUserEmail(), t.expenseId)
                                         .MatchAsync(() => new OkResult(),
                                                     () => (IActionResult)new NotFoundResult()),
                       e => new BadRequestErrorMessageResult(e).ToTask<IActionResult>());

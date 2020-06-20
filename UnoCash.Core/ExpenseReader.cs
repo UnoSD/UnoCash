@@ -7,13 +7,12 @@ namespace UnoCash.Core
 {
     public static class ExpenseReader
     {
-        public static Task<IEnumerable<Expense>> GetAsync(string account, Guid id) =>
-            GetAllAsync(account).WhereAsync(expense => expense.Id == id);
+        public static Task<IEnumerable<Expense>> GetAsync(string account, string email, Guid id) =>
+            GetAllAsync(account, email).WhereAsync(expense => expense.Id == id);
 
-        public static Task<IEnumerable<Expense>> GetAllAsync(string account) =>
-            AzureTableStorage.GetAllAsync(nameof(Expense))
-                             .SelectAsync(ToExpense)
-                             .WhereAsync(expense => expense.Account == account);
+        public static Task<IEnumerable<Expense>> GetAllAsync(string account, string email) =>
+            AzureTableStorage.GetAllAsync(nameof(Expense), account + email)
+                             .SelectAsync(ToExpense);
 
         static Expense ToExpense(this DynamicTableEntity expense) =>
             new Expense

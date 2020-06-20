@@ -1,6 +1,4 @@
 using System;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -21,19 +19,13 @@ namespace UnoCash.Api
         {
             var account = req.Query["account"];
 
-            var jwtToken = req.Cookies["jwtToken"];
-            
-            var email =
-                new JwtSecurityTokenHandler().ReadJwtToken(jwtToken)
-                                             .Claims
-                                             .SingleOrDefault(c => c.Type == "email")
-                                             .Value;
+            var email = req.GetUserEmail();
 
             log.LogWarning($"Fetching expense(s) for account: {account}, user: {email}");
 
             return new OkObjectResult(Guid.TryParse(req.Query["id"], out var id) ?
-                                      await ExpenseReader.GetAsync(account, id):
-                                      await ExpenseReader.GetAllAsync(account));
+                                          await ExpenseReader.GetAsync(account, req.GetUserEmail(), id):
+                                          await ExpenseReader.GetAllAsync(account, req.GetUserEmail()));
         }
     }
 }

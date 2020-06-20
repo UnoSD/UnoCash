@@ -15,7 +15,7 @@ namespace UnoCash.Core
             GetOrCreateAsync(tableName).Bind(t => t.ExecuteAsync(TableOperation.Insert(entity)))
                                        .Map(result => result.HttpStatusCode.IsSuccessStatusCode());
 
-        static Task<CloudTable> GetOrCreateAsync(string name) =>
+        static Task<CloudTable> GetOrCreateAsync(this string name) =>
             ConfigurationReader.GetAsync(StorageAccountConnectionString)
                                .Map(CloudStorageAccount.Parse)
                                .Map(csa => csa.CreateCloudTableClient())
@@ -23,8 +23,15 @@ namespace UnoCash.Core
                                .Bind(table => table.CreateIfNotExistsAsync()
                                                    .Map(_ => table));
 
-        internal static Task<IEnumerable<DynamicTableEntity>> GetAllAsync(string tableName) =>
-            GetOrCreateAsync(tableName).Bind(table => GetAllAsync(table, new TableQuery()));
+        internal static Task<IEnumerable<DynamicTableEntity>> GetAllAsync(string tableName, string partitionKey) =>
+            tableName.GetOrCreateAsync()
+                     .Bind(table => GetAllAsync(table, 
+                                                PartitionKeyQuery(partitionKey)));
+
+        static TableQuery PartitionKeyQuery(string partitionKey) =>
+            new TableQuery().Where(TableQuery.GenerateFilterCondition("PartitionKey",
+                                                                      QueryComparisons.Equal,
+                                                                      partitionKey));
 
         static Task<IEnumerable<DynamicTableEntity>> GetAllAsync(CloudTable table,
                                                                  TableQuery query) =>
@@ -75,7 +82,7 @@ namespace UnoCash.Core
             if (entity != null)
                 await table.ExecuteAsync(TableOperation.Delete(entity))
                            .ConfigureAwait(false);
-
+            
             return entity != null;
         }
     }

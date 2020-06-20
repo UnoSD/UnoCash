@@ -20,7 +20,7 @@ namespace UnoCash.Api
 
             log.LogWarning($"Processing the receipt for {blob}");
 
-            var receipt = await ReceiptParser.ParseAsync(blob);
+            var receipt = await ReceiptParser.ParseAsync(blob, req.GetUserEmail());
 
             return new OkObjectResult(receipt);
         }

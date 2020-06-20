@@ -36,7 +36,7 @@ namespace UnoCash.Api
                                     expense.Description,
                                     expense.Tags
                                 }.Iter(x => log.LogWarning(x)))
-               .Bind(expense => expense.WriteAsync())
+               .Bind(expense => expense.WriteAsync(req.GetUserEmail()))
                .Map(isSuccessful => isSuccessful ?
                                     (IActionResult)new OkResult() :
                                     new InternalServerErrorResult());
