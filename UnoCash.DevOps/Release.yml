@@ -46,7 +46,7 @@ trigger:
 
 resources:
   pipelines:
-    - pipeline: Build
+    - pipeline: Build-resource
       source: Build
       trigger:
         branches:
@@ -141,8 +141,8 @@ stages:
           displayName: Download build artifacts for Fable
           inputs:
             buildType: specific
-            project: '44f232b3-0809-4f97-bac6-30d169f0187d'
-            pipeline: '4'
+            project: resources.pipeline.Build.projectID
+            pipeline: resources.pipeline.Build.pipelineID
             specificBuildWithTriggering: true
             buildVersionToDownload: latest
             downloadType: single
@@ -153,8 +153,8 @@ stages:
           displayName: Download build artifacts for API
           inputs:
             buildType: specific
-            project: '44f232b3-0809-4f97-bac6-30d169f0187d'
-            pipeline: '4'
+            project: resources.pipeline.Build.projectID
+            pipeline: resources.pipeline.Build.pipelineID
             specificBuildWithTriggering: true
             buildVersionToDownload: latest
             downloadType: single
@@ -219,8 +219,8 @@ stages:
               displayName: Download build artifacts for API
               inputs:
                 buildType: specific
-                project: '44f232b3-0809-4f97-bac6-30d169f0187d'
-                pipeline: '4'
+                project: resources.pipeline.Build.projectID
+                pipeline: resources.pipeline.Build.pipelineID
                 specificBuildWithTriggering: true
                 buildVersionToDownload: latest
                 downloadType: single
@@ -231,8 +231,8 @@ stages:
               displayName: Download build artifacts for Fable
               inputs:
                 buildType: specific
-                project: '44f232b3-0809-4f97-bac6-30d169f0187d'
-                pipeline: '4'
+                project: resources.pipeline.Build.projectID
+                pipeline: resources.pipeline.Build.pipelineID
                 specificBuildWithTriggering: true
                 buildVersionToDownload: latest
                 downloadType: single
