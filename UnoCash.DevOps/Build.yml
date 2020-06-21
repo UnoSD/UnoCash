@@ -45,10 +45,10 @@ steps:
     arguments: build
     workingDirectory: UnoCash.Fulma
 
-- task: PublishBuildArtifacts@1
+- task: PublishPipelineArtifact@1
   displayName: Publish Fable project
   inputs:
-    pathtoPublish: UnoCash.Fulma/output
+    targetPath: UnoCash.Fulma/output
     artifactName: UnoCash.Fulma
   
 - task: DotNetCoreCLI@2
@@ -60,8 +60,8 @@ steps:
     arguments: '--configuration Release --output $(Build.ArtifactStagingDirectory)'
     zipAfterPublish: true
   
-- task: PublishBuildArtifacts@1
+- task: PublishPipelineArtifact@1
   displayName: Publish Function API
   inputs:
-    pathtoPublish: $(Build.ArtifactStagingDirectory)
+    targetPath: $(Build.ArtifactStagingDirectory)
     artifactName: UnoCash.Api

@@ -137,29 +137,27 @@ stages:
       steps:
         - checkout: self
           
-        - task: DownloadBuildArtifacts@0
+        - task: DownloadPipelineArtifact@2
           displayName: Download build artifacts for Fable
           inputs:
-            buildType: specific
+            source: specific
             project: $(resources.pipeline.Build-resource.projectID)
             pipeline: $(resources.pipeline.Build-resource.pipelineID)
-            specificBuildWithTriggering: true
-            buildVersionToDownload: latest
-            downloadType: single
-            artifactName: UnoCash.Fulma
-            downloadPath: $(System.ArtifactsDirectory)
+            preferTriggeringPipeline: true
+            runVersion: latest
+            artifact: UnoCash.Fulma
+            path: $(System.ArtifactsDirectory)
             
-        - task: DownloadBuildArtifacts@0
+        - task: DownloadPipelineArtifact@2
           displayName: Download build artifacts for API
           inputs:
-            buildType: specific
+            source: specific
             project: $(resources.pipeline.Build-resource.projectID)
             pipeline: $(resources.pipeline.Build-resource.pipelineID)
-            specificBuildWithTriggering: true
-            buildVersionToDownload: latest
-            downloadType: single
-            artifactName: UnoCash.Api
-            downloadPath: $(System.ArtifactsDirectory)
+            preferTriggeringPipeline: true
+            runVersion: latest
+            artifact: UnoCash.Api
+            path: $(System.ArtifactsDirectory)
           
         - task: AzureCLI@2
           displayName: Pulumi preview
@@ -215,29 +213,27 @@ stages:
             steps:
             - checkout: self                
                 
-            - task: DownloadBuildArtifacts@0
+            - task: DownloadPipelineArtifact@2
               displayName: Download build artifacts for API
               inputs:
-                buildType: specific
+                source: specific
                 project: $(resources.pipeline.Build-resource.projectID)
                 pipeline: $(resources.pipeline.Build-resource.pipelineID)
-                specificBuildWithTriggering: true
-                buildVersionToDownload: latest
-                downloadType: single
-                artifactName: UnoCash.Api
-                downloadPath: $(System.ArtifactsDirectory)
+                preferTriggeringPipeline: true
+                runVersion: latest
+                artifact: UnoCash.Api
+                path: $(System.ArtifactsDirectory)
                 
-            - task: DownloadBuildArtifacts@0
+            - task: DownloadPipelineArtifact@2
               displayName: Download build artifacts for Fable
               inputs:
-                buildType: specific
+                source: specific
                 project: $(resources.pipeline.Build-resource.projectID)
                 pipeline: $(resources.pipeline.Build-resource.pipelineID)
-                specificBuildWithTriggering: true
-                buildVersionToDownload: latest
-                downloadType: single
-                artifactName: UnoCash.Fulma
-                downloadPath: $(System.ArtifactsDirectory)
+                preferTriggeringPipeline: true
+                runVersion: latest
+                artifact: UnoCash.Fulma
+                path: $(System.ArtifactsDirectory)
                 
             - task: AzureCLI@2
               displayName: Pulumi up
