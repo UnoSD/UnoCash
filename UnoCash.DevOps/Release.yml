@@ -397,7 +397,7 @@ stages:
 
                   az ad app update \
                     --id $APPLICATION_ID \
-                    --optional-claims '{"idToken":[{"name":"email"}]}'
+                    --optional-claims '{"idToken":[{"name":"upn","essential":true,"additionalProperties":["include_externally_authenticated_upn"]}]}'
 
             - task: AzureCLI@2
               displayName: Remove subscription required from API Management
