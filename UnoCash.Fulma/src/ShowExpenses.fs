@@ -115,7 +115,37 @@ let private expensesTable model dispatch =
     | true  -> table
     | false -> spinner
 
+let private getTotalByTypes types (expenses : Expense[]) =
+    expenses |>
+    Array.filter (fun x -> types |> List.contains x.``type``) |>
+    Array.sumBy (fun x -> x.amount) |>
+    decimal
+
+let private totalLevelItem title total =
+    Level.item [ Level.Item.HasTextCentered ]
+               [ div []
+                     [ Level.heading [] [ str title ]
+                       Level.title   [] [ sprintf "£ %.2f" total |> str ] ] ]
+
+let private totals expenses =
+    [
+        {|
+            Types = [ "Regular" ]
+            Title = "TOTAL RECONCILED"
+        |}
+        {|
+            Types = [ "Regular"; "Pending" ]
+            Title = "TOTAL"
+        |}
+    ] |>
+    List.map (fun x -> expenses |> getTotalByTypes x.Types |> totalLevelItem x.Title) |>
+    Level.level []
+
+let topBox model dispatch =
+    Box.box' [] [ dropdownWithEvent "Account" model.Accounts model.ShowAccount ChangeShowAccount dispatch
+                  totals model.Expenses ]
+
 let showExpensesCard model dispatch =
-    card [ dropdownWithEvent "Account" model.Accounts model.ShowAccount ChangeShowAccount dispatch
+    card [ topBox model dispatch
            expensesTable model dispatch ]
          Html.none
