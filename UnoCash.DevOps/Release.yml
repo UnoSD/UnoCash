@@ -73,7 +73,7 @@ stages:
             
       - task: AzureCLI@2
         displayName: Install Pulumi
-        condition: ne(variables.pulumi_installed, ‘true’)
+        condition: ne(variables.pulumi_installed, 'true')
         inputs:
           scriptType: bash
           scriptLocation: inlineScript
