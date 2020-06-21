@@ -24,8 +24,8 @@ namespace UnoCash.Api
             log.LogWarning($"Fetching expense(s) for account: {account}, user: {email}");
 
             return new OkObjectResult(Guid.TryParse(req.Query["id"], out var id) ?
-                                          await ExpenseReader.GetAsync(account, req.GetUserEmail(), id):
-                                          await ExpenseReader.GetAllAsync(account, req.GetUserEmail()));
+                                          await ExpenseReader.GetAsync(account, email, id):
+                                          await ExpenseReader.GetAllAsync(account, email));
         }
     }
 }
