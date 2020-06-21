@@ -392,7 +392,7 @@ let infra () =
                 <return-response>
                     <set-status code="303" reason="See Other" />
                     <set-header name="Location" exists-action="override">
-                        <value>@($"https://login.microsoftonline.com/%s/oauth2/v2.0/authorize?client_id=%s&response_type=id_token&redirect_uri={System.Net.WebUtility.UrlEncode(context.Request.OriginalUrl.ToString())}&response_mode=form_post&scope=openid&nonce={Guid.NewGuid().ToString("n")}")</value>
+                        <value>@($"https://login.microsoftonline.com/%s/oauth2/v2.0/authorize?client_id=%s&response_type=id_token&redirect_uri={System.Net.WebUtility.UrlEncode(context.Request.OriginalUrl.ToString())}&response_mode=form_post&scope=openid%%20profile&nonce={Guid.NewGuid().ToString("n")}")</value>
                     </set-header>
                 </return-response>
             </when>
