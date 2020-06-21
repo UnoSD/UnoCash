@@ -214,17 +214,6 @@ stages:
             - checkout: self                
                 
             - task: DownloadPipelineArtifact@2
-              displayName: Download build artifacts for API
-              inputs:
-                source: specific
-                project: $(resources.pipeline.Build-resource.projectID)
-                pipeline: $(resources.pipeline.Build-resource.pipelineID)
-                preferTriggeringPipeline: true
-                runVersion: latest
-                artifact: UnoCash.Api
-                path: $(System.ArtifactsDirectory)/UnoCash.Fulma
-                
-            - task: DownloadPipelineArtifact@2
               displayName: Download build artifacts for Fable
               inputs:
                 source: specific
@@ -233,6 +222,17 @@ stages:
                 preferTriggeringPipeline: true
                 runVersion: latest
                 artifact: UnoCash.Fulma
+                path: $(System.ArtifactsDirectory)/UnoCash.Fulma
+  
+            - task: DownloadPipelineArtifact@2
+              displayName: Download build artifacts for API
+              inputs:
+                source: specific
+                project: $(resources.pipeline.Build-resource.projectID)
+                pipeline: $(resources.pipeline.Build-resource.pipelineID)
+                preferTriggeringPipeline: true
+                runVersion: latest
+                artifact: UnoCash.Api
                 path: $(System.ArtifactsDirectory)/UnoCash.Api
                 
             - task: AzureCLI@2
