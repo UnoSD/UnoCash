@@ -19,7 +19,7 @@ namespace UnoCash.Api
         {
             var account = req.Query["account"];
 
-            var email = req.GetUserEmail();
+            var email = req.GetUserUpn();
 
             log.LogWarning($"Fetching expense(s) for account: {account}, user: {email}");
 
