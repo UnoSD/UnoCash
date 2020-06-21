@@ -64,6 +64,22 @@ stages:
   jobs:
     - job: Pulumi
       steps:
+      - task: Cache@2
+        displayName: Cache Pulumi installation
+        inputs:
+          key: pulumi
+          path: /home/vsts/.pulumi
+          cacheHitVar: pulumi_installed
+            
+      - task: AzureCLI@2
+        displayName: Install Pulumi
+        condition: ne(variables.pulumi_installed, ‘true’)
+        inputs:
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            curl -fsSL https://get.pulumi.com | sh
+            
       - task: AzureCLI@2
         displayName: Create backend storage
         env:
@@ -114,20 +130,12 @@ stages:
             export PATH="$PATH:/home/vsts/.pulumi/bin"
             export KEYVAULT="${{ parameters.secrets_provider_keyvault_name }}.vault.azure.net"
 
-            curl -fsSL https://get.pulumi.com | sh
-
             pulumi login -c azblob://unocash -C UnoCash.Pulumi
 
             pulumi stack select dev \
               -c \
               -C UnoCash.Pulumi \
               --secrets-provider="azurekeyvault://$KEYVAULT/keys/pulumi"
-      
-      - task: Cache@2
-        displayName: Cache Pulumi installation
-        inputs:
-          key: pulumi
-          path: /home/vsts/.pulumi
 
 - stage: Development_preview
   displayName: Development preview
