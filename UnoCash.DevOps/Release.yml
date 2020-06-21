@@ -146,7 +146,7 @@ stages:
             preferTriggeringPipeline: true
             runVersion: latest
             artifact: UnoCash.Fulma
-            path: $(System.ArtifactsDirectory)
+            path: $(System.ArtifactsDirectory)/UnoCash.Fulma
             
         - task: DownloadPipelineArtifact@2
           displayName: Download build artifacts for API
@@ -157,7 +157,7 @@ stages:
             preferTriggeringPipeline: true
             runVersion: latest
             artifact: UnoCash.Api
-            path: $(System.ArtifactsDirectory)
+            path: $(System.ArtifactsDirectory)/UnoCash.Api
           
         - task: AzureCLI@2
           displayName: Pulumi preview
@@ -222,7 +222,7 @@ stages:
                 preferTriggeringPipeline: true
                 runVersion: latest
                 artifact: UnoCash.Api
-                path: $(System.ArtifactsDirectory)
+                path: $(System.ArtifactsDirectory)/UnoCash.Fulma
                 
             - task: DownloadPipelineArtifact@2
               displayName: Download build artifacts for Fable
@@ -233,7 +233,7 @@ stages:
                 preferTriggeringPipeline: true
                 runVersion: latest
                 artifact: UnoCash.Fulma
-                path: $(System.ArtifactsDirectory)
+                path: $(System.ArtifactsDirectory)/UnoCash.Api
                 
             - task: AzureCLI@2
               displayName: Pulumi up
