@@ -9,8 +9,11 @@
         <Content Include="Build.yml" />
         <Content Include="Release.yml" />
         <Content Include="Destroy.yml" />
+        <Content Include="CreateTlsCertificate.yml" />
+        <Content Include="RenewTlsCertificate.yml" />
         <Compile Include="Program.fs" />
         <Content Include="AADSpaApplicationManifest.json" />
+        <Content Include="DnsTxtContributorRole.json" />
     </ItemGroup>
 
     <ItemGroup>

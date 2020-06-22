@@ -1,0 +1,59 @@
+parameters:
+  - name: azure_subscription
+    type: string
+    default: $(azure-subscription)
+
+  - name: dns_zone_name
+    type: string
+    default: $(dns-zone-name)
+
+  - name: dns_record_name
+    type: string
+    default: $(dns-record-name)
+
+  - name: certificate_password
+    type: string
+    default: $(certificate-password)
+
+  - name: keyvault_name
+    type: string
+    default: $(keyvault-name)
+  
+trigger: none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: AzurePowerShell@5
+    displayName: Create TLS certificate
+    inputs:
+      azureSubscription: ${{ parameters.azure_subscription }}
+      ScriptType: InlineScript
+      azurePowerShellVersion: LatestVersion
+      Inline: |
+        $domainName = "${{ parameters.dns_record_name }}.${{ parameters.dns_zone_name }}"
+        $pfxPass = '${{ parameters.certificate_password }}'
+        $subscription = (Get-AzSubscription).Id
+        $vaultName = "${{ parameters.keyvault_name }}"
+        
+        Install-Module -Name Posh-ACME -Scope CurrentUser -Force
+        
+        Set-PAServer "LE_Prod"
+        
+        $azParams = @{ AZSubscriptionId=$subscription; AZUseIMDS=$true }
+        
+        DOSOMETHINGELSE-PACertificate $domainName `
+                          -PfxPass $pfxPass `
+                          -AcceptTOS `
+                          -DnsPlugin Azure `
+                          -PluginArgs $azParams
+        
+        $pfxFilePath = (Get-PACertificate).PfxFile
+        
+        Import-AzKeyVaultCertificate -VaultName ${{ parameters.keyvault_name }} `
+                                     -Name "pippo" `
+                                     -FilePath "$pfxFilePath" `
+                                     -Password (ConvertTo-SecureString -AsPlainText $pfxPass)
+        
+        Get-PAAccount | Remove-PAAccount -Force

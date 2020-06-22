@@ -1,0 +1,18 @@
+{
+    "assignableScopes": [
+        "/subscriptions/754b3409-fca1-4ba4-aed4-058add63e401"
+    ],
+    "description": "Lets you manage DNS TXT record sets in Azure DNS.",
+    "name": "DNS TXT Contributor",
+    "actions": [
+        "Microsoft.Network/dnsZones/TXT/*",
+        "Microsoft.Network/dnsZones/read",
+        "Microsoft.Authorization/*/read",
+        "Microsoft.Insights/alertRules/*",
+        "Microsoft.ResourceHealth/availabilityStatuses/read",
+        "Microsoft.Resources/deployments/read",
+        "Microsoft.Resources/subscriptions/resourceGroups/read"
+    ],
+    "notActions": [],
+    "isCustom": true
+}
