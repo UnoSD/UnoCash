@@ -14,10 +14,13 @@ open Pulumi.FSharp
 open Pulumi.Azure.Core
 open Pulumi.Azure.Storage
 open System.Collections.Generic
+open Pulumi.FSharp.CE.ResourceGroup
 
 let infra () =
     let resourceGroup =
-        ResourceGroup "unocash"
+        resourceGroup {
+            name "unocash"
+        }
 
     let storageAccount =
         Account("unocashstorage",
