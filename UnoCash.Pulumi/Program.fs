@@ -21,7 +21,7 @@ let infra () =
             name "unocash"
         }
 
-    let storageAccount =
+    let sa =
         storageAccount {
             name          "unocashstorage"
             resourceGroup rg
@@ -31,14 +31,16 @@ let infra () =
         }
         
     let webContainer =
-        Container("unocashweb",
-                  ContainerArgs(StorageAccountName = io storageAccount.Name,
-                                ContainerAccessType = input "private",
-                                Name = input "$web"))
-        
+        storageContainer {
+            name                "unocashweb"
+            storageAccountInput sa.Name
+            access              Private
+            containerName       "$web"
+        }
+                
     let storageContainer =
         Container("unocashbuild",
-                  ContainerArgs(StorageAccountName = io storageAccount.Name,
+                  ContainerArgs(StorageAccountName = io sa.Name,
                                 ContainerAccessType = input "private"))
     
     let appServicePlan =
@@ -50,13 +52,13 @@ let infra () =
     
     let blob =
         Blob("unocashapi",
-             BlobArgs(StorageAccountName = io storageAccount.Name,
+             BlobArgs(StorageAccountName = io sa.Name,
                       StorageContainerName = io storageContainer.Name,
                       Type = input "Block",
                       Source = input ((Config().Require("ApiBuild") |> FileAsset) :> AssetOrArchive)))
     
     let codeBlobUrl =
-        SharedAccessSignature.SignedBlobReadUrl(blob, storageAccount)
+        SharedAccessSignature.SignedBlobReadUrl(blob, sa)
     
     let appInsights =
         Insights("unocashai",
@@ -86,7 +88,7 @@ let infra () =
                           ApplicationInsights = input (LoggerApplicationInsightsArgs(InstrumentationKey = io appInsights.InstrumentationKey))))
         
     let webContainerUrl =
-        FormattableStringFactory.Create("https://{0}.blob.core.windows.net/{1}", storageAccount.Name, webContainer.Name) |>
+        FormattableStringFactory.Create("https://{0}.blob.core.windows.net/{1}", sa.Name, webContainer.Name) |>
         Output.Format
     
     let api =
@@ -175,7 +177,7 @@ let infra () =
     
     let policyBlob name (appIdToPolicyXml : string -> string) =
         Blob("unocash" + name + "policyblob",
-             BlobArgs(StorageAccountName = io storageAccount.Name,
+             BlobArgs(StorageAccountName = io sa.Name,
                       StorageContainerName = io storageContainer.Name,
                       Type = input "Block",
                       Source = (appIdToPolicyXml |>
@@ -197,14 +199,14 @@ let infra () =
         GetAccountBlobContainerSAS.InvokeAsync
     
     let withSas blobUrl =
-        Output.Tuple(storageAccount.PrimaryConnectionString, storageContainer.Name, blobUrl)
+        Output.Tuple(sa.PrimaryConnectionString, storageContainer.Name, blobUrl)
               .Apply<string>(fun struct (cs, cn, bu) ->
                   Output.Create<GetAccountBlobContainerSASResult>(getSas cs cn)
                         .Apply(fun res -> bu + res.Sas))
     
     let apiPolicyXml =
         let sasToken =
-            Output.Tuple(storageAccount.PrimaryConnectionString, webContainer.Name)
+            Output.Tuple(sa.PrimaryConnectionString, webContainer.Name)
                           .Apply(fun struct (cs, cn) ->
                                      GetAccountBlobContainerSASArgs(ConnectionString = cs,
                                                                     ContainerName = cn,
@@ -419,11 +421,11 @@ let infra () =
                                     AppSettings = inputMap [ "runtime", input "dotnet"
                                                              "WEBSITE_RUN_FROM_PACKAGE", io codeBlobUrl
                                                              "APPINSIGHTS_INSTRUMENTATIONKEY", io appInsights.InstrumentationKey
-                                                             "StorageAccountConnectionString", io storageAccount.PrimaryConnectionString
+                                                             "StorageAccountConnectionString", io sa.PrimaryConnectionString
                                                              "FormRecognizerKey", input ""
                                                              "FormRecognizerEndpoint", input "" ],
-                                    StorageAccountName = io storageAccount.Name,
-                                    StorageAccountAccessKey = io storageAccount.PrimaryAccessKey,
+                                    StorageAccountName = io sa.Name,
+                                    StorageAccountAccessKey = io sa.PrimaryAccessKey,
                                     Version = input "~3",
                                     SiteConfig = input (FunctionAppSiteConfigArgs(Cors = functionAppCors))))
     
@@ -492,7 +494,7 @@ let infra () =
     
     let _ =
         Blob("unocashwebconfig",
-             BlobArgs(StorageAccountName = io storageAccount.Name,
+             BlobArgs(StorageAccountName = io sa.Name,
                       StorageContainerName = io webContainer.Name,
                       Type = input "Block",
                       Name = input "apibaseurl",
@@ -503,7 +505,7 @@ let infra () =
     dict [
         ("Hostname", app.DefaultHostname :> obj)
         ("ResourceGroup", rg.Name :> obj)
-        ("StorageAccount", storageAccount.Name :> obj)
+        ("StorageAccount", sa.Name :> obj)
         ("ApiManagementEndpoint", apiManagement.GatewayUrl :> obj)
         ("ApiManagement", apiManagement.Name :> obj)
         ("StaticWebsiteApi", api.Name :> obj)
