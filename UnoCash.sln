@@ -27,6 +27,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "UnoCash.Pulumi", "UnoCash.P
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "UnoCash.DevOps", "UnoCash.DevOps\UnoCash.DevOps.fsproj", "{C225663B-9CE7-4DDA-96DC-47152B8F9E3F}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Pulumi.FSharp.Azure", "Pulumi.FSharp.Azure\Pulumi.FSharp.Azure.fsproj", "{0EAF11D7-F470-4ABD-AD99-63622D9C4C19}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{C225663B-9CE7-4DDA-96DC-47152B8F9E3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C225663B-9CE7-4DDA-96DC-47152B8F9E3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C225663B-9CE7-4DDA-96DC-47152B8F9E3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EAF11D7-F470-4ABD-AD99-63622D9C4C19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EAF11D7-F470-4ABD-AD99-63622D9C4C19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EAF11D7-F470-4ABD-AD99-63622D9C4C19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EAF11D7-F470-4ABD-AD99-63622D9C4C19}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

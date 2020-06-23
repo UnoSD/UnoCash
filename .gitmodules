@@ -1,0 +1,3 @@
+[submodule "Pulumi.FSharp.Azure"]
+	path = Pulumi.FSharp.Azure
+	url = git@github.com:UnoSD/Pulumi.FSharp.Azure.git

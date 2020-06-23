@@ -11,9 +11,6 @@
     <Content Include="ApiManagement.json" />
     <Content Include="Pulumi.yaml" />
     <Content Include="Pulumi.dev.yaml" />
-    <Compile Include="Regions.fs" />
-    <Compile Include="ResourceGroup.fs" />
-    <Compile Include="StorageAccount.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
@@ -22,6 +19,10 @@
     <PackageReference Include="Pulumi.AzureAD" Version="2.2.1" />
     <PackageReference Include="Pulumi.FSharp" Version="2.3.0" />
     <PackageReference Include="FSharp.Core" Version="4.7.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Pulumi.FSharp.Azure\Pulumi.FSharp.Azure.fsproj" />
   </ItemGroup>
 
 </Project>
