@@ -144,6 +144,7 @@ stages:
     - job: Preview
       steps:
         - checkout: self
+          submodules: true
           
         - task: DownloadPipelineArtifact@2
           displayName: Download build artifacts for Fable
@@ -219,7 +220,8 @@ stages:
         runOnce:
           deploy:
             steps:
-            - checkout: self                
+            - checkout: self
+              submodules: true
                 
             - task: DownloadPipelineArtifact@2
               displayName: Download build artifacts for Fable
