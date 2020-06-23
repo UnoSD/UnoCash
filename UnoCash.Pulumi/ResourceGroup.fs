@@ -1,23 +1,18 @@
-module Pulumi.FSharp.CE.ResourceGroup
+[<AutoOpen>]
+module Pulumi.FSharp.Azure.ResourceGroup
 
+open Pulumi.FSharp.Azure
 open Pulumi.Azure.Core
 open Pulumi.FSharp
 open Pulumi
 
-type Region =
-    | WestEurope
-
-let regionName =
-    function
-    | WestEurope -> "West Europe"
-
-type ResourceGroupArgsRecord = {
+type ResourceGroupBuilderArgs = {
     Name: string
     Region: Region
     Tags: (string * Input<string>) list
 }
 
-type ResourceGroupBuilder internal () =
+type ResourceGroupBuilder () =
     member __.Yield _ = {
         Name = "" // This needs to be an option or mandatory
         Region = WestEurope

@@ -11,7 +11,9 @@
     <Content Include="ApiManagement.json" />
     <Content Include="Pulumi.yaml" />
     <Content Include="Pulumi.dev.yaml" />
-    <Compile Include="Pulumi.FSharp.CE.ResourceGroup.fs" />
+    <Compile Include="Regions.fs" />
+    <Compile Include="ResourceGroup.fs" />
+    <Compile Include="StorageAccount.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
