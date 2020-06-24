@@ -145,6 +145,7 @@ stages:
       steps:
         - checkout: self
           submodules: true
+          clean: true
           
         - task: DownloadPipelineArtifact@2
           displayName: Download build artifacts for Fable
