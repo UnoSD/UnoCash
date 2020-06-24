@@ -32,10 +32,10 @@ let infra () =
         
     let webContainer =
         storageContainer {
-            name                "unocashweb"
-            storageAccountInput sa.Name
-            access              Private
-            containerName       "$web"
+            name           "unocashweb"
+            storageAccount sa.Name
+            access         Private
+            containerName  "$web"
         }
                 
     let storageContainer =
