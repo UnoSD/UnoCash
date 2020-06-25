@@ -9,6 +9,7 @@ trigger:
     - UnoCash.DevOps/Destroy.yml
     - UnoCash.DevOps/DevOps.fsproj
     - .git/*
+    - UnoCash/Pulumi.FSharp.Azure
 
 pool:
   vmImage: ubuntu-latest
