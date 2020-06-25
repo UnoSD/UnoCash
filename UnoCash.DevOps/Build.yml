@@ -10,6 +10,7 @@ trigger:
     - UnoCash.DevOps/DevOps.fsproj
     - .git/*
     - Pulumi.FSharp.Azure
+    - Pulumi.FSharp.Azure/*
 
 pool:
   vmImage: ubuntu-latest
