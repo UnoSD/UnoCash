@@ -5,7 +5,6 @@ open System.Runtime.CompilerServices
 open Pulumi
 open Pulumi.Azure.ApiManagement
 open Pulumi.Azure.ApiManagement.Inputs
-open Pulumi.Azure.AppInsights
 open Pulumi.Azure.AppService
 open Pulumi.Azure.AppService.Inputs
 open Pulumi.Azure.Storage.Inputs
@@ -62,11 +61,13 @@ let infra () =
         SharedAccessSignature.SignedBlobReadUrl(blob, storage)
     
     let appInsights =
-        Insights("unocashai",
-                 InsightsArgs(ResourceGroupName = io rg.Name,
-                              ApplicationType = input "web",
-                              RetentionInDays = input 90))
-   
+        appInsight {
+            name            "unocashai"
+            resourceGroup   rg
+            applicationType AppInsightPrivate.Web
+            retentionInDays 90
+        }
+        
     let apiManagement =
         let outputs =
             TemplateDeployment("unocashapim",
@@ -206,7 +207,15 @@ let infra () =
                         .Apply(fun res -> bu + res.Sas))
     
     let apiPolicyXml =
+        // Is it possible for Pulumi to read the current state
+        // check if the token is not expired
+        // if not, don't alter it
+        // if yes, alter it and regenerate
+        // Pulumi reflection-like
+        
+        
         let sasToken =
+            // Replace Apply with CE
             Output.Tuple(storage.PrimaryConnectionString, webContainer.Name)
                           .Apply(fun struct (cs, cn) ->
                                      GetAccountBlobContainerSASArgs(ConnectionString = cs,
@@ -224,6 +233,11 @@ let infra () =
         sasToken.Apply(fun st -> tokenToPolicy st (Config().Require("WebEndpoint")))
 
     let swApiPolicyBlobLink =
+        // Use that to check if expired
+        //Blob.Get("", input "unocashmainapipolicyblob").Metadata.Apply(fun x -> x.["date"])
+        //
+        //StackReference("").Outputs.Apply(fun x -> x.["LastTokenDate"])
+        
         apiPolicyXml.Apply(fun p -> policyBlob "mainapi" (fun _ -> p))
                     .Apply<string>(fun b -> b.Url) |>
         withSas |>
