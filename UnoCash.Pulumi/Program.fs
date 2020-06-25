@@ -45,7 +45,7 @@ let infra () =
         }
     
     let appServicePlan =
-        appService {
+        functionAppService {
             name          "unocashasp"
             resourceGroup rg
         }
