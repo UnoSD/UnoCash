@@ -51,11 +51,12 @@ let infra () =
         }
     
     let blob =
-        Blob("unocashapi",
-             BlobArgs(StorageAccountName = io storage.Name,
-                      StorageContainerName = io buildContainer.Name,
-                      Type = input "Block",
-                      Source = input ((Config().Require("ApiBuild") |> FileAsset) :> AssetOrArchive)))
+        storageBlob {
+            name           "unocashapi"
+            storageAccount storage
+            container      buildContainer
+            source         (input ((Config().Require("ApiBuild") |> FileAsset) :> AssetOrArchive))
+        }
     
     let codeBlobUrl =
         SharedAccessSignature.SignedBlobReadUrl(blob, storage)
