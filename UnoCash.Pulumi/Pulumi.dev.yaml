@@ -1,3 +1,5 @@
 encryptionsalt: v1:QuW5FoE30SU=:v1:WiPebME9Bj+cMfrH:AN1Kez74ddoos7cvjUHhotVrjRu7Gg==
 config:
+  UnoCash.Pulumi:ApiBuild: ../UnoCash.Api/bin/output.zip
+  UnoCash.Pulumi:WebEndpoint: https://unocash.stefanodantonio.com
   azure:location: WestEurope
