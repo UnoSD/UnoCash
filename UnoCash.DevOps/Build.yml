@@ -8,7 +8,7 @@ trigger:
     - UnoCash.DevOps/Release.yml
     - UnoCash.DevOps/Destroy.yml
     - UnoCash.DevOps/DevOps.fsproj
-    - .git
+    - .git/*
 
 pool:
   vmImage: ubuntu-latest
