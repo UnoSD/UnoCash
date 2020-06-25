@@ -37,11 +37,13 @@ let infra () =
             access         Private
             containerName  "$web"
         }
-                
-    let storageContainer =
-        Container("unocashbuild",
-                  ContainerArgs(StorageAccountName = io sa.Name,
-                                ContainerAccessType = input "private"))
+            
+    let sc =
+        storageContainer {
+            name           "unocashbuild"
+            storageAccount sa
+            access         Private
+        }
     
     let appServicePlan =
         Plan("unocashasp",
@@ -53,7 +55,7 @@ let infra () =
     let blob =
         Blob("unocashapi",
              BlobArgs(StorageAccountName = io sa.Name,
-                      StorageContainerName = io storageContainer.Name,
+                      StorageContainerName = io sc.Name,
                       Type = input "Block",
                       Source = input ((Config().Require("ApiBuild") |> FileAsset) :> AssetOrArchive)))
     
@@ -178,7 +180,7 @@ let infra () =
     let policyBlob name (appIdToPolicyXml : string -> string) =
         Blob("unocash" + name + "policyblob",
              BlobArgs(StorageAccountName = io sa.Name,
-                      StorageContainerName = io storageContainer.Name,
+                      StorageContainerName = io sc.Name,
                       Type = input "Block",
                       Source = (appIdToPolicyXml |>
                                 spaAdApplication.ApplicationId.Apply |>
@@ -199,7 +201,7 @@ let infra () =
         GetAccountBlobContainerSAS.InvokeAsync
     
     let withSas blobUrl =
-        Output.Tuple(sa.PrimaryConnectionString, storageContainer.Name, blobUrl)
+        Output.Tuple(sa.PrimaryConnectionString, sc.Name, blobUrl)
               .Apply<string>(fun struct (cs, cn, bu) ->
                   Output.Create<GetAccountBlobContainerSASResult>(getSas cs cn)
                         .Apply(fun res -> bu + res.Sas))
