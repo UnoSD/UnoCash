@@ -1,7 +1,9 @@
 ﻿module Program
 
 open System
+open System.Diagnostics
 open System.Runtime.CompilerServices
+open System.Threading
 open Pulumi
 open Pulumi.Azure.ApiManagement
 open Pulumi.Azure.ApiManagement.Inputs
@@ -44,9 +46,10 @@ let infra () =
         }
     
     let appServicePlan =
-        functionAppService {
+        appService {
             name          "unocashasp"
             resourceGroup rg
+            kind          FunctionAppKind
         }
     
     let blob =
@@ -537,4 +540,16 @@ let infra () =
 
 [<EntryPoint>]
 let main _ =
+  let rec waitForDebugger () =
+      match Debugger.IsAttached with
+      | false -> Thread.Sleep(100)
+                 printf "."
+                 waitForDebugger ()
+      | true  -> printfn " attached"
+  
+  match Environment.GetEnvironmentVariable("PULUMI_DEBUG_WAIT") = "0" with
+  | false -> printf "Awaiting debugger to attach to the process"
+             waitForDebugger ()
+  | true  -> ()
+  
   Deployment.run infra
