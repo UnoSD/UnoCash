@@ -67,7 +67,7 @@ let infra () =
         appInsight {
             name            "unocashai"
             resourceGroup   rg
-            applicationType AppInsightPrivate.Web
+            applicationType Web
             retentionInDays 90
         }
         
