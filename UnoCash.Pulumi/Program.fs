@@ -108,9 +108,9 @@ let infra () =
                     ServiceUrl = io webContainerUrl(*,
                     SubscriptionRequired = false*)))
 
-    let tokenToPolicy (tokenResult : GetAccountBlobContainerSASResult) gatewayUrl =
+    let tokenToPolicy (sas : string) gatewayUrl =
         let queryString =
-            tokenResult.Sas.Substring(1).Split('&') |>
+            sas.Substring(1).Split('&') |>
             Array.map (fun pair -> pair.Split('=')) |>
             Array.map (fun arr -> (arr.[0], arr.[1])) |>
             Map.ofArray
@@ -208,6 +208,39 @@ let infra () =
               .Apply<string>(fun struct (cs, cn, bu) ->
                   Output.Create<GetAccountBlobContainerSASResult>(getSas cs cn)
                         .Apply(fun res -> bu + res.Sas))
+
+    let sasExpirationDate =
+        StackReference(Deployment.Instance.StackName)
+            .Outputs
+            .Apply(fun x -> match x.TryGetValue "SasTokenExpiration" with
+                            | true, (:? string as exp) -> match DateTime.Parse(exp) with
+                                                          | x when x < DateTime.Now -> (x, false) // Unchanged
+                                                          | _                       -> (DateTime.Now.AddYears(1), true)
+                            | _                        -> (DateTime.Now.AddYears(1), true))
+    
+    let sasToken () =
+        // Replace Apply with CE
+        Output.Tuple(storage.PrimaryConnectionString, webContainer.Name, sasExpirationDate.Apply(fst))
+                      .Apply(fun struct (cs, cn, exp) ->
+                                 GetAccountBlobContainerSASArgs(ConnectionString = cs,
+                                                                ContainerName = cn,
+                                                                Start = DateTime.Now
+                                                                                .ToString("u")
+                                                                                .Replace(' ', 'T'),
+                                                                Expiry = exp.ToString("u")
+                                                                            .Replace(' ', 'T'),
+                                                                Permissions = containerPermissions))
+                      .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
+              
+    let tokenOutput () =
+        StackReference(Deployment.Instance.StackName).Outputs.Apply(fun o -> o.["SasToken"] :?> string)
+              
+    let token =
+        sasExpirationDate.Apply(snd)
+                         .Apply<string>(fun (sasChanged : bool) -> match sasChanged with
+                                                                   | true  -> sasToken().Apply(fun x -> x.Sas)
+                                                                   | false -> tokenOutput ())
+                         //.Apply<string>(Output.CreateSecret)
     
     let apiPolicyXml =
         // Is it possible for Pulumi to read the current state
@@ -215,25 +248,7 @@ let infra () =
         // if not, don't alter it
         // if yes, alter it and regenerate
         // Pulumi reflection-like
-        
-        
-        let sasToken =
-            // Replace Apply with CE
-            Output.Tuple(storage.PrimaryConnectionString, webContainer.Name)
-                          .Apply(fun struct (cs, cn) ->
-                                     GetAccountBlobContainerSASArgs(ConnectionString = cs,
-                                                                    ContainerName = cn,
-                                                                    Start = DateTime.Now
-                                                                                    .ToString("u")
-                                                                                    .Replace(' ', 'T'),
-                                                                    Expiry = DateTime.Now
-                                                                                     .AddYears(1)
-                                                                                     .ToString("u")
-                                                                                     .Replace(' ', 'T'),
-                                                                    Permissions = containerPermissions))
-                          .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
-                          
-        sasToken.Apply(fun st -> tokenToPolicy st (Config().Require("WebEndpoint")))
+        token.Apply(fun st -> tokenToPolicy st (Config().Require("WebEndpoint")))
 
     let swApiPolicyBlobLink =
         // Use that to check if expired
@@ -530,6 +545,8 @@ let infra () =
         ("FunctionApi", apiFunction.Name :> obj)
         ("ApplicationId", spaAdApplication.ApplicationId :> obj)
         ("FunctionName", app.Name :> obj)
+        ("SasToken", token :> obj)
+        ("SasTokenExpiration", (sasExpirationDate.Apply(fun x -> (x |> fst).ToString())) :> obj)
         
         ("StaticWebsiteApiPolicyLink", swApiPolicyBlobLink :> obj)
         ("StaticWebsiteApiPostPolicyLink", swApiPostPolicyBlobLink :> obj)
