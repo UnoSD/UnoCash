@@ -547,9 +547,9 @@ let main _ =
                  waitForDebugger ()
       | true  -> printfn " attached"
   
-  match Environment.GetEnvironmentVariable("PULUMI_DEBUG_WAIT") = "0" with
-  | false -> printf "Awaiting debugger to attach to the process"
-             waitForDebugger ()
-  | true  -> ()
+  match Environment.GetEnvironmentVariable("PULUMI_DEBUG_WAIT") = "1" with
+  | true -> printf "Awaiting debugger to attach to the process"
+            waitForDebugger ()
+  | _    -> ()
   
   Deployment.run infra
