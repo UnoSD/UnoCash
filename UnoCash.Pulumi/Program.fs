@@ -221,10 +221,13 @@ let infra () =
     let sasExpirationOutputName = "SasTokenExpiration"
     let sasTokenOutputName = "SasToken"
     
+    let stack =
+        StackReference(Deployment.Instance.StackName)
+    
     let sasExpirationDate =
         output {
             let! previousOutputs =
-                StackReference(Deployment.Instance.StackName).Outputs
+                stack.Outputs
             
             return match previousOutputs.TryGetValue sasExpirationOutputName with
                    | true, (:? string as exp) -> match DateTime.TryParse(exp) with
@@ -261,7 +264,7 @@ let infra () =
                                         )
                                     
                                     return st.Sas }
-                | false -> output { let! tokenOutput = StackReference(Deployment.Instance.StackName).Outputs
+                | false -> output { let! tokenOutput = stack.Outputs
                                     return tokenOutput.[sasTokenOutputName] :?> string }
         }
     
