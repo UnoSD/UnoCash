@@ -59,8 +59,8 @@ let infra () =
     
     let codeBlobUrl =
         sasToken {
-            storageAccount storage
-            blob           apiBlob
+            account storage
+            blob    apiBlob
         }
     
     let appInsights =
