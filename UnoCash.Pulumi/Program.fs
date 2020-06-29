@@ -15,6 +15,7 @@ open Pulumi.FSharp
 open Pulumi.Azure.Core
 open Pulumi.Azure.Storage
 open Pulumi.FSharp.Azure
+open Pulumi.FSharp.Output
 
 let infra () =
     let rg =
@@ -190,74 +191,98 @@ let infra () =
                                 (fun o -> o.Apply (fun x -> x |> StringAsset :> AssetOrArchive)) |>
                                 io)))
     
-    let getSas connectionString containerName =
-        GetAccountBlobContainerSASArgs(ConnectionString = connectionString,
-                                       ContainerName = containerName,
-                                       Start = DateTime.Now
-                                                       .ToString("u")
-                                                       .Replace(' ', 'T'),
-                                       Expiry = DateTime.Now
-                                                        .AddHours(1.)
-                                                        .ToString("u")
-                                                        .Replace(' ', 'T'),
-                                       Permissions = containerPermissions) |>
-        GetAccountBlobContainerSAS.InvokeAsync
-    
-    let withSas blobUrl =
-        Output.Tuple(storage.PrimaryConnectionString, buildContainer.Name, blobUrl)
-              .Apply<string>(fun struct (cs, cn, bu) ->
-                  Output.Create<GetAccountBlobContainerSASResult>(getSas cs cn)
-                        .Apply(fun res -> bu + res.Sas))
+    let withSas baseBlobUrl =
+        output {
+            let! connectionString = storage.PrimaryConnectionString
+            let! containerName = buildContainer.Name
+            let! url = baseBlobUrl
 
-    let sasExpirationDate =
-        StackReference(Deployment.Instance.StackName)
-            .Outputs
-            .Apply(fun x -> match x.TryGetValue "SasTokenExpiration" with
-                            | true, (:? string as exp) -> match DateTime.Parse(exp) with
-                                                          | x when x < DateTime.Now -> (x, false) // Unchanged
-                                                          | _                       -> (DateTime.Now.AddYears(1), true)
-                            | _                        -> (DateTime.Now.AddYears(1), true))
-    
-    let sasToken () =
-        // Replace Apply with CE
-        Output.Tuple(storage.PrimaryConnectionString, webContainer.Name, sasExpirationDate.Apply(fst))
-                      .Apply(fun struct (cs, cn, exp) ->
-                                 GetAccountBlobContainerSASArgs(ConnectionString = cs,
-                                                                ContainerName = cn,
-                                                                Start = DateTime.Now
-                                                                                .ToString("u")
-                                                                                .Replace(' ', 'T'),
-                                                                Expiry = exp.ToString("u")
-                                                                            .Replace(' ', 'T'),
-                                                                Permissions = containerPermissions))
-                      .Apply<GetAccountBlobContainerSASResult>(GetAccountBlobContainerSAS.InvokeAsync)
-              
-    let tokenOutput () =
-        StackReference(Deployment.Instance.StackName).Outputs.Apply(fun o -> o.["SasToken"] :?> string)
-              
-    let token =
-        sasExpirationDate.Apply(snd)
-                         .Apply<string>(fun (sasChanged : bool) -> match sasChanged with
-                                                                   | true  -> sasToken().Apply(fun x -> x.Sas)
-                                                                   | false -> tokenOutput ())
-                         //.Apply<string>(Output.CreateSecret)
-    
-    let apiPolicyXml =
-        // Is it possible for Pulumi to read the current state
-        // check if the token is not expired
-        // if not, don't alter it
-        // if yes, alter it and regenerate
-        // Pulumi reflection-like
-        token.Apply(fun st -> tokenToPolicy st (Config().Require("WebEndpoint")))
-
-    let swApiPolicyBlobLink =
-        // Use that to check if expired
-        //Blob.Get("", input "unocashmainapipolicyblob").Metadata.Apply(fun x -> x.["date"])
-        //
-        //StackReference("").Outputs.Apply(fun x -> x.["LastTokenDate"])
+            let start =
+                DateTime.Now.ToString("u").Replace(' ', 'T')
+            
+            let expiry =
+                DateTime.Now.AddHours(1.).ToString("u").Replace(' ', 'T')
+            
+            let! tokenResult =
+                GetAccountBlobContainerSASArgs(
+                    ConnectionString = connectionString,
+                    ContainerName = containerName,
+                    Start = start,
+                    Expiry = expiry,
+                    Permissions = containerPermissions
+                ) |>
+                GetAccountBlobContainerSAS.InvokeAsync |>
+                Output.Create<GetAccountBlobContainerSASResult>
+                
+            return url + tokenResult.Sas
+        }
         
-        apiPolicyXml.Apply(fun p -> policyBlob "mainapi" (fun _ -> p))
-                    .Apply<string>(fun b -> b.Url) |>
+    let sasExpirationOutputName = "SasTokenExpiration"
+    let sasTokenOutputName = "SasToken"
+    
+    let sasExpirationDate =
+        output {
+            let! previousOutputs =
+                StackReference(Deployment.Instance.StackName).Outputs
+            
+            return match previousOutputs.TryGetValue sasExpirationOutputName with
+                   | true, (:? string as exp) -> match DateTime.TryParse(exp) with
+                                                 | true, x when x < DateTime.Now -> x, false // Unchanged
+                                                 | _, _                          -> DateTime.Now.AddYears(1), true
+                   | _                        -> DateTime.Now.AddYears(1), true
+        }
+    
+    let token =
+        secretOutput {
+            let! (_, sasChanged) =
+                sasExpirationDate
+            
+            let! token =
+                match sasChanged with
+                | true  -> output { let! cs = storage.PrimaryConnectionString
+                                    let! cn = webContainer.Name
+                                    let! (exp, _) = sasExpirationDate
+                                    
+                                    let args =
+                                        GetAccountBlobContainerSASArgs(ConnectionString = cs,
+                                                                       ContainerName = cn,
+                                                                       Start = DateTime.Now
+                                                                                       .ToString("u")
+                                                                                       .Replace(' ', 'T'),
+                                                                       Expiry = exp.ToString("u")
+                                                                                   .Replace(' ', 'T'),
+                                                                       Permissions = containerPermissions)
+                                    
+                                    // Create a Bind that accepts a Task
+                                    let! st =
+                                        Output.Create<GetAccountBlobContainerSASResult>(
+                                            GetAccountBlobContainerSAS.InvokeAsync(args)
+                                        )
+                                    
+                                    return st.Sas }
+                | false -> output { let! tokenOutput = StackReference(Deployment.Instance.StackName).Outputs
+                                    return tokenOutput.[sasTokenOutputName] :?> string }
+            
+            // secret token CustomOperation in CE
+            let! secretToken =
+                Output.CreateSecret(token)
+                
+            return secretToken
+        }
+    
+    let swApiPolicyBlobLink =
+        output {
+            let! sas =
+                token
+            
+            let apiPolicyXml =
+                tokenToPolicy sas <| Config().Require("WebEndpoint")
+            
+            let blob =
+                policyBlob "mainapi" (fun _ -> apiPolicyXml)
+            
+            return! blob.Url
+        } |>
         withSas |>
         io
     
@@ -535,24 +560,32 @@ let infra () =
                                       StringAsset :>
                                       AssetOrArchive)))
     
+    let sasExpirationDateString =
+        output {
+            let! (date, _) = sasExpirationDate
+            
+            return date.ToString("u")
+        }
+    
     dict [
-        ("Hostname", app.DefaultHostname :> obj)
-        ("ResourceGroup", rg.Name :> obj)
-        ("StorageAccount", storage.Name :> obj)
-        ("ApiManagementEndpoint", apiManagement.GatewayUrl :> obj)
-        ("ApiManagement", apiManagement.Name :> obj)
-        ("StaticWebsiteApi", api.Name :> obj)
-        ("FunctionApi", apiFunction.Name :> obj)
-        ("ApplicationId", spaAdApplication.ApplicationId :> obj)
-        ("FunctionName", app.Name :> obj)
-        ("SasToken", token :> obj)
-        ("SasTokenExpiration", (sasExpirationDate.Apply(fun x -> (x |> fst).ToString())) :> obj)
+        "Hostname",                           app.DefaultHostname            :> obj
+        "ResourceGroup",                      rg.Name                        :> obj
+        "StorageAccount",                     storage.Name                   :> obj
+        "ApiManagementEndpoint",              apiManagement.GatewayUrl       :> obj
+        "ApiManagement",                      apiManagement.Name             :> obj
+        "StaticWebsiteApi",                   api.Name                       :> obj
+        "FunctionApi",                        apiFunction.Name               :> obj
+        "ApplicationId",                      spaAdApplication.ApplicationId :> obj
+        "FunctionName",                       app.Name                       :> obj
         
-        ("StaticWebsiteApiPolicyLink", swApiPolicyBlobLink :> obj)
-        ("StaticWebsiteApiPostPolicyLink", swApiPostPolicyBlobLink :> obj)
-        ("StaticWebsiteApiGetPolicyLink", swApiGetPolicyBlobLink :> obj)
-        ("StaticWebsiteApiGetIndexPolicyLink", swApiGetIndexPolicyBlobLink :> obj)
-        ("FunctionApiPolicyLink", functionApiPolicyBlobLink :> obj)
+        sasTokenOutputName,                   token                          :> obj
+        sasExpirationOutputName,              sasExpirationDateString        :> obj
+                                                                       
+        "StaticWebsiteApiPolicyLink",         swApiPolicyBlobLink            :> obj
+        "StaticWebsiteApiPostPolicyLink",     swApiPostPolicyBlobLink        :> obj
+        "StaticWebsiteApiGetPolicyLink",      swApiGetPolicyBlobLink         :> obj
+        "StaticWebsiteApiGetIndexPolicyLink", swApiGetIndexPolicyBlobLink    :> obj
+        "FunctionApiPolicyLink",              functionApiPolicyBlobLink      :> obj
     ]
 
 [<EntryPoint>]
