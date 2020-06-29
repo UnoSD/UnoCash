@@ -18,7 +18,7 @@ open System
 open Pulumi
 
 let infra () =
-    let rg =
+    let group =
         resourceGroup {
             name "unocash"
         }
@@ -26,17 +26,13 @@ let infra () =
     let storage =
         storageAccount {
             name          "unocashstorage"
-            resourceGroup rg
-            replication   LRS
-            tier          Standard
-            httpsOnly     true
+            resourceGroup group
         }
         
     let webContainer =
         storageContainer {
             name           "unocashweb"
             storageAccount storage.Name
-            access         Private
             containerName  "$web"
         }
             
@@ -46,10 +42,10 @@ let infra () =
             storageAccount storage
         }
     
-    let appServicePlan =
+    let functionPlan =
         appService {
             name          "unocashasp"
-            resourceGroup rg
+            resourceGroup group
             kind          FunctionAppKind
         }
     
@@ -70,7 +66,7 @@ let infra () =
     let appInsights =
         appInsight {
             name            "unocashai"
-            resourceGroup   rg
+            resourceGroup   group
             applicationType Web
             retentionInDays 90
         }
@@ -79,10 +75,10 @@ let infra () =
         let templateOutputs =
             armTemplate {
                 name          "unocashapim"
-                resourceGroup rg
+                resourceGroup group
                 json          (File.ReadAllText("ApiManagement.json"))
                 parameters    [ "apiManagementServiceName", input "unocashapim"
-                                "location", io rg.Location ]
+                                "location", io group.Location ]
             } |>
             fun at -> at.Outputs
         
@@ -94,7 +90,7 @@ let infra () =
     let _ =
         Logger("unocashapimlog",
                LoggerArgs(ApiManagementName = io apiManagement.Name,
-                          ResourceGroupName = io rg.Name,
+                          ResourceGroupName = io group.Name,
                           ApplicationInsights = input (LoggerApplicationInsightsArgs(InstrumentationKey = io appInsights.InstrumentationKey))))
         
     let webContainerUrl =
@@ -105,7 +101,7 @@ let infra () =
         apimApi {
             name          "unocashapimapi"
             apiName       "staticwebsite"
-            resourceGroup rg
+            resourceGroup group
             apim          apiManagement.Name
             displayName   "StaticWebsite"
             protocol      HttpHttps
@@ -294,7 +290,7 @@ let infra () =
     
     let _ =
         ApiOperation("unocashapimindexoperation",
-                     ApiOperationArgs(ResourceGroupName = io rg.Name,
+                     ApiOperationArgs(ResourceGroupName = io group.Name,
                                       ApiManagementName = io apiManagement.Name,
                                       ApiName = io api.Name,
                                       UrlTemplate = input "/",
@@ -304,7 +300,7 @@ let infra () =
         
     let _ =
         ApiOperation("unocashapimoperation",
-                     ApiOperationArgs(ResourceGroupName = io rg.Name,
+                     ApiOperationArgs(ResourceGroupName = io group.Name,
                                       ApiManagementName = io apiManagement.Name,
                                       ApiName = io api.Name,
                                       UrlTemplate = input "/*",
@@ -363,7 +359,7 @@ let infra () =
     
     let _ =
         ApiOperation("unocashapimpostoperation",
-                     ApiOperationArgs(ResourceGroupName = io rg.Name,
+                     ApiOperationArgs(ResourceGroupName = io group.Name,
                                       ApiManagementName = io apiManagement.Name,
                                       ApiName = io api.Name,
                                       UrlTemplate = input "/",
@@ -480,8 +476,8 @@ let infra () =
     
     let app =
         FunctionApp("unocashapp",
-                    FunctionAppArgs(ResourceGroupName = io rg.Name,
-                                    AppServicePlanId = io appServicePlan.Id,
+                    FunctionAppArgs(ResourceGroupName = io group.Name,
+                                    AppServicePlanId = io functionPlan.Id,
                                     AppSettings = inputMap [ "runtime", input "dotnet"
                                                              "WEBSITE_RUN_FROM_PACKAGE", io codeBlobUrl
                                                              "APPINSIGHTS_INSTRUMENTATIONKEY", io appInsights.InstrumentationKey
@@ -498,7 +494,7 @@ let infra () =
             name          "unocashapimapifunction"
             apiName       "api"
             path          "api"
-            resourceGroup rg
+            resourceGroup group
             apim          apiManagement.Name
             displayName   "API"
             protocol      Https
@@ -507,7 +503,7 @@ let infra () =
     
     let apiOperation method =
         ApiOperation("unocashapimapifunction" + method,
-                     ApiOperationArgs(ResourceGroupName = io rg.Name,
+                     ApiOperationArgs(ResourceGroupName = io group.Name,
                                       ApiManagementName = io apiManagement.Name,
                                       ApiName = io apiFunction.Name,
                                       UrlTemplate = input "/*",
@@ -579,7 +575,7 @@ let infra () =
     
     dict [
         "Hostname",                           app.DefaultHostname            :> obj
-        "ResourceGroup",                      rg.Name                        :> obj
+        "ResourceGroup",                      group.Name                        :> obj
         "StorageAccount",                     storage.Name                   :> obj
         "ApiManagementEndpoint",              apiManagement.GatewayUrl       :> obj
         "ApiManagement",                      apiManagement.Name             :> obj
