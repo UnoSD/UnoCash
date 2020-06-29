@@ -53,7 +53,7 @@ let infra () =
             kind          FunctionAppKind
         }
     
-    let blob =
+    let apiBlob =
         storageBlob {
             name           "unocashapi"
             storageAccount storage
@@ -62,7 +62,10 @@ let infra () =
         }
     
     let codeBlobUrl =
-        SharedAccessSignature.SignedBlobReadUrl(blob, storage)
+        sasToken {
+            storageAccount storage
+            blob           apiBlob
+        }
     
     let appInsights =
         appInsight {
@@ -576,6 +579,7 @@ let infra () =
         "ApplicationId",                      spaAdApplication.ApplicationId :> obj
         "FunctionName",                       app.Name                       :> obj
         
+        // Outputs to read on next deployment to check for changes
         sasTokenOutputName,                   token                          :> obj
         sasExpirationOutputName,              sasExpirationDateString        :> obj
                                                                        
