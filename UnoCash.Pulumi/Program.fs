@@ -203,7 +203,7 @@ let infra () =
                             } |> io)
         }
     
-    let withSas baseBlobUrl =
+    let withSas (baseBlobUrl : Output<string>) =
         output {
             let! connectionString = storage.PrimaryConnectionString
             let! containerName = buildContainer.Name
@@ -223,9 +223,8 @@ let infra () =
                     Expiry = expiry,
                     Permissions = containerPermissions
                 ) |>
-                GetAccountBlobContainerSAS.InvokeAsync |>
-                Output.Create<GetAccountBlobContainerSASResult>
-                
+                GetAccountBlobContainerSAS.InvokeAsync
+
             return url + tokenResult.Sas
         }
         
@@ -270,9 +269,7 @@ let infra () =
                                     
                                     // Create a Bind that accepts a Task
                                     let! st =
-                                        Output.Create<GetAccountBlobContainerSASResult>(
-                                            GetAccountBlobContainerSAS.InvokeAsync(args)
-                                        )
+                                        GetAccountBlobContainerSAS.InvokeAsync(args)
                                     
                                     return st.Sas }
                 | false -> output { let! tokenOutput = stack.Outputs
