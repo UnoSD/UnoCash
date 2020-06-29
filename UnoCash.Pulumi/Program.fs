@@ -1,21 +1,21 @@
 ﻿module Program
 
-open System
-open System.Diagnostics
-open System.Runtime.CompilerServices
-open System.Threading
-open Pulumi
-open Pulumi.Azure.ApiManagement
 open Pulumi.Azure.ApiManagement.Inputs
-open Pulumi.Azure.AppService
+open System.Runtime.CompilerServices
 open Pulumi.Azure.AppService.Inputs
 open Pulumi.Azure.Storage.Inputs
-open Pulumi.AzureAD
-open Pulumi.FSharp
-open Pulumi.Azure.Core
+open Pulumi.Azure.ApiManagement
+open Pulumi.Azure.AppService
+open Pulumi.FSharp.Output
 open Pulumi.Azure.Storage
 open Pulumi.FSharp.Azure
-open Pulumi.FSharp.Output
+open System.Diagnostics
+open System.Threading
+open Pulumi.AzureAD
+open Pulumi.FSharp
+open System.IO
+open System
+open Pulumi
 
 let infra () =
     let rg =
@@ -73,19 +73,20 @@ let infra () =
         }
         
     let apiManagement =
-        let outputs =
-            TemplateDeployment("unocashapim",
-                               TemplateDeploymentArgs(ResourceGroupName = io rg.Name,
-                                                      TemplateBody = input (IO.File.ReadAllText("ApiManagement.json")),
-                                                      Parameters = inputMap [
-                                                          ("apiManagementServiceName", input "unocashapim")
-                                                          ("location", io rg.Location)
-                                                      ],
-                                                      DeploymentMode = input "Incremental")).Outputs
-        {|
-            Name = outputs.Apply(fun d -> d.["name"])
-            GatewayUrl = outputs.Apply(fun d -> d.["gatewayUrl"])
-        |}
+        let templateOutputs =
+            armTemplate {
+                name          "unocashapim"
+                resourceGroup rg
+                json          (File.ReadAllText("ApiManagement.json"))
+                parameters    [ "apiManagementServiceName", input "unocashapim"
+                                "location", io rg.Location ]
+            } |>
+            fun at -> at.Outputs
+        
+        {| Name = output { let! outputs = templateOutputs
+                           return outputs.["name"] }
+           GatewayUrl = output { let! outputs = templateOutputs
+                                 return outputs.["gatewayUrl"] } |}
         
     let _ =
         Logger("unocashapimlog",
