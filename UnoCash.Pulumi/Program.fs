@@ -100,18 +100,17 @@ let infra () =
     let webContainerUrl =
         FormattableStringFactory.Create("https://{0}.blob.core.windows.net/{1}", storage.Name, webContainer.Name) |>
         Output.Format
-    
+
     let api =
-        Api("unocashapimapi",
-            ApiArgs(ResourceGroupName = io rg.Name,
-                    ApiManagementName = io apiManagement.Name,
-                    DisplayName = input "StaticWebsite",
-                    Name = input "staticwebsite",
-                    Path = input "",
-                    Protocols = inputList [ input "https"; input "http" ],
-                    Revision = input "1",
-                    ServiceUrl = io webContainerUrl(*,
-                    SubscriptionRequired = false*)))
+        apimApi {
+            name          "unocashapimapi"
+            apiName       "staticwebsite"
+            resourceGroup rg
+            apim          apiManagement.Name
+            displayName   "StaticWebsite"
+            protocol      HttpHttps
+            serviceUrl    webContainerUrl
+        }
 
     let tokenToPolicy (sas : string) gatewayUrl =
         let queryString =
@@ -185,15 +184,24 @@ let infra () =
                     ApplicationArgs(ReplyUrls = inputList [ io apiManagement.GatewayUrl ],
                                     Oauth2AllowImplicitFlow = input true))
     
-    let policyBlob name (appIdToPolicyXml : string -> string) =
-        Blob("unocash" + name + "policyblob",
-             BlobArgs(StorageAccountName = io storage.Name,
-                      StorageContainerName = io buildContainer.Name,
-                      Type = input "Block",
-                      Source = (appIdToPolicyXml |>
-                                spaAdApplication.ApplicationId.Apply |>
-                                (fun o -> o.Apply (fun x -> x |> StringAsset :> AssetOrArchive)) |>
-                                io)))
+
+    let policyBlob resourceName (appIdToPolicyXml : string -> string) =
+        storageBlob {
+            name           ("unocash" + resourceName + "policyblob")
+            storageAccount storage
+            container      buildContainer
+            source         (output {
+                                let! appId =
+                                    spaAdApplication.ApplicationId
+                                
+                                let policyXmlAsset =
+                                    appIdToPolicyXml appId |>
+                                    StringAsset :>
+                                    AssetOrArchive
+                                    
+                                return policyXmlAsset
+                            } |> io)
+        }
     
     let withSas baseBlobUrl =
         output {
@@ -489,15 +497,16 @@ let infra () =
                                     SiteConfig = input (FunctionAppSiteConfigArgs(Cors = functionAppCors))))
     
     let apiFunction =
-        Api("unocashapimapifunction",
-            ApiArgs(ResourceGroupName = io rg.Name,
-                    ApiManagementName = io apiManagement.Name,
-                    DisplayName = input "API",
-                    Name = input "api",
-                    Path = input "api",
-                    Protocols = inputList [ input "https" ],
-                    Revision = input "1",
-                    ServiceUrl = io (app.DefaultHostname.Apply<string>(fun hn -> sprintf "https://%s" hn))))
+        apimApi {
+            name          "unocashapimapifunction"
+            apiName       "api"
+            path          "api"
+            resourceGroup rg
+            apim          apiManagement.Name
+            displayName   "API"
+            protocol      Https
+            serviceUrl    (app.DefaultHostname.Apply (sprintf "https://%s"))
+        }
     
     let apiOperation method =
         ApiOperation("unocashapimapifunction" + method,
@@ -551,15 +560,18 @@ let infra () =
         withSas |>
         io
     
-    let _ =
-        Blob("unocashwebconfig",
-             BlobArgs(StorageAccountName = io storage.Name,
-                      StorageContainerName = io webContainer.Name,
-                      Type = input "Block",
-                      Name = input "apibaseurl",
-                      Source = input (Config().Require("WebEndpoint") + "/api" |>
-                                      StringAsset :>
-                                      AssetOrArchive)))
+    storageBlob {
+        name           "unocashwebconfig"
+        blobName       "apibaseurl"
+        storageAccount storage
+        container      webContainer
+        blobType       Block
+        source         (Config().Require("WebEndpoint") + "/api" |>
+                        StringAsset :>
+                        AssetOrArchive |>
+                        input)
+        
+    } |> ignore
     
     let sasExpirationDateString =
         output {
