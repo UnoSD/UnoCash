@@ -31,15 +31,15 @@ let infra () =
         
     let webContainer =
         storageContainer {
-            name           "unocashweb"
-            storageAccount storage.Name
-            containerName  "$web"
+            name          "unocashweb"
+            account       storage.Name
+            containerName "$web"
         }
             
     let buildContainer =
         storageContainer {
-            name           "unocashbuild"
-            storageAccount storage
+            name    "unocashbuild"
+            account storage
         }
     
     let functionPlan =
