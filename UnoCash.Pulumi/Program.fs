@@ -51,10 +51,10 @@ let infra () =
     
     let apiBlob =
         storageBlob {
-            name           "unocashapi"
-            storageAccount storage
-            container      buildContainer
-            source         (input ((Config().Require("ApiBuild") |> FileAsset) :> AssetOrArchive))
+            name      "unocashapi"
+            account   storage
+            container buildContainer
+            source    (input ((Config().Require("ApiBuild") |> FileAsset) :> AssetOrArchive))
         }
     
     let codeBlobUrl =
@@ -183,20 +183,20 @@ let infra () =
 
     let policyBlob resourceName (appIdToPolicyXml : string -> string) =
         storageBlob {
-            name           ("unocash" + resourceName + "policyblob")
-            storageAccount storage
-            container      buildContainer
-            source         (output {
-                                let! appId =
-                                    spaAdApplication.ApplicationId
-                                
-                                let policyXmlAsset =
-                                    appIdToPolicyXml appId |>
-                                    StringAsset :>
-                                    AssetOrArchive
-                                    
-                                return policyXmlAsset
-                            } |> io)
+            name      ("unocash" + resourceName + "policyblob")
+            account   storage
+            container buildContainer
+            source    (output {
+                           let! appId =
+                               spaAdApplication.ApplicationId
+                           
+                           let policyXmlAsset =
+                               appIdToPolicyXml appId |>
+                               StringAsset :>
+                               AssetOrArchive
+                               
+                           return policyXmlAsset
+                       } |> io)
         }
     
     let withSas (baseBlobUrl : Output<string>) =
@@ -554,15 +554,15 @@ let infra () =
         io
     
     storageBlob {
-        name           "unocashwebconfig"
-        blobName       "apibaseurl"
-        storageAccount storage
-        container      webContainer
-        blobType       Block
-        source         (Config().Require("WebEndpoint") + "/api" |>
-                        StringAsset :>
-                        AssetOrArchive |>
-                        input)
+        name      "unocashwebconfig"
+        blobName  "apibaseurl"
+        account   storage
+        container webContainer
+        blobType  Block
+        source    (Config().Require("WebEndpoint") + "/api" |>
+                   StringAsset :>
+                   AssetOrArchive |>
+                   input)
         
     } |> ignore
     
