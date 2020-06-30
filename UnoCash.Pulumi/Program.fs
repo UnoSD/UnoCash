@@ -2,11 +2,9 @@
 
 open Pulumi.Azure.ApiManagement.Inputs
 open Pulumi.Azure.AppService.Inputs
-open Pulumi.Azure.Storage.Inputs
 open Pulumi.Azure.ApiManagement
 open Pulumi.Azure.AppService
 open Pulumi.FSharp.Output
-open Pulumi.Azure.Storage
 open Pulumi.FSharp.Azure
 open System.Diagnostics
 open System.Threading
@@ -110,10 +108,7 @@ let infra () =
             protocol      HttpHttps
             serviceUrl    webContainerUrl
         }
-        
-    let containerPermissions =
-        GetAccountBlobContainerSASPermissionsArgs(Read = true)
-        
+
     let spaAdApplication =
         Application("unocashspaaadapp",
                     ApplicationArgs(ReplyUrls = inputList [ io apiManagement.GatewayUrl ],
@@ -140,27 +135,20 @@ let infra () =
     
     let withSas (baseBlobUrl : Output<string>) =
         secretOutput {
-            let! connectionString = storage.PrimaryConnectionString
-            let! containerName = buildContainer.Name
             let! url = baseBlobUrl
 
-            let start =
-                DateTime.Now.ToString("u").Replace(' ', 'T')
-            
-            let expiry =
-                DateTime.Now.AddHours(1.).ToString("u").Replace(' ', 'T')
-            
-            let! tokenResult =
-                GetAccountBlobContainerSASArgs(
-                    ConnectionString = connectionString,
-                    ContainerName = containerName,
-                    Start = start,
-                    Expiry = expiry,
-                    Permissions = containerPermissions
-                ) |>
-                GetAccountBlobContainerSAS.InvokeAsync
+            let! sas =
+                sasToken {
+                    account    storage
+                    container  buildContainer
+                    duration   {
+                        From = DateTime.Now
+                        To   = DateTime.Now.AddHours(1.)
+                    }
+                    permission Read
+                }
 
-            return url + tokenResult.Sas
+            return url + sas
         }
         
     let sasExpirationOutputName = "SasTokenExpiration"
@@ -188,25 +176,17 @@ let infra () =
             
             return!
                 match sasChanged with
-                | true  -> output { let! cs = storage.PrimaryConnectionString
-                                    let! cn = webContainer.Name
-                                    let! (exp, _) = sasExpirationDate
+                | true  -> output { let! (exp, _) = sasExpirationDate
                                     
-                                    let args =
-                                        GetAccountBlobContainerSASArgs(ConnectionString = cs,
-                                                                       ContainerName = cn,
-                                                                       Start = DateTime.Now
-                                                                                       .ToString("u")
-                                                                                       .Replace(' ', 'T'),
-                                                                       Expiry = exp.ToString("u")
-                                                                                   .Replace(' ', 'T'),
-                                                                       Permissions = containerPermissions)
-                                    
-                                    // Create a Bind that accepts a Task
-                                    let! st =
-                                        GetAccountBlobContainerSAS.InvokeAsync(args)
-                                    
-                                    return st.Sas }
+                                    return! sasToken {
+                                        account    storage
+                                        container  webContainer
+                                        duration   {
+                                            From = DateTime.Now
+                                            To   = exp
+                                        }
+                                        permission Read
+                                    } }
                 | false -> output { let! tokenOutput = stack.Outputs
                                     return tokenOutput.[sasTokenOutputName] :?> string }
         }
