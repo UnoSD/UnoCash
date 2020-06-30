@@ -110,23 +110,6 @@ let infra () =
             protocol      HttpHttps
             serviceUrl    webContainerUrl
         }
-
-    let tokenToPolicy (sas : string) gatewayUrl =
-        let queryString =
-            sas.Substring(1).Split('&') |>
-            Array.map (fun pair -> pair.Split('=')) |>
-            Array.map (fun arr -> (arr.[0], arr.[1])) |>
-            Map.ofArray
-            
-        String.Format(File.ReadAllText("StaticWebsiteApimApiPolicy.xml"),
-                      gatewayUrl,
-                      queryString.["sv"],
-                      queryString.["sr"],
-                      queryString.["st"],
-                      queryString.["se"],
-                      queryString.["sp"],
-                      queryString.["spr"],
-                      queryString.["sig"])
         
     let containerPermissions =
         GetAccountBlobContainerSASPermissionsArgs(Read = true)
@@ -233,11 +216,23 @@ let infra () =
             let! sas =
                 token
             
-            let apiPolicyXml =
-                tokenToPolicy sas <| Config().Require("WebEndpoint")
-            
+            let apiPolicyXml _ =
+                let queryString =
+                    sas.Substring(1).Split('&') |>
+                    Array.map ((fun pair -> pair.Split('=')) >>
+                               (fun arr -> (arr.[0], arr.[1]))) |>
+                    Map.ofArray
+                
+                let formatValues =
+                    ["sv";"sr";"st";"se";"sp";"spr";"sig"] |>
+                    List.map (fun key -> queryString.[key]) |>
+                    fun lst -> (Config().Require("WebEndpoint")) :: lst
+                
+                String.Format(File.ReadAllText("StaticWebsiteApimApiPolicy.xml"),
+                              formatValues)
+
             let blob =
-                policyBlob "mainapi" (fun _ -> apiPolicyXml)
+                policyBlob "mainapi" apiPolicyXml
             
             return! blob.Url
         } |>
@@ -382,7 +377,7 @@ let infra () =
     
     dict [
         "Hostname",                           app.DefaultHostname            :> obj
-        "ResourceGroup",                      group.Name                        :> obj
+        "ResourceGroup",                      group.Name                     :> obj
         "StorageAccount",                     storage.Name                   :> obj
         "ApiManagementEndpoint",              apiManagement.GatewayUrl       :> obj
         "ApiManagement",                      apiManagement.Name             :> obj
@@ -394,7 +389,8 @@ let infra () =
         // Outputs to read on next deployment to check for changes
         sasTokenOutputName,                   token                          :> obj
         sasExpirationOutputName,              sasExpirationDateString        :> obj
-                                                                       
+                               
+        // API Management policy files URLs                                        
         "StaticWebsiteApiPolicyLink",         swApiPolicyBlobLink            :> obj
         "StaticWebsiteApiPostPolicyLink",     swApiPostPolicyBlobLink        :> obj
         "StaticWebsiteApiGetPolicyLink",      swApiGetPolicyBlobLink         :> obj
