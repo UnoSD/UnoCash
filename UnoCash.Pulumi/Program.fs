@@ -229,7 +229,6 @@ let infra () =
         apim          apiManagement.Name
         api           swApi
         displayName   "GET index"
-        id            "get-index"
     } |> ignore
         
     apiOperation {
@@ -237,11 +236,7 @@ let infra () =
         resourceGroup group
         apim          apiManagement.Name
         api           swApi
-        urlTemplate   "/*"
-        // Infer display name from method if missing
-        displayName   "GET"
-        // Infer ID from displayname if missing
-        id            "get"        
+        urlTemplate   "/*"     
     } |> ignore
     
     let getPolicy applicationId =
@@ -262,7 +257,6 @@ let infra () =
         api           swApi
         method        Post
         displayName   "POST AAD token"
-        id            "post-aad-token"
     } |> ignore
     
     let postPolicy applicationId =
@@ -318,18 +312,18 @@ let infra () =
             serviceUrl    (app.DefaultHostname.Apply (sprintf "https://%s"))
         }
     
-    let apiOperation method =
-        ApiOperation("unocashapimapifunction" + method,
-                     ApiOperationArgs(ResourceGroupName = io group.Name,
-                                      ApiManagementName = io apiManagement.Name,
-                                      ApiName = io apiFunction.Name,
-                                      UrlTemplate = input "/*",
-                                      Method = input (method.ToUpper()),
-                                      DisplayName = input (method.ToUpper()),
-                                      OperationId = input method))
+    let apiOperation (httpMethod : HttpMethod) =
+        apiOperation {
+            name          ("unocashapimapifunction" + (httpMethod.ToString()))
+            resourceGroup group
+            apim          apiManagement.Name
+            api           apiFunction
+            method        httpMethod
+            urlTemplate   "/*"
+        }
     
     let _ =
-        [ "get"; "post"; "delete"; "put" ] |>
+        [ Get; Post; HttpMethod.Delete; Put ] |>
         List.map apiOperation
     
     let apiFunctionPolicyXml applicationId =
