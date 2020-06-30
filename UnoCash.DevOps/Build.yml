@@ -8,9 +8,7 @@ trigger:
     - UnoCash.DevOps/Release.yml
     - UnoCash.DevOps/Destroy.yml
     - UnoCash.DevOps/DevOps.fsproj
-    - .git/*
-    - Pulumi.FSharp.Azure
-    - Pulumi.FSharp.Azure/*
+    - child
 
 pool:
   vmImage: ubuntu-latest

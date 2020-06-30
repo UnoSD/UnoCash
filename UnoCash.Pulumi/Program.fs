@@ -309,47 +309,9 @@ let infra () =
                                       OperationId = input "get"))
     
     let getPolicy applicationId =
-        sprintf """
-<policies>
-    <inbound>
-        <base />
-        
-        <validate-jwt token-value="@(context.Request.Headers.TryGetValue("Cookie", out var value) ? value?.SingleOrDefault(x => x.StartsWith("jwtToken="))?.Substring(9) : "")"
-                      failed-validation-httpcode="401"
-                      failed-validation-error-message="Unauthorized. Access token is missing or invalid."
-                      output-token-variable-name="jwt">
-            <openid-config url="https://login.microsoftonline.com/%s/v2.0/.well-known/openid-configuration" />
-            <audiences>
-                <audience>%s</audience>
-            </audiences>
-        </validate-jwt>
-        
-    </inbound>
-    <backend>
-        <base />
-    </backend>
-    <outbound>
-        <base />
-    </outbound>
-    <on-error>
-        <base />
-        <choose>
-            <when condition="@(context.Response.StatusCode == 401)">
-                <return-response>
-                    <set-status code="303" reason="See Other" />
-                    <set-header name="Location" exists-action="override">
-                        <value>@($"https://login.microsoftonline.com/%s/oauth2/v2.0/authorize?client_id=%s&response_type=id_token&redirect_uri={System.Net.WebUtility.UrlEncode(context.Request.OriginalUrl.ToString())}&response_mode=form_post&scope=openid%%20profile&nonce={Guid.NewGuid().ToString("n")}")</value>
-                    </set-header>
-                </return-response>
-            </when>
-        </choose>
-    </on-error>
-</policies>
-"""
-         Config.TenantId
-         applicationId
-         Config.TenantId
-         applicationId
+        String.Format(File.ReadAllText("WebsiteApimApiPolicy.xml"),
+                      Config.TenantId,
+                      applicationId)
     
     let swApiGetPolicyBlobLink =
         policyBlob "get" getPolicy |>

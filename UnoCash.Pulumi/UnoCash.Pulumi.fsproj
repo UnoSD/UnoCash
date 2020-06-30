@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="WebsiteApimApiPolicy.xml" />
     <Content Include="ApiManagement.json" />
     <Content Include="Pulumi.yaml" />
     <Content Include="Pulumi.dev.yaml" />
