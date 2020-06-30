@@ -1,7 +1,6 @@
 ﻿module Program
 
 open Pulumi.Azure.ApiManagement.Inputs
-open System.Runtime.CompilerServices
 open Pulumi.Azure.AppService.Inputs
 open Pulumi.Azure.Storage.Inputs
 open Pulumi.Azure.ApiManagement
@@ -94,8 +93,12 @@ let infra () =
                           ApplicationInsights = input (LoggerApplicationInsightsArgs(InstrumentationKey = io appInsights.InstrumentationKey))))
         
     let webContainerUrl =
-        FormattableStringFactory.Create("https://{0}.blob.core.windows.net/{1}", storage.Name, webContainer.Name) |>
-        Output.Format
+        output {
+            let! accountName = storage.Name
+            let! containerName = webContainer.Name
+            
+            return sprintf "https://%s.blob.core.windows.net/%s" accountName containerName
+        }
 
     let api =
         apimApi {
@@ -200,7 +203,7 @@ let infra () =
         }
     
     let withSas (baseBlobUrl : Output<string>) =
-        output {
+        secretOutput {
             let! connectionString = storage.PrimaryConnectionString
             let! containerName = buildContainer.Name
             let! url = baseBlobUrl
