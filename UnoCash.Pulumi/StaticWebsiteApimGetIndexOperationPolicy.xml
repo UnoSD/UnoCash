@@ -4,6 +4,8 @@
 
         <base />
 
+        <rewrite-uri template="/index.html" />
+        
         <validate-jwt token-value="@(context.Request.Headers.TryGetValue("Cookie", out var value) ?
                                      value?.SingleOrDefault(x => x.StartsWith("jwtToken="))?.Substring(9) :
                                      "")"
@@ -14,24 +16,29 @@
             <openid-config url="https://login.microsoftonline.com/{0}/v2.0/.well-known/openid-configuration" />
 
             <audiences>
-            
+
                 <audience>{1}</audience>
-                
+
             </audiences>
 
         </validate-jwt>
-    
+        
     </inbound>
 
     <backend>
-    <base />
+
+        <base />
+
     </backend>
 
     <outbound>
-    <base />
-    </outbound>
 
+        <base />
+
+    </outbound>
+    
     <on-error>
+
         <base />
 
         <choose>
@@ -44,13 +51,13 @@
 
                     <set-header name="Location" exists-action="override">
 
-                        <value>@("https://login.microsoftonline.com/{0}/oauth2/v2.0/authorize?" + 
+                        <value>@("https://login.microsoftonline.com/{0}/oauth2/v2.0/authorize?" +
                                  "client_id={1}&" +
-                                 "response_type=id_token&" + 
-                                $"redirect_uri={{System.Net.WebUtility.UrlEncode(context.Request.OriginalUrl.ToString())}}&" +
+                                 "response_type=id_token&" +
+                                $"redirect_uri={System.Net.WebUtility.UrlEncode(context.Request.OriginalUrl.ToString())}&" +
                                  "response_mode=form_post&" +
                                  "scope=openid%20profile&" +
-                                $"nonce={{Guid.NewGuid().ToString("n")}}")</value>
+                                $"nonce={Guid.NewGuid().ToString("n")}")</value>
 
                     </set-header>
 
@@ -61,5 +68,5 @@
         </choose>
 
     </on-error>
-
+    
 </policies>

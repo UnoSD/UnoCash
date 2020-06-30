@@ -339,3 +339,7 @@ ASALocalRun/
 # BeatPulse healthcheck temp database
 healthchecksdb
 /.ionide/symbolCache.db
+/.vscode/extensions.json
+/.vscode/launch.json
+/.vscode/settings.json
+/.vscode/tasks.json
