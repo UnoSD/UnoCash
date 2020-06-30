@@ -53,7 +53,7 @@ let infra () =
             name      "unocashapi"
             account   storage
             container buildContainer
-            source    (Config().Require("ApiBuild") |> FileAsset)
+            source    (Config().Require("ApiBuild"))
         }
     
     let codeBlobUrl =
@@ -369,9 +369,7 @@ let infra () =
         account   storage
         container webContainer
         blobType  Block
-        source    (Config().Require("WebEndpoint") + "/api" |>
-                   StringAsset :>
-                   AssetOrArchive)
+        content   (Config().Require("WebEndpoint") + "/api")
         
     } |> ignore
     
