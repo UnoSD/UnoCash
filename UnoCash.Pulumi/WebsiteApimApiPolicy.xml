@@ -47,10 +47,10 @@
                         <value>@("https://login.microsoftonline.com/{0}/oauth2/v2.0/authorize?" + 
                                 $"client_id={1}&" +
                                 $"response_type=id_token&" + 
-                                $"redirect_uri={UrlEncode(context.Request.OriginalUrl.ToString())}&" +
+                                $"redirect_uri={{UrlEncode(context.Request.OriginalUrl.ToString())}}&" +
                                 $"response_mode=form_post&" +
                                 $"scope=openid%20profile&" +
-                                $"nonce={Guid.NewGuid().ToString("n")}")</value>
+                                $"nonce={{Guid.NewGuid().ToString("n")}}")</value>
 
                     </set-header>
 
