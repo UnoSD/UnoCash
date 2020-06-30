@@ -309,7 +309,7 @@ let infra () =
                                       OperationId = input "get"))
     
     let getPolicy applicationId =
-        String.Format(File.ReadAllText("WebsiteApimApiPolicy.xml"),
+        String.Format(File.ReadAllText("APIApimApiPolicy.xml"),
                       Config.TenantId,
                       applicationId)
     
