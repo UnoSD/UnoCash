@@ -224,9 +224,13 @@ let infra () =
                     Map.ofArray
                 
                 let formatValues =
-                    ["sv";"sr";"st";"se";"sp";"spr";"sig"] |>
-                    List.map (fun key -> queryString.[key]) |>
-                    fun lst -> (Config().Require("WebEndpoint")) :: lst
+                    seq {
+                        yield Config().Require("WebEndpoint") :> obj
+                        
+                        for key in ["sv";"sr";"st";"se";"sp";"spr";"sig"] do
+                            yield queryString.[key] :> obj
+                    } |>
+                    Array.ofSeq
                 
                 String.Format(File.ReadAllText("StaticWebsiteApimApiPolicy.xml"),
                               formatValues)
