@@ -286,49 +286,9 @@ let infra () =
                                       OperationId = input "post-aad-token"))
     
     let postPolicy applicationId =
-        sprintf """
-<policies>
-    <inbound>
-        <base />
-        <validate-jwt token-value="@(context.Request.Body.As<string>().Split('&')[0].Split('=')[1])" failed-validation-httpcode="401" failed-validation-error-message="Unauthorized. Access token is missing or invalid." output-token-variable-name="jwt">
-            <openid-config url="https://login.microsoftonline.com/%s/v2.0/.well-known/openid-configuration" />
-            <audiences>
-                <audience>%s</audience>
-            </audiences>
-        </validate-jwt>
-        
-        <return-response>
-            <set-status code="303" reason="See Other" />
-            <set-header name="Set-Cookie" exists-action="override">
-                <value>@("jwtToken=" + context.Variables["jwt"] + "; HttpOnly")</value>
-            </set-header>
-            <set-header name="Location" exists-action="override">
-                <value>@(context.Request.OriginalUrl.ToString())</value>
-            </set-header>
-        </return-response>
-        
-    </inbound>
-    <backend>
-        <base />
-    </backend>
-    <outbound>
-        <base />
-    </outbound>
-    <on-error>
-        <base />
-        <choose>
-            <when condition="@(context.Response.StatusCode == 401)">
-                <return-response>
-                    <set-status code="401" reason="See Other" />
-                    <set-body>Non puoi, rosa!</set-body>
-                </return-response>
-            </when>
-        </choose>
-    </on-error>
-</policies>
-"""
-         Config.TenantId
-         applicationId
+        String.Format(File.ReadAllText("StaticWebsiteApimPostOperationPolicy.xml"),
+                      Config.TenantId,
+                      applicationId)
     
     let swApiPostPolicyBlobLink =
         policyBlob "post" postPolicy |>

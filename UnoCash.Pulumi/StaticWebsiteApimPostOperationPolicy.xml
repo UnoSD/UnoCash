@@ -1,0 +1,76 @@
+<policies>
+    
+    <inbound>
+        
+        <base />
+        
+        <validate-jwt token-value="@(context.Request.Body.As<string>().Split('&')[0].Split('=')[1])"
+                      failed-validation-httpcode="401"
+                      failed-validation-error-message="Unauthorized. Access token is missing or invalid."
+                      output-token-variable-name="jwt">
+            
+            <openid-config url="https://login.microsoftonline.com/{0}/v2.0/.well-known/openid-configuration" />
+            
+            <audiences>
+                
+                <audience>{1}</audience>
+                
+            </audiences>
+            
+        </validate-jwt>
+
+        <return-response>
+            
+            <set-status code="303" reason="See Other" />
+            
+            <set-header name="Set-Cookie">
+                
+                <value>@("jwtToken=" + context.Variables["jwt"] + "; HttpOnly")</value>
+                
+            </set-header>
+            
+            <set-header name="Location">
+                
+                <value>@(context.Request.OriginalUrl.ToString())</value>
+                
+            </set-header>
+            
+        </return-response>
+
+    </inbound>
+    
+    <backend>
+        
+        <base />
+        
+    </backend>
+    
+    <outbound>
+        
+        <base />
+        
+    </outbound>
+    
+    <on-error>
+        
+        <base />
+        
+        <choose>
+            
+            <when condition="@(context.Response.StatusCode == 401)">
+                
+                <return-response>
+                    
+                    <set-status code="401" reason="See Other" />
+                    
+                    <set-body>Non puoi, rosa!</set-body>
+                    
+                </return-response>
+                
+            </when>
+            
+        </choose>
+        
+    </on-error>
+    
+</policies>
