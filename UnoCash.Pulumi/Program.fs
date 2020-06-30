@@ -237,7 +237,7 @@ let infra () =
             
             return match previousOutputs.TryGetValue sasExpirationOutputName with
                    | true, (:? string as exp) -> match DateTime.TryParse(exp) with
-                                                 | true, x when x < DateTime.Now -> x, false // Unchanged
+                                                 | true, x when x > DateTime.Now -> x, false // Unchanged
                                                  | _, _                          -> DateTime.Now.AddYears(1), true
                    | _                        -> DateTime.Now.AddYears(1), true
         }
