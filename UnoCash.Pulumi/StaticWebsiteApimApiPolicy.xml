@@ -1,0 +1,80 @@
+<policies>
+
+    <inbound>
+
+        <base />
+
+        <choose>
+
+            <when condition="@(context.Request.OriginalUrl.Scheme.ToLower() == "http")">
+
+                <return-response>
+
+                    <set-status code="303" reason="See Other" />
+
+                    <set-header name="Location">
+
+                        <value>@("{0}" + 
+                                 context.Request.OriginalUrl.Path +
+                                 context.Request.OriginalUrl.QueryString)</value>
+
+                    </set-header>
+
+                </return-response>
+
+            </when>
+
+        </choose>
+        
+        <set-query-parameter name="sv">
+            <value>{1}</value>
+        </set-query-parameter>
+
+        <set-query-parameter name="sr">
+            <value>{2}</value>
+        </set-query-parameter>
+
+        <set-query-parameter name="st">
+            <value>{3}</value>
+        </set-query-parameter>
+
+        <set-query-parameter name="se">
+            <value>{4}</value>
+        </set-query-parameter>
+
+        <set-query-parameter name="sp">
+            <value>{5}</value>
+        </set-query-parameter>
+
+        <set-query-parameter name="spr">
+            <value>{6}</value>
+        </set-query-parameter>
+
+        <set-query-parameter name="sig">
+            <value>{7}</value>
+        </set-query-parameter>
+
+        <rate-limit calls="100"
+                    renewal-period="300" />
+
+    </inbound>
+
+    <backend>
+
+        <base />
+
+    </backend>
+
+    <outbound>
+
+        <base />
+
+    </outbound>
+
+    <on-error>
+
+        <base />
+        
+    </on-error>
+
+</policies>

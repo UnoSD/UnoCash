@@ -118,62 +118,15 @@ let infra () =
             Array.map (fun arr -> (arr.[0], arr.[1])) |>
             Map.ofArray
             
-        sprintf """
-<policies>
-    <inbound>
-        <base />
-        <choose>
-            <when condition="@(context.Request.OriginalUrl.Scheme.ToLower() == "http")">
-                <return-response>
-                    <set-status code="303" reason="See Other" />
-                    <set-header name="Location" exists-action="override">
-                        <value>@("%s" + context.Request.OriginalUrl.Path + context.Request.OriginalUrl.QueryString)</value>
-                    </set-header>
-                </return-response>
-            </when>
-        </choose>
-        <set-query-parameter name="sv" exists-action="override">
-            <value>%s</value>
-        </set-query-parameter>
-        <set-query-parameter name="sr" exists-action="override">
-            <value>%s</value>
-        </set-query-parameter>
-        <set-query-parameter name="st" exists-action="override">
-            <value>%s</value>
-        </set-query-parameter>
-        <set-query-parameter name="se" exists-action="override">
-            <value>%s</value>
-        </set-query-parameter>
-        <set-query-parameter name="sp" exists-action="override">
-            <value>%s</value>
-        </set-query-parameter>
-        <set-query-parameter name="spr" exists-action="override">
-            <value>%s</value>
-        </set-query-parameter>
-        <set-query-parameter name="sig" exists-action="override">
-            <value>%s</value>
-        </set-query-parameter>
-        <rate-limit calls="100" renewal-period="300" />
-    </inbound>
-    <backend>
-        <base />
-    </backend>
-    <outbound>
-        <base />
-    </outbound>
-    <on-error>
-        <base />
-    </on-error>
-</policies>
-"""
-         gatewayUrl
-         queryString.["sv"]
-         queryString.["sr"]
-         queryString.["st"]
-         queryString.["se"]
-         queryString.["sp"]
-         queryString.["spr"]
-         queryString.["sig"]
+        String.Format(File.ReadAllText("StaticWebsiteApimApiPolicy.xml"),
+                      gatewayUrl,
+                      queryString.["sv"],
+                      queryString.["sr"],
+                      queryString.["st"],
+                      queryString.["se"],
+                      queryString.["sp"],
+                      queryString.["spr"],
+                      queryString.["sig"])
         
     let containerPermissions =
         GetAccountBlobContainerSASPermissionsArgs(Read = true)
