@@ -301,7 +301,7 @@ stages:
                     StaticWebsiteApiGetPolicyLink \
                     StaticWebsiteApiGetIndexPolicyLink \
                     FunctionApiPolicyLink; do
-                    echo "##vso[task.setvariable variable=$i]$(pulumi stack output $i -C UnoCash.Pulumi)"
+                    echo "##vso[task.setvariable variable=$i]$(pulumi stack output $i -C UnoCash.Pulumi --show-secrets)"
                   done
 
             - task: AzureCLI@2
