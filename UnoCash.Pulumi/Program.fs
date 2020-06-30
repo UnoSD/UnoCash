@@ -75,7 +75,7 @@ let infra () =
             armTemplate {
                 name          "unocashapim"
                 resourceGroup group
-                json          (File.ReadAllText("ApiManagement.json"))
+                jsonFile      "ApiManagement.json"
                 parameters    [ "apiManagementServiceName", input "unocashapim"
                                 "location", io group.Location ]
             } |>
@@ -152,7 +152,7 @@ let infra () =
                                AssetOrArchive
                                
                            return policyXmlAsset
-                       } |> io)
+                       })
         }
     
     let withSas (baseBlobUrl : Output<string>) =
@@ -371,8 +371,7 @@ let infra () =
         blobType  Block
         source    (Config().Require("WebEndpoint") + "/api" |>
                    StringAsset :>
-                   AssetOrArchive |>
-                   input)
+                   AssetOrArchive)
         
     } |> ignore
     
