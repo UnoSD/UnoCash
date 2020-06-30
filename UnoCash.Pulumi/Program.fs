@@ -53,7 +53,7 @@ let infra () =
             name      "unocashapi"
             account   storage
             container buildContainer
-            source    (input ((Config().Require("ApiBuild") |> FileAsset) :> AssetOrArchive))
+            source    (Config().Require("ApiBuild") |> FileAsset)
         }
     
     let codeBlobUrl =
