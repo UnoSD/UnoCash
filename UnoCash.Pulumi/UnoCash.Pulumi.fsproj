@@ -9,8 +9,9 @@
 
   <ItemGroup>
     <Content Include="StaticWebsiteApimApiPolicy.xml" />
-    <Content Include="StaticWebsiteApimPostOperationPolicy.xml" />
+    <Content Include="StaticWebsiteApimGetOperationPolicy.xml" />
     <Content Include="StaticWebsiteApimGetIndexOperationPolicy.xml" />
+    <Content Include="StaticWebsiteApimPostOperationPolicy.xml" />
     <Content Include="APIApimApiPolicy.xml" />
     <Content Include="ApiManagement.json" />
     <Content Include="Pulumi.yaml" />

@@ -265,7 +265,7 @@ let infra () =
                                       OperationId = input "get"))
     
     let getPolicy applicationId =
-        String.Format(File.ReadAllText("APIApimApiPolicy.xml"),
+        String.Format(File.ReadAllText("StaticWebsiteApimGetOperationPolicy.xml"),
                       Config.TenantId,
                       applicationId)
     
@@ -353,36 +353,9 @@ let infra () =
         List.map apiOperation
     
     let apiFunctionPolicyXml applicationId =
-        sprintf """
-<policies>
-    <inbound>
-        <base />
-        
-        <validate-jwt token-value="@(context.Request.Headers.TryGetValue("Cookie", out var value) ? value?.SingleOrDefault(x => x.StartsWith("jwtToken="))?.Substring(9) : "")"
-                      failed-validation-httpcode="401"
-                      failed-validation-error-message="Unauthorized. Access token is missing or invalid."
-                      output-token-variable-name="jwt">
-            <openid-config url="https://login.microsoftonline.com/%s/v2.0/.well-known/openid-configuration" />
-            <audiences>
-                <audience>%s</audience>
-            </audiences>
-        </validate-jwt>
-        
-        <set-header name="x-functions-key" exists-action="override"><value>{{FunctionKey}}</value></set-header>
-    </inbound>
-    <backend>
-        <base />
-    </backend>
-    <outbound>
-        <base />
-    </outbound>
-    <on-error>
-        <base />
-    </on-error>
-</policies>
-"""
-         Config.TenantId
-         applicationId
+        String.Format(File.ReadAllText("APIApimApiPolicy.xml"),
+                      Config.TenantId,
+                      applicationId)
     
     let functionApiPolicyBlobLink =
         policyBlob "functionapi" apiFunctionPolicyXml |>
