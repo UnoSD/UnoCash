@@ -23,7 +23,7 @@
         
         <set-header name="x-functions-key">
 
-            <value>{{FunctionKey}}</value>
+            <value>{{{{FunctionKey}}}}</value>
 
         </set-header>
 
