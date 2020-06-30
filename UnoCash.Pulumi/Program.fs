@@ -98,7 +98,7 @@ let infra () =
             return sprintf "https://%s.blob.core.windows.net/%s" accountName containerName
         }
 
-    let api =
+    let swApi =
         apimApi {
             name          "unocashapimapi"
             apiName       "staticwebsite"
@@ -223,25 +223,26 @@ let infra () =
         withSas |>
         io
     
-    let _ =
-        ApiOperation("unocashapimindexoperation",
-                     ApiOperationArgs(ResourceGroupName = io group.Name,
-                                      ApiManagementName = io apiManagement.Name,
-                                      ApiName = io api.Name,
-                                      UrlTemplate = input "/",
-                                      Method = input "GET",
-                                      DisplayName = input "GET index",
-                                      OperationId = input "get-index"))
+    apiOperation {
+        name          "unocashapimindexoperation"
+        resourceGroup group
+        apim          apiManagement.Name
+        api           swApi
+        displayName   "GET index"
+        id            "get-index"
+    } |> ignore
         
-    let _ =
-        ApiOperation("unocashapimoperation",
-                     ApiOperationArgs(ResourceGroupName = io group.Name,
-                                      ApiManagementName = io apiManagement.Name,
-                                      ApiName = io api.Name,
-                                      UrlTemplate = input "/*",
-                                      Method = input "GET",
-                                      DisplayName = input "GET",
-                                      OperationId = input "get"))
+    apiOperation {
+        name          "unocashapimoperation"
+        resourceGroup group
+        apim          apiManagement.Name
+        api           swApi
+        urlTemplate   "/*"
+        // Infer display name from method if missing
+        displayName   "GET"
+        // Infer ID from displayname if missing
+        id            "get"        
+    } |> ignore
     
     let getPolicy applicationId =
         String.Format(File.ReadAllText("StaticWebsiteApimGetOperationPolicy.xml"),
@@ -254,15 +255,15 @@ let infra () =
         withSas |>
         io
     
-    let _ =
-        ApiOperation("unocashapimpostoperation",
-                     ApiOperationArgs(ResourceGroupName = io group.Name,
-                                      ApiManagementName = io apiManagement.Name,
-                                      ApiName = io api.Name,
-                                      UrlTemplate = input "/",
-                                      Method = input "POST",
-                                      DisplayName = input "POST AAD token",
-                                      OperationId = input "post-aad-token"))
+    apiOperation {
+        name          "unocashapimpostoperation"
+        resourceGroup group
+        apim          apiManagement.Name
+        api           swApi
+        method        Post
+        displayName   "POST AAD token"
+        id            "post-aad-token"
+    } |> ignore
     
     let postPolicy applicationId =
         String.Format(File.ReadAllText("StaticWebsiteApimPostOperationPolicy.xml"),
@@ -365,7 +366,7 @@ let infra () =
         "StorageAccount",                     storage.Name                   :> obj
         "ApiManagementEndpoint",              apiManagement.GatewayUrl       :> obj
         "ApiManagement",                      apiManagement.Name             :> obj
-        "StaticWebsiteApi",                   api.Name                       :> obj
+        "StaticWebsiteApi",                   swApi.Name                       :> obj
         "FunctionApi",                        apiFunction.Name               :> obj
         "ApplicationId",                      spaAdApplication.ApplicationId :> obj
         "FunctionName",                       app.Name                       :> obj
