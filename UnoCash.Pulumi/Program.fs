@@ -12,6 +12,11 @@ open System.IO
 open System
 open Pulumi
 
+type ParsedSasToken =
+    | Valid of string * DateTime
+    | ExpiredOrInvalid
+    | Missing
+
 let infra () =
     let group =
         resourceGroup {
@@ -82,11 +87,11 @@ let infra () =
            GatewayUrl = output { let! outputs = templateOutputs
                                  return outputs.["gatewayUrl"] } |}
         
-    let _ =
-        Logger("unocashapimlog",
-               LoggerArgs(ApiManagementName = io apiManagement.Name,
-                          ResourceGroupName = io group.Name,
-                          ApplicationInsights = input (LoggerApplicationInsightsArgs(InstrumentationKey = io appInsights.InstrumentationKey))))
+    LoggerApplicationInsightsArgs(InstrumentationKey = io appInsights.InstrumentationKey) |>
+    fun la -> Logger("unocashapimlog",
+                     LoggerArgs(ApiManagementName = io apiManagement.Name,
+                                ResourceGroupName = io group.Name,
+                                ApplicationInsights = input la)) |> ignore
         
     let webContainerUrl =
         output {
@@ -114,24 +119,27 @@ let infra () =
     
 
     let policyBlob resourceName (appIdToPolicyXml : string -> string) =
+        let policyXmlAsset =
+            output {
+                let! appId =
+                    spaAdApplication.ApplicationId
+                
+                let policyXmlAsset =
+                    appIdToPolicyXml appId |>
+                    StringAsset :>
+                    AssetOrArchive
+                    
+                return policyXmlAsset
+            }
+            
         storageBlob {
             name      ("unocash" + resourceName + "policyblob")
             account   storage
             container buildContainer
-            source    (output {
-                           let! appId =
-                               spaAdApplication.ApplicationId
-                           
-                           let policyXmlAsset =
-                               appIdToPolicyXml appId |>
-                               StringAsset :>
-                               AssetOrArchive
-                               
-                           return policyXmlAsset
-                       })
+            source    policyXmlAsset
         }
     
-    let withSas (baseBlobUrl : Output<string>) =
+    let withSasToken (baseBlobUrl : Output<string>) =
         secretOutput {
             let! url = baseBlobUrl
 
@@ -152,51 +160,48 @@ let infra () =
     let sasExpirationOutputName = "SasTokenExpiration"
     let sasTokenOutputName = "SasToken"
     
-    let stack =
-        StackReference(Deployment.Instance.StackName)
-    
-    let sasExpirationDate =
-        output {
-            let! previousOutputs =
-                stack.Outputs
-            
-            return match previousOutputs.TryGetValue sasExpirationOutputName with
-                   | true, (:? string as exp) -> match DateTime.TryParse(exp) with
-                                                 | true, x when x > DateTime.Now -> x, false // Unchanged
-                                                 | _, _                          -> DateTime.Now.AddYears(1), true
-                   | _                        -> DateTime.Now.AddYears(1), true
-        }
-    
     let token =
         secretOutput {
-            let! (_, sasChanged) =
-                sasExpirationDate
+            let! previousOutputs =
+                StackReference(Deployment.Instance.StackName).Outputs
+
+            let tokenValidity =
+                let getTokenIfValid (expirationString : string) =
+                    match DateTime.TryParse expirationString with
+                    | true, x when x > DateTime.Now -> Valid (
+                                                           previousOutputs.[sasTokenOutputName] :?> string,
+                                                           x
+                                                       )
+                    | _                             -> ExpiredOrInvalid
+                
+                match previousOutputs.TryGetValue sasExpirationOutputName with
+                | true, (:? string as exp) -> getTokenIfValid exp
+                | _                        -> Missing
             
             return!
-                match sasChanged with
-                | true  -> output { let! (exp, _) = sasExpirationDate
-                                    
-                                    return! sasToken {
-                                        account    storage
-                                        container  webContainer
-                                        duration   {
-                                            From = DateTime.Now
-                                            To   = exp
-                                        }
-                                        permission Read
-                                    } }
-                | false -> output { let! tokenOutput = stack.Outputs
-                                    return tokenOutput.[sasTokenOutputName] :?> string }
+                match tokenValidity with
+                | Missing
+                | ExpiredOrInvalid      -> let expiry = DateTime.Now.AddYears(1)
+                                           sasToken {
+                                               account    storage
+                                               container  webContainer
+                                               duration   {
+                                                   From = DateTime.Now
+                                                   To   = expiry
+                                               }
+                                               permission Read
+                                           } |> (fun x -> x.Apply(fun y -> (y, expiry )))
+                 | Valid (sasToken, e ) -> output { return sasToken, e }
         }
     
     let swApiPolicyBlobLink =
         output {
-            let! sas =
+            let! (tokenValue, _) =
                 token
-            
+                
             let apiPolicyXml _ =
                 let queryString =
-                    sas.Substring(1).Split('&') |>
+                    tokenValue.Substring(1).Split('&') |>
                     Array.map ((fun pair -> pair.Split('=')) >>
                                (fun arr -> (arr.[0], arr.[1]))) |>
                     Map.ofArray
@@ -218,7 +223,7 @@ let infra () =
             
             return! blob.Url
         } |>
-        withSas |>
+        withSasToken |>
         io
     
     apiOperation {
@@ -245,7 +250,7 @@ let infra () =
     let swApiGetPolicyBlobLink =
         policyBlob "get" getPolicy |>
         (fun pb -> pb.Url) |>
-        withSas |>
+        withSasToken |>
         io
     
     apiOperation {
@@ -265,7 +270,7 @@ let infra () =
     let swApiPostPolicyBlobLink =
         policyBlob "post" postPolicy |>
         (fun pb -> pb.Url) |>
-        withSas |>
+        withSasToken |>
         io
 
     let indexPolicyXml applicationId =
@@ -276,7 +281,7 @@ let infra () =
     let swApiGetIndexPolicyBlobLink =
         policyBlob "getindex" indexPolicyXml |>
         (fun pb -> pb.Url) |>
-        withSas |>
+        withSasToken |>
         io
     
     let app =
@@ -332,7 +337,7 @@ let infra () =
     let functionApiPolicyBlobLink =
         policyBlob "functionapi" apiFunctionPolicyXml |>
         (fun pb -> pb.Url) |>
-        withSas |>
+        withSasToken |>
         io
     
     storageBlob {
@@ -344,12 +349,11 @@ let infra () =
         content   (Config().Require("WebEndpoint") + "/api")
         
     } |> ignore
-    
-    let sasExpirationDateString =
+
+    let sasExpiry =
         output {
-            let! (date, _) = sasExpirationDate
-            
-            return date.ToString("u")
+            let! (_, expiry) = token            
+            return expiry.ToString("u")
         }
     
     dict [
@@ -358,14 +362,14 @@ let infra () =
         "StorageAccount",                     storage.Name                   :> obj
         "ApiManagementEndpoint",              apiManagement.GatewayUrl       :> obj
         "ApiManagement",                      apiManagement.Name             :> obj
-        "StaticWebsiteApi",                   swApi.Name                       :> obj
+        "StaticWebsiteApi",                   swApi.Name                     :> obj
         "FunctionApi",                        apiFunction.Name               :> obj
         "ApplicationId",                      spaAdApplication.ApplicationId :> obj
         "FunctionName",                       app.Name                       :> obj
         
         // Outputs to read on next deployment to check for changes
-        sasTokenOutputName,                   token                          :> obj
-        sasExpirationOutputName,              sasExpirationDateString        :> obj
+        sasTokenOutputName,                   token.Apply fst                :> obj
+        sasExpirationOutputName,              sasExpiry                      :> obj
                                
         // API Management policy files URLs                                        
         "StaticWebsiteApiPolicyLink",         swApiPolicyBlobLink            :> obj
