@@ -312,9 +312,9 @@ let infra () =
             serviceUrl    (app.DefaultHostname.Apply (sprintf "https://%s"))
         }
     
-    let apiOperation (httpMethod : HttpMethod) =
+    let apiOperation httpMethod =
         apiOperation {
-            name          ("unocashapimapifunction" + (httpMethod.ToString()))
+            name          ("unocashapimapifunction" + (httpMethod.ToString().ToLower()))
             resourceGroup group
             apim          apiManagement.Name
             api           apiFunction
