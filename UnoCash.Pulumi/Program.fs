@@ -1,9 +1,7 @@
 ﻿module Program
 
 open Pulumi.Azure.ApiManagement.Inputs
-open Pulumi.Azure.AppService.Inputs
 open Pulumi.Azure.ApiManagement
-open Pulumi.Azure.AppService
 open Pulumi.FSharp.Output
 open Pulumi.FSharp.Azure
 open System.Diagnostics
@@ -281,24 +279,24 @@ let infra () =
         withSas |>
         io
     
-    let functionAppCors =
-        input (FunctionAppSiteConfigCorsArgs(AllowedOrigins = inputList [ io apiManagement.GatewayUrl ],
-                                             SupportCredentials = input true))
-    
     let app =
-        FunctionApp("unocashapp",
-                    FunctionAppArgs(ResourceGroupName = io group.Name,
-                                    AppServicePlanId = io functionPlan.Id,
-                                    AppSettings = inputMap [ "runtime", input "dotnet"
-                                                             "WEBSITE_RUN_FROM_PACKAGE", io codeBlobUrl
-                                                             "APPINSIGHTS_INSTRUMENTATIONKEY", io appInsights.InstrumentationKey
-                                                             "StorageAccountConnectionString", io storage.PrimaryConnectionString
-                                                             "FormRecognizerKey", input ""
-                                                             "FormRecognizerEndpoint", input "" ],
-                                    StorageAccountName = io storage.Name,
-                                    StorageAccountAccessKey = io storage.PrimaryAccessKey,
-                                    Version = input "~3",
-                                    SiteConfig = input (FunctionAppSiteConfigArgs(Cors = functionAppCors))))
+        functionApp {
+            name            "unocashapp"
+            resourceGroup   group
+            plan            functionPlan
+            appSettings     [
+                Runtime     Dotnet
+                Package     codeBlobUrl
+                AppInsight  appInsights
+                CustomIO    ("StorageAccountConnectionString", storage.PrimaryConnectionString)
+                Custom      ("FormRecognizerKey"             , "")
+                Custom      ("FormRecognizerEndpoint"        , "")
+            ]               
+            storageAccount  storage
+            version         "~3"
+            allowedOrigin   apiManagement.GatewayUrl
+            corsCredentials true
+        }
     
     let apiFunction =
         apimApi {
