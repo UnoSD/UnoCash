@@ -10,57 +10,7 @@ open UnoCash.Fulma.Helpers
 open Feliz
 open System
 
-let private expensesTable model dispatch =
-    let expensesRows =
-        let row (expense : Expense) =
-            let cellButton message icon =
-                a [ onClick message dispatch
-                    Style [ PaddingLeft "10px"; PaddingRight "10px" ] ]
-                  [ Fa.i [ icon ] [] ]
-                  
-            let deleteButton =
-                cellButton (DeleteExpense expense.id) Fa.Solid.Trash
-            
-            let editButton =
-                cellButton (EditExpense expense) Fa.Solid.PencilAlt
-            
-            let date =
-                DateTime.Parse(expense.date).ToString("dd/MM/yy")
-            
-            let allCells =
-                [
-                    date
-                    expense.payee
-                    expense.amount |> string
-                    expense.status
-                    expense.``type``
-                    expense.tags
-                    expense.description
-                ]
-                
-            let cellsSubset =
-                [
-                    date
-                    expense.payee
-                    expense.amount |> string
-                ]
-            
-            let cells =
-                (match isSmallScreen with
-                 | true  -> cellsSubset
-                 | false -> allCells) |>
-                List.map (fun cellContent -> td [] [ str cellContent ])
-            
-            let cellsWithActions =
-                cells @ [ td [ Style [ WhiteSpace WhiteSpaceOptions.Nowrap ] ]
-                             [ deleteButton
-                               editButton ] ]
-            
-            tr [] cellsWithActions
-               
-        model.Expenses |>
-        Array.map row
-    
+let private tableHeader () =
     let allColumns =
         [
             "Date"
@@ -88,19 +38,67 @@ let private expensesTable model dispatch =
     let columnsWithActions =
         columns @ [ th [ Style [ Width "1%" ] ] [ str "Actions" ] ]
     
-    let tableHeader =
-        thead []
-              [ tr []
-                   columnsWithActions ]
+    thead []
+          [ tr []
+               columnsWithActions ]
+
+let private row dispatch (expense : Expense) =
+    let cellButton message icon =
+        a [ onClick message dispatch
+            Style [ PaddingLeft "10px"; PaddingRight "10px" ] ]
+          [ Fa.i [ icon ] [] ]
+          
+    let deleteButton =
+        cellButton (DeleteExpense expense.id) Fa.Solid.Trash
     
-    let tableBody =
-        tbody [] expensesRows
+    let editButton =
+        cellButton (EditExpense expense) Fa.Solid.PencilAlt
     
+    let date =
+        DateTime.Parse(expense.date).ToString("dd/MM/yy")
+    
+    let allCells =
+        [
+            date
+            expense.payee
+            expense.amount |> string
+            expense.status
+            expense.``type``
+            expense.tags
+            expense.description
+        ]
+        
+    let cellsSubset =
+        [
+            date
+            expense.payee
+            expense.amount |> string
+        ]
+    
+    let cells =
+        (match isSmallScreen with
+         | true  -> cellsSubset
+         | false -> allCells) |>
+        List.map (fun cellContent -> td [] [ str cellContent ])
+    
+    let cellsWithActions =
+        cells @ [ td [ Style [ WhiteSpace WhiteSpaceOptions.Nowrap ] ]
+                     [ deleteButton
+                       editButton ] ]
+    
+    tr [] cellsWithActions
+
+let private tableBody expenses dispatch =
+    expenses |>
+    Array.map (row dispatch) |>
+    tbody []
+
+let private expensesTable model dispatch =
     Table.table [ Table.IsBordered
                   Table.IsFullWidth
                   Table.IsStriped ]
-                [ tableHeader
-                  tableBody ]
+                [ tableHeader ()
+                  tableBody model.Expenses dispatch ]
 
 let private getTotalByTypes types (expenses : Expense[]) =
     expenses |>
