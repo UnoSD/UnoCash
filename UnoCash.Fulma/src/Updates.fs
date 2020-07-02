@@ -86,9 +86,10 @@ let private toModel (expense : Expense) =
 
 let private changeTabTo tab model =
     match tab with
-    | ShowExpenses -> { model with CurrentTab = tab }, loadExpensesCmd model.ShowAccount model.ApiBaseUrl
-    | AddExpense   -> { emptyModel with ApiBaseUrl = model.ApiBaseUrl }, Cmd.none
-    | _            -> { model with CurrentTab = tab }, Cmd.none
+    | ShowExpenses
+    | ShowStatistics -> { model with CurrentTab = tab }, loadExpensesCmd model.ShowAccount model.ApiBaseUrl
+    | AddExpense     -> { emptyModel with ApiBaseUrl = model.ApiBaseUrl }, Cmd.none
+    | _              -> { model with CurrentTab = tab }, Cmd.none
 
 let private addTagOnEnter key tag model =
     match key with
