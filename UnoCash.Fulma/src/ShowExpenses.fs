@@ -96,24 +96,11 @@ let private expensesTable model dispatch =
     let tableBody =
         tbody [] expensesRows
     
-    let table =
-        Table.table [ Table.IsBordered
-                      Table.IsFullWidth
-                      Table.IsStriped ]
-                    [ tableHeader
-                      tableBody ]
-    
-    let spinnerIcon =
-        Fa.i [ Fa.Solid.Sync; Fa.Spin ] []
-    
-    let spinner =
-        div [ Class ("block " + Fa.Classes.Size.Fa3x)
-              Style [ TextAlign TextAlignOptions.Center ] ]
-            [ spinnerIcon ]
-    
-    match model.ExpensesLoaded with
-    | true  -> table
-    | false -> spinner
+    Table.table [ Table.IsBordered
+                  Table.IsFullWidth
+                  Table.IsStriped ]
+                [ tableHeader
+                  tableBody ]
 
 let private getTotalByTypes types (expenses : Expense[]) =
     expenses |>
@@ -141,11 +128,14 @@ let private totals expenses =
     List.map (fun x -> expenses |> getTotalByTypes x.Types |> totalLevelItem x.Title) |>
     Level.level []
 
-let topBox model dispatch =
+let private topBox model dispatch =
     Box.box' [] [ dropdownWithEvent "Account" model.Accounts model.ShowAccount ChangeShowAccount dispatch
                   totals model.Expenses ]
 
 let showExpensesCard model dispatch =
+    let getTable () =
+        expensesTable model dispatch
+    
     card [ topBox model dispatch
-           expensesTable model dispatch ]
+           spinnerOrContent model.ExpensesLoaded getTable ]
          Html.none

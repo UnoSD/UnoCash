@@ -4,6 +4,7 @@ open System
 open Fable.React.Props
 open Fable.React
 open Fulma
+open Fable.FontAwesome
 
 let onChange message dispatch =
     OnChange (fun event -> message event.Value |> dispatch)
@@ -70,3 +71,16 @@ let toDecimal value precision =
 
 let isSmallScreen =
     Browser.Dom.window.screen.width <= 768.
+    
+let private spinner =
+    let spinnerIcon =
+        Fa.i [ Fa.Solid.Sync; Fa.Spin ] []
+    
+    div [ Class ("block " + Fa.Classes.Size.Fa3x)
+          Style [ TextAlign TextAlignOptions.Center ] ]
+        [ spinnerIcon ]
+    
+let spinnerOrContent loaded content =
+    match loaded with
+    | true  -> content ()
+    | false -> spinner
