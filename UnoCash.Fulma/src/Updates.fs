@@ -159,3 +159,5 @@ let update message model =
     | DeleteExpense expId    -> model, removeExpenseCmd expId model.ShowAccount model.ApiBaseUrl
     | EditExpense expense    -> { model with Expense = expense |> toModel
                                              CurrentTab = Tab.EditExpense }, Cmd.none
+    
+    | ChangePieChartIndex ix -> { model with PieChartIndex = ix }, Cmd.none

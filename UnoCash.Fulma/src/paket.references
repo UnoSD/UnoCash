@@ -16,3 +16,5 @@ Thoth.Json
 Fable.JsonProvider
 Feliz
 Thoth.Fetch
+Fable.Recharts
+Feliz.Recharts

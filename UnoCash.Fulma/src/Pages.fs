@@ -1,17 +1,16 @@
 module UnoCash.Fulma.Pages
 
-open Fable.React
 open UnoCash.Fulma.Models
 open UnoCash.Fulma.ExpenseForm
 open UnoCash.Fulma.ShowExpenses
 open UnoCash.Fulma.About
-open Feliz
+open UnoCash.Fulma.Statistics
 
 let page model =
     model |>
     match model.CurrentTab with
-    | AddExpense   -> expenseFormCard "Add"
-    | EditExpense  -> expenseFormCard "Edit"
-    | ShowExpenses -> showExpensesCard
-    | About        -> aboutCard
-    | _            -> (fun _ _ -> Html.div [ str "Not implemented" ])
+    | AddExpense     -> expenseFormCard "Add"
+    | EditExpense    -> expenseFormCard "Edit"
+    | ShowExpenses   -> showExpensesCard
+    | About          -> aboutCard
+    | ShowStatistics -> statisticsCard

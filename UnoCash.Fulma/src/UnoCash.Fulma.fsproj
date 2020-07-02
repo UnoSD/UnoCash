@@ -18,6 +18,7 @@
     <Compile Include="ShowExpenses.fs" />
     <Compile Include="ExpenseForm.fs" />
     <Compile Include="About.fs" />
+    <Compile Include="Statistics.fs" />
     <Compile Include="Pages.fs" />
     <Compile Include="View.fs" />
     <Compile Include="App.fs" />
