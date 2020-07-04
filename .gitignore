@@ -343,3 +343,5 @@ healthchecksdb
 /.vscode/launch.json
 /.vscode/settings.json
 /.vscode/tasks.json
+
+.ionide
