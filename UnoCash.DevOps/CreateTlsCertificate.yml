@@ -19,6 +19,10 @@ parameters:
     type: string
     default: $(keyvault-name)
   
+  - name: certificate_name
+    type: string
+    default: $(certificate-name)
+  
 trigger: none
 
 pool:
@@ -34,6 +38,7 @@ steps:
       Inline: |
         $domainName = "${{ parameters.dns_record_name }}.${{ parameters.dns_zone_name }}"
         $pfxPass = '${{ parameters.certificate_password }}'
+        // This can respond with multiple subs, pick one
         $subscription = (Get-AzSubscription).Id
         $vaultName = "${{ parameters.keyvault_name }}"
         
@@ -43,7 +48,7 @@ steps:
         
         $azParams = @{ AZSubscriptionId=$subscription; AZUseIMDS=$true }
         
-        DOSOMETHINGELSE-PACertificate $domainName `
+        New-PACertificate $domainName `
                           -PfxPass $pfxPass `
                           -AcceptTOS `
                           -DnsPlugin Azure `
@@ -51,8 +56,8 @@ steps:
         
         $pfxFilePath = (Get-PACertificate).PfxFile
         
-        Import-AzKeyVaultCertificate -VaultName ${{ parameters.keyvault_name }} `
-                                     -Name "pippo" `
+        Import-AzKeyVaultCertificate -VaultName $vaultName `
+                                     -Name "${{ parameters.certificate_name }}" `
                                      -FilePath "$pfxFilePath" `
                                      -Password (ConvertTo-SecureString -AsPlainText $pfxPass)
         
