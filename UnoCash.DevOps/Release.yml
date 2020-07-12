@@ -147,6 +147,13 @@ stages:
           submodules: true
           clean: true
           
+        - task: UseDotNet@2
+          displayName: 'Use .NET Core SDK 3.1.103'
+          inputs:
+            packageType: sdk
+            version: 3.1.103
+            installationPath: $(Agent.ToolsDirectory)/dotnet
+          
         - task: DownloadPipelineArtifact@2
           displayName: Download build artifacts for Fable
           inputs:
@@ -223,6 +230,13 @@ stages:
             steps:
             - checkout: self
               submodules: true
+                
+            - task: UseDotNet@2
+              displayName: 'Use .NET Core SDK 3.1.103'
+              inputs:
+                packageType: sdk
+                version: 3.1.103
+                installationPath: $(Agent.ToolsDirectory)/dotnet
                 
             - task: DownloadPipelineArtifact@2
               displayName: Download build artifacts for Fable
