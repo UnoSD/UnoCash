@@ -218,6 +218,10 @@ stages:
               
               pulumi preview -C UnoCash.Pulumi --diff
 
+              #pulumi preview -C UnoCash.Pulumi > summary.log
+              #echo "##vso[task.addattachment type=myattachmenttype;name=myattachmentname;]$(pwd)/summary.log"
+              #echo "##vso[task.uploadsummary]$(pwd)/summary.log"
+
 - stage: Development_deploy
   displayName: Development deploy
   dependsOn: Development_preview
