@@ -3,6 +3,7 @@
 open Pulumi.Azure.ApiManagement.Inputs
 open Pulumi.Azure.ApiManagement
 open Pulumi.FSharp.Output
+open Pulumi.FSharp.Azure.Legacy
 open Pulumi.FSharp.Azure
 open System.Diagnostics
 open System.Threading

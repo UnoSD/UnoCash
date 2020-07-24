@@ -24,10 +24,7 @@
     <PackageReference Include="Pulumi.AzureAD" Version="2.3.0" />
     <PackageReference Include="Pulumi.FSharp" Version="2.5.0" />
     <PackageReference Include="FSharp.Core" Version="4.7.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Pulumi.FSharp.Azure\Pulumi.FSharp.Azure.fsproj" />
+    <PackageReference Include="Pulumi.FSharp.Azure" Version="2.0.1" />
   </ItemGroup>
 
 </Project>
