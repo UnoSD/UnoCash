@@ -75,6 +75,7 @@ stages:
         displayName: Install Pulumi
         condition: ne(variables.pulumi_installed, 'true')
         inputs:
+          azureSubscription: ${{ parameters.azure_subscription }}
           scriptType: bash
           scriptLocation: inlineScript
           inlineScript: |
