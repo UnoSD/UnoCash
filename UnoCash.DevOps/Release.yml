@@ -220,7 +220,7 @@ stages:
               pulumi preview -C UnoCash.Pulumi --diff | tee -a summary.log
 
               echo "##vso[task.addattachment type=myattachmenttype;name=myattachmentname;]$(pwd)/summary.log"
-              echo "##vso[task.addattachment type=myattachmenttype;name=myattachmentname;]$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip"
+              echo "##vso[task.addattachment type=myattachmenttypex;name=myattachmentnamex;]$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip"
               echo "##vso[task.uploadsummary]$(pwd)/summary.log"
 
 - stage: Development_deploy
