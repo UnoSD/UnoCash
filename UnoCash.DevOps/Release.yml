@@ -224,7 +224,6 @@ stages:
               echo -e '```' >> summary.log
 
               echo "##vso[task.uploadfile]$(pwd)/summary.log"
-              echo "##vso[task.uploadfile]$(System.ArtifactsDirectory)/UnoCash.Api/UnoCash.Api.zip"
               echo "##vso[task.uploadsummary]$(pwd)/summary.log"
 
 - stage: Development_deploy

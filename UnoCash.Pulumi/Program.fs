@@ -69,11 +69,13 @@ let infra() =
         }
     
     let codeBlobUrl =
-        sasToken {
-            account storage
-            blob    apiBlob
+        secretOutput {
+            return! sasToken {
+                        account storage
+                        blob    apiBlob
+                    }
         }
-    
+
     let appInsights =
         appInsight {
             name            "unocashai"
