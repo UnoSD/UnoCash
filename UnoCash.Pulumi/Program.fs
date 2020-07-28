@@ -6,6 +6,7 @@ open Pulumi.Azure.ApiManagement
 open Pulumi.FSharp.Azure.Legacy
 open System.Threading.Tasks
 open Pulumi.FSharp.Output
+open Pulumi.FSharp.Config
 open Pulumi.FSharp.Azure
 open System.Diagnostics
 open System.Threading
@@ -54,12 +55,17 @@ let infra() =
             kind          FunctionAppKind
         }
     
+    let apiBuildContent =
+        config.["ApiBuild"] |>
+        File.ReadAllText |>
+        StringAsset
+    
     let apiBlob =
         storageBlob {
             name      "unocashapi"
             account   storage
             container buildContainer
-            source    (Config().Require("ApiBuild"))
+            source    apiBuildContent
         }
     
     let codeBlobUrl =
