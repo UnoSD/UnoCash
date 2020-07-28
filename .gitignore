@@ -345,3 +345,4 @@ healthchecksdb
 /.vscode/tasks.json
 
 .ionide
+/UnoCash.Pulumi/Pulumi.dev.yaml
