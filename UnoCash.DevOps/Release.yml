@@ -217,7 +217,7 @@ stages:
               
               echo -e "#Preview\n\`\`\`" >> summary.log
               
-              pulumi preview -C UnoCash.Pulumi | tee -a summary.log
+              pulumi preview -C UnoCash.Pulumi --verbose 0 | tee -a summary.log
               
               pulumi preview -C UnoCash.Pulumi --diff | tee -a summary.log
 
