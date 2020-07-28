@@ -1,9 +1,11 @@
 ﻿module Program
 
 open Pulumi.Azure.ApiManagement.Inputs
+open System.Collections.Generic
 open Pulumi.Azure.ApiManagement
-open Pulumi.FSharp.Output
 open Pulumi.FSharp.Azure.Legacy
+open System.Threading.Tasks
+open Pulumi.FSharp.Output
 open Pulumi.FSharp.Azure
 open System.Diagnostics
 open System.Threading
@@ -18,23 +20,25 @@ type ParsedSasToken =
     | ExpiredOrInvalid
     | Missing
 
-let infra () =
+let infra() =
     let group =
-        resourceGroup {
+        Pulumi.FSharp.Azure.Core.resourceGroup {
             name "unocash"
         }
-
+    
     let storage =
-        storageAccount {
+        Pulumi.FSharp.Azure.Storage.account {
             name          "unocashstorage"
-            resourceGroup group
+            resourceGroup group.Name
+            accountReplicationType "LRS"
+            accountTier "Standard"
         }
         
     let webContainer =
-        storageContainer {
-            name          "unocashweb"
-            account       storage.Name
-            containerName "$web"
+        Pulumi.FSharp.Azure.Storage.container {
+            name               "unocashweb"
+            storageAccountName storage.Name
+            resourceName      "$web"
         }
             
     let buildContainer =
@@ -380,18 +384,36 @@ let infra () =
         "FunctionApiPolicyLink",              functionApiPolicyBlobLink      :> obj
     ]
 
+type bclList<'a> =
+    System.Collections.Generic.List<'a>
+
+let ignoreBlobSourceChanges (args : ResourceTransformationArgs) =
+    if args.Resource.GetResourceType() = "azure:storage/blob:Blob" then
+        args.Options.IgnoreChanges <- bclList(["source"])
+    ResourceTransformationResult(args.Args, args.Options) |> Nullable
+
+let stackOptions =
+        StackOptions(
+            ResourceTransformations =
+                bclList([
+                    if Environment.GetEnvironmentVariable("AGENT_ID") = null then
+                        yield ResourceTransformation(ignoreBlobSourceChanges)
+                ]))
+
 [<EntryPoint>]
 let main _ =
-  let rec waitForDebugger () =
-      match Debugger.IsAttached with
-      | false -> Thread.Sleep(100)
-                 printf "."
-                 waitForDebugger ()
-      | true  -> printfn " attached"
-  
-  match Environment.GetEnvironmentVariable("PULUMI_DEBUG_WAIT") = "1" with
-  | true -> printf "Awaiting debugger to attach to the process"
-            waitForDebugger ()
-  | _    -> ()
-  
-  Deployment.run infra
+    let rec waitForDebugger () =
+        match Debugger.IsAttached with
+        | false -> Thread.Sleep(100)
+                   printf "."
+                   waitForDebugger ()
+        | true  -> printfn " attached"
+
+    match Environment.GetEnvironmentVariable("PULUMI_DEBUG_WAIT") = "1" with
+    | true -> printf "Awaiting debugger to attach to the process"
+              waitForDebugger ()
+    | _    -> ()
+
+    Deployment.RunAsync(Func<Task<IDictionary<string, obj>>>(infra >> Task.FromResult), stackOptions)
+              .GetAwaiter()
+              .GetResult()
