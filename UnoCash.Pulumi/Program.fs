@@ -1,9 +1,14 @@
 ﻿module Program
 
-open Pulumi.Azure.ApiManagement.Inputs
+open Pulumi.FSharp.Azure.ApiManagement.Inputs
+open Pulumi.FSharp.Azure.ApiManagement
+open Pulumi.FSharp.Azure.AppService.Inputs
+open Pulumi.FSharp.Azure.AppInsights
+open Pulumi.FSharp.Azure.AppService
+open Pulumi.Azure.AppService.Inputs
+open Pulumi.FSharp.Azure.Storage
 open System.Collections.Generic
-open Pulumi.Azure.ApiManagement
-open Pulumi.FSharp.Azure.Legacy
+open Pulumi.FSharp.Azure.Core
 open System.Threading.Tasks
 open Pulumi.FSharp.Output
 open Pulumi.FSharp.Config
@@ -23,49 +28,49 @@ type ParsedSasToken =
 
 let infra() =
     let group =
-        Pulumi.FSharp.Azure.Core.resourceGroup {
+        resourceGroup {
             name "unocash"
         }
     
     let storage =
-        Pulumi.FSharp.Azure.Storage.account {
-            name          "unocashstorage"
-            resourceGroup group.Name
+        account {
+            name                   "unocashstorage"
+            resourceGroup          group.Name
             accountReplicationType "LRS"
-            accountTier "Standard"
+            accountTier            "Standard"
         }
         
     let webContainer =
-        Pulumi.FSharp.Azure.Storage.container {
+        container {
             name               "unocashweb"
             storageAccountName storage.Name
-            resourceName      "$web"
+            resourceName       "$web"
         }
             
     let buildContainer =
-        storageContainer {
-            name    "unocashbuild"
-            account storage
+        container {
+            name               "unocashbuild"
+            storageAccountName storage.Name
         }
     
     let functionPlan =
-        appService {
+        plan {
             name          "unocashasp"
-            resourceGroup group
-            kind          FunctionAppKind
+            resourceGroup group.Name
+            kind          "FunctionApp"
+            planSku {
+                size "Y1"
+                tier "Dynamic"
+            }
         }
-    
-    let apiBuildContent =
-        config.["ApiBuild"] |>
-        File.ReadAllText |>
-        StringAsset
-    
+
     let apiBlob =
-        storageBlob {
-            name      "unocashapi"
-            account   storage
-            container buildContainer
-            source    apiBuildContent
+        blob {
+            name                 "unocashapi"
+            storageAccountName   storage.Name
+            storageContainerName buildContainer.Name
+            ``type``             "Block"
+            StringAsset          (config.["ApiBuild"] |> File.ReadAllText)
         }
     
     let codeBlobUrl =
@@ -77,34 +82,38 @@ let infra() =
         }
 
     let appInsights =
-        appInsight {
+        insights {
             name            "unocashai"
-            resourceGroup   group
-            applicationType Web
+            resourceGroup   group.Name
+            applicationType "web"
             retentionInDays 90
         }
         
     let apiManagement =
         let templateOutputs =
-            armTemplate {
-                name          "unocashapim"
-                resourceGroup group
-                jsonFile      "ApiManagement.json"
-                parameters    [ "apiManagementServiceName", input "unocashapim"
-                                "location", io group.Location ]
-            } |>
+            templateDeployment {
+                name           "unocashapim"
+                resourceGroup  group.Name
+                templateBody   (File.ReadAllText("ApiManagement.json"))
+                deploymentMode "Incremental"
+                parameters     [ "apiManagementServiceName", input "unocashapim"
+                                 "location", io group.Location ]
+            } |>               
             fun at -> at.Outputs
         
         {| Name = output { let! outputs = templateOutputs
                            return outputs.["name"] }
            GatewayUrl = output { let! outputs = templateOutputs
                                  return outputs.["gatewayUrl"] } |}
-        
-    LoggerApplicationInsightsArgs(InstrumentationKey = io appInsights.InstrumentationKey) |>
-    fun la -> Logger("unocashapimlog",
-                     LoggerArgs(ApiManagementName = io apiManagement.Name,
-                                ResourceGroupName = io group.Name,
-                                ApplicationInsights = input la)) |> ignore
+    
+    logger {
+        name              "unocashapimlog"
+        apiManagementName apiManagement.Name
+        resourceGroup     group.Name
+        loggerApplicationInsights {
+            instrumentationKey appInsights.InstrumentationKey
+        }
+    } |> ignore
         
     let webContainerUrl =
         output {
@@ -115,14 +124,16 @@ let infra() =
         }
 
     let swApi =
-        apimApi {
-            name          "unocashapimapi"
-            apiName       "staticwebsite"
-            resourceGroup group
-            apim          apiManagement.Name
-            displayName   "StaticWebsite"
-            protocol      HttpHttps
-            serviceUrl    webContainerUrl
+        api {
+            name              "unocashapimapi"
+            resourceName      "staticwebsite"
+            resourceGroup     group.Name
+            apiManagementName apiManagement.Name
+            displayName       "StaticWebsite"
+            protocols         [ "http"; "https" ]
+            serviceUrl        webContainerUrl
+            path              ""
+            revision          "1"
         }
 
     let spaAdApplication =
@@ -130,31 +141,18 @@ let infra() =
                     ApplicationArgs(ReplyUrls = inputList [ io apiManagement.GatewayUrl ],
                                     Oauth2AllowImplicitFlow = input true))
     
-
-    let policyBlob resourceName (appIdToPolicyXml : string -> string) =
-        let policyXmlAsset =
-            output {
-                let! appId =
-                    spaAdApplication.ApplicationId
-                
-                let policyXmlAsset =
-                    appIdToPolicyXml appId |>
-                    StringAsset :>
-                    AssetOrArchive
-                    
-                return policyXmlAsset
+    let policyBlobUrlWithSas pulumiName policyXml =
+        secretOutput {
+            let blob = blob {
+                name                 ("unocash" + pulumiName + "policyblob")
+                storageAccountName   storage.Name
+                storageContainerName buildContainer.Name
+                StringAsset          policyXml
+                ``type``             "Block"
             }
             
-        storageBlob {
-            name      ("unocash" + resourceName + "policyblob")
-            account   storage
-            container buildContainer
-            source    policyXmlAsset
-        }
-    
-    let withSasToken (baseBlobUrl : Output<string>) =
-        secretOutput {
-            let! url = baseBlobUrl
+            let! url =
+                blob.Url
 
             let! sas =
                 sasToken {
@@ -212,7 +210,7 @@ let infra() =
             let! (tokenValue, _) =
                 token
                 
-            let apiPolicyXml _ =
+            let apiPolicyXml =
                 let queryString =
                     tokenValue.Substring(1).Split('&') |>
                     Array.map ((fun pair -> pair.Split('=')) >>
@@ -231,136 +229,124 @@ let infra() =
                 String.Format(File.ReadAllText("StaticWebsiteApimApiPolicy.xml"),
                               formatValues)
 
-            let blob =
-                policyBlob "mainapi" apiPolicyXml
-            
-            return! blob.Url
-        } |>
-        withSasToken |>
-        io
+            return! policyBlobUrlWithSas "mainapi" apiPolicyXml
+        }
     
     apiOperation {
-        name          "unocashapimindexoperation"
-        resourceGroup group
-        apim          apiManagement.Name
-        api           swApi
-        displayName   "GET index"
+        name              "unocashapimindexoperation"
+        resourceGroup     group.Name
+        apiManagementName apiManagement.Name
+        apiName           swApi.Name
+        method            "GET"
+        operationId       "get-index"
+        urlTemplate       "/"
+        displayName       "GET index"
     } |> ignore
         
     apiOperation {
-        name          "unocashapimoperation"
-        resourceGroup group
-        apim          apiManagement.Name
-        api           swApi
-        urlTemplate   "/*"     
+        name              "unocashapimoperation"
+        resourceGroup     group.Name
+        apiManagementName apiManagement.Name
+        apiName           swApi.Name
+        method            "GET"
+        operationId       "get"
+        urlTemplate       "/*"     
+        displayName       "GET"
     } |> ignore
     
-    let getPolicy applicationId =
-        String.Format(File.ReadAllText("StaticWebsiteApimGetOperationPolicy.xml"),
-                      Config.TenantId,
-                      applicationId)
-    
-    let swApiGetPolicyBlobLink =
-        policyBlob "get" getPolicy |>
-        (fun pb -> pb.Url) |>
-        withSasToken |>
-        io
-    
-    apiOperation {
-        name          "unocashapimpostoperation"
-        resourceGroup group
-        apim          apiManagement.Name
-        api           swApi
-        method        Post
-        displayName   "POST AAD token"
-    } |> ignore
-    
-    let postPolicy applicationId =
-        String.Format(File.ReadAllText("StaticWebsiteApimPostOperationPolicy.xml"),
-                      Config.TenantId,
-                      applicationId)
-    
-    let swApiPostPolicyBlobLink =
-        policyBlob "post" postPolicy |>
-        (fun pb -> pb.Url) |>
-        withSasToken |>
-        io
-
-    let indexPolicyXml applicationId =
-        String.Format(File.ReadAllText("StaticWebsiteApimGetIndexOperationPolicy.xml"),
-                      Config.TenantId,
-                      applicationId)
+    let blobLink name fileName =
+        output {
+            let! appId =
+                spaAdApplication.ApplicationId
+            
+            let policy =
+                String.Format(File.ReadAllText(fileName),
+                              Config.TenantId,
+                              appId)
+            
+            return! policyBlobUrlWithSas name policy
+        }
+        
+    let functionApiPolicyBlobLink =
+        blobLink "functionapi" "APIApimApiPolicy.xml"
     
     let swApiGetIndexPolicyBlobLink =
-        policyBlob "getindex" indexPolicyXml |>
-        (fun pb -> pb.Url) |>
-        withSasToken |>
-        io
+        blobLink "getindex" "StaticWebsiteApimGetIndexOperationPolicy.xml"
+    
+    let swApiGetPolicyBlobLink =
+        blobLink "get" "StaticWebsiteApimGetOperationPolicy.xml"
+    
+    let swApiPostPolicyBlobLink =
+        blobLink "post" "StaticWebsiteApimPostOperationPolicy.xml"
+    
+    apiOperation {
+        name              "unocashapimpostoperation"
+        resourceGroup     group.Name
+        apiManagementName apiManagement.Name
+        apiName           swApi.Name
+        method            "POST"
+        operationId       "post-aad-token"
+        urlTemplate       "/"
+        displayName       "POST AAD token"
+    } |> ignore
     
     let app =
         functionApp {
-            name            "unocashapp"
-            resourceGroup   group
-            plan            functionPlan
+            name             "unocashapp"
+            resourceGroup    group.Name
+            appServicePlanId functionPlan.Id
             appSettings     [
-                Runtime     Dotnet
-                Package     codeBlobUrl
-                AppInsight  appInsights
-                CustomIO    ("StorageAccountConnectionString", storage.PrimaryConnectionString)
-                Custom      ("FormRecognizerKey"             , "")
-                Custom      ("FormRecognizerEndpoint"        , "")
+                "runtime"                        , input "dotnet"
+                "WEBSITE_RUN_FROM_PACKAGE"       , io codeBlobUrl
+                "APPINSIGHTS_INSTRUMENTATIONKEY" , io appInsights.InstrumentationKey
+                "StorageAccountConnectionString" , io storage.PrimaryConnectionString
+                "FormRecognizerKey"              , input ""
+                "FormRecognizerEndpoint"         , input ""
             ]               
-            storageAccount  storage
-            version         "~3"
-            allowedOrigin   apiManagement.GatewayUrl
-            corsCredentials true
+            storageAccountName storage.Name
+            version            "~3"
+            functionAppSiteConfig {
+                FunctionAppSiteConfigCorsArgs(AllowedOrigins = inputList [ io apiManagement.GatewayUrl ],
+                                              SupportCredentials = input true)
+            }
         }
     
     let apiFunction =
-        apimApi {
-            name          "unocashapimapifunction"
-            apiName       "api"
-            path          "api"
-            resourceGroup group
-            apim          apiManagement.Name
-            displayName   "API"
-            protocol      Https
-            serviceUrl    (app.DefaultHostname.Apply (sprintf "https://%s"))
+        api {
+            name              "unocashapimapifunction"
+            resourceName      "api"
+            path              "api"
+            resourceGroup     group.Name
+            apiManagementName apiManagement.Name
+            displayName       "API"
+            protocols         [ "https" ]
+            serviceUrl        (app.DefaultHostname.Apply (sprintf "https://%s"))
+            path              ""
+            revision          "1"
         }
     
-    let apiOperation httpMethod =
+    let apiOperation (httpMethod : string) =
         apiOperation {
-            name          ("unocashapimapifunction" + (httpMethod.ToString().ToLower()))
-            resourceGroup group
-            apim          apiManagement.Name
-            api           apiFunction
-            method        httpMethod
-            urlTemplate   "/*"
+            name              ("unocashapimapifunction" + (httpMethod.ToString().ToLower()))
+            resourceGroup     group.Name
+            apiManagementName apiManagement.Name
+            apiName           apiFunction.Name
+            method            httpMethod
+            operationId       (httpMethod.ToLower())
+            urlTemplate       "/*"     
+            displayName       httpMethod
         }
     
-    let _ =
-        [ Get; Post; HttpMethod.Delete; Put ] |>
-        List.map apiOperation
+    [ "GET"; "POST"; "DELETE"; "PUT" ] |>
+    List.iter (apiOperation >> ignore)
     
-    let apiFunctionPolicyXml applicationId =
-        String.Format(File.ReadAllText("APIApimApiPolicy.xml"),
-                      Config.TenantId,
-                      applicationId)
-    
-    let functionApiPolicyBlobLink =
-        policyBlob "functionapi" apiFunctionPolicyXml |>
-        (fun pb -> pb.Url) |>
-        withSasToken |>
-        io
-    
-    storageBlob {
-        name      "unocashwebconfig"
-        blobName  "apibaseurl"
-        account   storage
-        container webContainer
-        blobType  Block
-        content   (Config().Require("WebEndpoint") + "/api")
-        
+    blob {
+        name                 "unocashwebconfig"
+        resourceName         "apibaseurl"
+        storageAccountName   storage.Name
+        storageContainerName webContainer.Name
+        ``type``             "Block"
+        StringAsset          (config.["WebEndpoint"] + "/api")
     } |> ignore
 
     let sasExpiry =
