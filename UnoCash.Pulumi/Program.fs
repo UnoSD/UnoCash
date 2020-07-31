@@ -97,7 +97,7 @@ let infra() =
                 templateBody   (File.ReadAllText("ApiManagement.json"))
                 deploymentMode "Incremental"
                 parameters     [ "apiManagementServiceName", input "unocashapim"
-                                 "location", io group.Location ]
+                                 "location"                , io    group.Location ]
             } |>               
             fun at -> at.Outputs
         
@@ -143,13 +143,14 @@ let infra() =
     
     let policyBlobUrlWithSas pulumiName policyXml =
         secretOutput {
-            let blob = blob {
-                name                 ("unocash" + pulumiName + "policyblob")
-                storageAccountName   storage.Name
-                storageContainerName buildContainer.Name
-                StringAsset          policyXml
-                ``type``             "Block"
-            }
+            let blob =
+                blob {
+                    name                 ("unocash" + pulumiName + "policyblob")
+                    storageAccountName   storage.Name
+                    storageContainerName buildContainer.Name
+                    StringAsset          policyXml
+                    ``type``             "Block"
+                }
             
             let! url =
                 blob.Url
@@ -201,7 +202,7 @@ let infra() =
                                                    To   = expiry
                                                }
                                                permission Read
-                                           } |> (fun x -> x.Apply(fun y -> (y, expiry )))
+                                           } |> (fun x -> x.Apply(fun y -> (y, expiry)))
                  | Valid (sasToken, e ) -> output { return sasToken, e }
         }
     
