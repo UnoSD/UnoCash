@@ -72,7 +72,7 @@ let infra() =
             storageAccountName   storage.Name
             storageContainerName buildContainer.Name
             resourceType         "Block"
-            source               { Text = config.["ApiBuild"] |> File.ReadAllText }.ToPulumiType
+            source               { Path = config.["ApiBuild"] }.ToPulumiType
         }
     
     let codeBlobUrl =
@@ -112,10 +112,10 @@ let infra() =
         
     let webContainerUrl =
         output {
-            let! accountName = storage.Name
+            let! blobEndpoint = storage.PrimaryBlobEndpoint
             let! containerName = webContainer.Name
             
-            return $"https://{accountName}.blob.core.windows.net/{containerName}"
+            return blobEndpoint + containerName
         }
 
     let swApi =
@@ -229,20 +229,14 @@ let infra() =
                 let queryString =
                     tokenValue.Substring(1).Split('&') |>
                     Array.map ((fun pair -> pair.Split('=')) >>
-                               (fun arr -> (arr.[0], arr.[1]))) |>
+                               (function | [| key; value |] -> (key, value) | _ -> failwith "Invalid query string")) |>
                     Map.ofArray
                 
-                let formatValues =
-                    seq {
-                        yield Config().Require("WebEndpoint") :> obj
-                        
-                        for key in ["sv";"sr";"st";"se";"sp";"spr";"sig"] do
-                            yield queryString.[key] :> obj
-                    } |>
-                    Array.ofSeq
-                
-                String.Format(File.ReadAllText("StaticWebsiteApimApiPolicy.xml"),
-                              formatValues)
+                String.Format(File.ReadAllText("StaticWebsiteApimApiPolicy.xml"), [|
+                    yield config.["WebEndpoint"] :> obj
+                    
+                    yield! ["sv";"sr";"st";"se";"sp";"spr";"sig"] |> List.map (fun x -> (Map.find x queryString) |> box)
+                |])
 
             return! policyBlobUrlWithSas "mainapi" apiPolicyXml
         }
