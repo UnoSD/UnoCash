@@ -90,21 +90,15 @@ let infra() =
         }
         
     let apiManagement =
-        let templateOutputs =
-            templateDeployment {
-                name           "unocashapim"
-                resourceGroup  group.Name
-                templateBody   (File.ReadAllText("ApiManagement.json"))
-                deploymentMode "Incremental"
-                parameters     [ "apiManagementServiceName", input "unocashapim"
-                                 "location"                , io    group.Location ]
-            } |>               
-            fun at -> at.Outputs
-        
-        {| Name = output { let! outputs = templateOutputs
-                           return outputs.["name"] }
-           GatewayUrl = output { let! outputs = templateOutputs
-                                 return outputs.["gatewayUrl"] } |}
+        service {
+            name           "unocashapim"
+            resourceName   config.["ApimName"]
+            location       group.Location
+            resourceGroup  group.Name
+            publisherEmail "info@uno.cash"
+            publisherName  "UnoSD"
+            skuName        "Consumption_0"
+        }
     
     logger {
         name              "unocashapimlog"
