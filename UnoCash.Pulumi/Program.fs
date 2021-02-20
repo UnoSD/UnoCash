@@ -1,18 +1,20 @@
 ﻿module Program
 
 open Pulumi.FSharp.Azure.ApiManagement.Inputs
-open Pulumi.FSharp.Azure.ApiManagement
 open Pulumi.FSharp.Azure.AppService.Inputs
+open Pulumi.FSharp.AzureStorageSasToken
+open Pulumi.FSharp.Azure.ApiManagement
 open Pulumi.FSharp.Azure.AppInsights
 open Pulumi.FSharp.Azure.AppService
-open Pulumi.Azure.AppService.Inputs
+open Pulumi.FSharp.AzureAD.Inputs
 open Pulumi.FSharp.Azure.Storage
 open System.Collections.Generic
 open Pulumi.FSharp.Azure.Core
 open System.Threading.Tasks
+open Pulumi.FSharp.AzureAD
 open Pulumi.FSharp.Output
 open Pulumi.FSharp.Config
-open Pulumi.FSharp.Azure
+open Pulumi.FSharp.Assets
 open System.Diagnostics
 open System.Threading
 open Pulumi.AzureAD
@@ -69,16 +71,14 @@ let infra() =
             name                 "unocashapi"
             storageAccountName   storage.Name
             storageContainerName buildContainer.Name
-            ``type``             "Block"
-            StringAsset          (config.["ApiBuild"] |> File.ReadAllText)
+            resourceType         "Block"
+            source               { Text = config.["ApiBuild"] |> File.ReadAllText }.ToPulumiType
         }
     
     let codeBlobUrl =
-        secretOutput {
-            return! sasToken {
-                        account storage
-                        blob    apiBlob
-                    }
+        sasToken {
+            account storage
+            blob    apiBlob
         }
 
     let appInsights =
@@ -110,17 +110,18 @@ let infra() =
         name              "unocashapimlog"
         apiManagementName apiManagement.Name
         resourceGroup     group.Name
+        
         loggerApplicationInsights {
             instrumentationKey appInsights.InstrumentationKey
         }
-    } |> ignore
+    }
         
     let webContainerUrl =
         output {
             let! accountName = storage.Name
             let! containerName = webContainer.Name
             
-            return sprintf "https://%s.blob.core.windows.net/%s" accountName containerName
+            return $"https://{accountName}.blob.core.windows.net/{containerName}"
         }
 
     let swApi =
@@ -137,21 +138,40 @@ let infra() =
         }
 
     let spaAdApplication =
-        Application("unocashspaaadapp",
-                    ApplicationArgs(ReplyUrls = inputList [ io apiManagement.GatewayUrl ],
-                                    Oauth2AllowImplicitFlow = input true))
+        application {
+            name                    "unocashspaaadapp"
+            displayName             "unocashspaaadapp"
+            oauth2AllowImplicitFlow true
+            groupMembershipClaims   "None"
+            
+            replyUrls               [
+                config.["WebEndpoint"]
+                "https://jwt.ms"
+                "http://localhost:8080"
+            ]            
+            
+            applicationOptionalClaims {
+                idTokens [
+                    applicationOptionalClaimsIdToken {
+                        name                 "upn"
+                        additionalProperties "include_externally_authenticated_upn"
+                        essential            true
+                    }
+                ]
+            }
+        }
     
     let policyBlobUrlWithSas pulumiName policyXml =
+        let blob =
+            blob {
+                name                 ("unocash" + pulumiName + "policyblob")
+                storageAccountName   storage.Name
+                storageContainerName buildContainer.Name
+                source               { Text = policyXml }.ToPulumiType
+                resourceType         "Block"
+            }
+    
         secretOutput {
-            let blob =
-                blob {
-                    name                 ("unocash" + pulumiName + "policyblob")
-                    storageAccountName   storage.Name
-                    storageContainerName buildContainer.Name
-                    StringAsset          policyXml
-                    ``type``             "Block"
-                }
-            
             let! url =
                 blob.Url
 
@@ -242,7 +262,7 @@ let infra() =
         operationId       "get-index"
         urlTemplate       "/"
         displayName       "GET index"
-    } |> ignore
+    }
         
     apiOperation {
         name              "unocashapimoperation"
@@ -253,7 +273,7 @@ let infra() =
         operationId       "get"
         urlTemplate       "/*"     
         displayName       "GET"
-    } |> ignore
+    }
     
     let blobLink name fileName =
         output {
@@ -289,13 +309,16 @@ let infra() =
         operationId       "post-aad-token"
         urlTemplate       "/"
         displayName       "POST AAD token"
-    } |> ignore
+    }
     
     let app =
         functionApp {
-            name             "unocashapp"
-            resourceGroup    group.Name
-            appServicePlanId functionPlan.Id
+            name               "unocashapp"
+            version            "~3"
+            resourceGroup      group.Name
+            appServicePlanId   functionPlan.Id
+            storageAccountName storage.Name
+            
             appSettings     [
                 "runtime"                        , input "dotnet"
                 "WEBSITE_RUN_FROM_PACKAGE"       , io codeBlobUrl
@@ -303,12 +326,13 @@ let infra() =
                 "StorageAccountConnectionString" , io storage.PrimaryConnectionString
                 "FormRecognizerKey"              , input ""
                 "FormRecognizerEndpoint"         , input ""
-            ]               
-            storageAccountName storage.Name
-            version            "~3"
+            ]
+            
             functionAppSiteConfig {
-                FunctionAppSiteConfigCorsArgs(AllowedOrigins = inputList [ io apiManagement.GatewayUrl ],
-                                              SupportCredentials = input true)
+                functionAppSiteConfigCors {
+                    allowedOrigins     apiManagement.GatewayUrl
+                    supportCredentials true
+                }
             }
         }
     
@@ -328,7 +352,7 @@ let infra() =
     
     let apiOperation (httpMethod : string) =
         apiOperation {
-            name              ("unocashapimapifunction" + (httpMethod.ToString().ToLower()))
+            name              $"unocashapimapifunction{httpMethod.ToLower()}"
             resourceGroup     group.Name
             apiManagementName apiManagement.Name
             apiName           apiFunction.Name
@@ -339,16 +363,16 @@ let infra() =
         }
     
     [ "GET"; "POST"; "DELETE"; "PUT" ] |>
-    List.iter (apiOperation >> ignore)
+    List.map apiOperation
     
     blob {
         name                 "unocashwebconfig"
         resourceName         "apibaseurl"
         storageAccountName   storage.Name
         storageContainerName webContainer.Name
-        ``type``             "Block"
-        StringAsset          (config.["WebEndpoint"] + "/api")
-    } |> ignore
+        resourceType         "Block"
+        source               { Text = config.["WebEndpoint"] + "/api" }.ToPulumiType
+    }
 
     let sasExpiry =
         output {
@@ -380,7 +404,7 @@ let infra() =
     ]
 
 type bclList<'a> =
-    System.Collections.Generic.List<'a>
+    List<'a>
 
 let ignoreBlobSourceChanges (args : ResourceTransformationArgs) =
     if args.Resource.GetResourceType() = "azure:storage/blob:Blob" then
@@ -404,10 +428,10 @@ let main _ =
                    waitForDebugger ()
         | true  -> printfn " attached"
 
-    match Environment.GetEnvironmentVariable("PULUMI_DEBUG_WAIT") = "1" with
-    | true -> printf "Awaiting debugger to attach to the process"
-              waitForDebugger ()
-    | _    -> ()
+    match Environment.GetEnvironmentVariable("PULUMI_DEBUG_WAIT") with
+    | "1" -> printf "Awaiting debugger to attach to the process"
+             waitForDebugger ()
+    | _   -> ()
 
     Deployment.RunAsync(Func<Task<IDictionary<string, obj>>>(infra >> Task.FromResult), stackOptions)
               .GetAwaiter()

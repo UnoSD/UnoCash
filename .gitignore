@@ -346,3 +346,5 @@ healthchecksdb
 
 .ionide
 /UnoCash.Pulumi/Pulumi.dev.yaml
+ignore
+auth.jpg

@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <FSharpCoreImplicitPackageVersion>4.7.*</FSharpCoreImplicitPackageVersion>
+    <TargetFramework>net5.0</TargetFramework>
+    <FSharpCoreImplicitPackageVersion>5.0.*</FSharpCoreImplicitPackageVersion>
+    <NoWarn>FS0020</NoWarn>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -20,11 +21,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Pulumi.Azure" Version="3.13.0" />
-    <PackageReference Include="Pulumi.AzureAD" Version="2.4.0" />
-    <PackageReference Include="Pulumi.FSharp" Version="2.7.1" />
-    <PackageReference Include="FSharp.Core" Version="4.7.2" />
-    <PackageReference Include="Pulumi.FSharp.Azure" Version="3.13.0.1" />
+    <PackageReference Include="Pulumi.Azure" Version="3.48.0" />
+    <PackageReference Include="Pulumi.AzureAD" Version="3.4.0" />
+    <PackageReference Include="Pulumi.FSharp" Version="2.21.1" />
+    <PackageReference Include="FSharp.Core" Version="5.0.1" />
+    <PackageReference Include="Pulumi.FSharp.Azure" Version="3.48.0.24" />
+    <PackageReference Include="Pulumi.FSharp.AzureAD" Version="3.4.0.40" />
+    <PackageReference Include="Pulumi.FSharp.Core" Version="2.0.14" />
   </ItemGroup>
 
 </Project>
