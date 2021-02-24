@@ -93,7 +93,6 @@ let infra() =
         service {
             name           "unocashapim"
             resourceName   config.["ApimName"]
-            location       group.Location
             resourceGroup  group.Name
             publisherEmail "info@uno.cash"
             publisherName  "UnoSD"
