@@ -1,13 +1,21 @@
 module LetsEncrypt
 
 open System.Threading.Tasks
+open Certes.Acme
 open Certes.Acme.Resource
 open DnsClient.Protocol
 open System.IO
 open DnsClient
 open Certes
 
-let certificateOrder (dns : string) addRecord (acme : AcmeContext) = async {
+type CertificateOrderInfo = {
+    TxtRecordName: string
+    TxtRecordValue: string
+    DnsChallenge: IChallengeContext
+    Order: IOrderContext
+}
+
+let startCertificateOrder (dns : string) (acme : AcmeContext) = async {
     let! order =
         acme.NewOrder([| dns |]) |>
         Async.AwaitTask
@@ -31,15 +39,23 @@ let certificateOrder (dns : string) addRecord (acme : AcmeContext) = async {
             $"_acme-challenge.{dns.Substring(2)}"
         else
             dns
-    
-    addRecord recordName dnsTxt
-    
+            
+    return
+        {
+            TxtRecordName = recordName
+            TxtRecordValue = dnsTxt
+            DnsChallenge = dnsChallenge
+            Order = order
+        }
+}
+
+let completeCertificateOrder dns txtRecordInfo = async {
     let rec waitForPropagation () = async {
-        if LookupClient().Query(recordName, QueryType.TXT)
+        if LookupClient().Query(txtRecordInfo.TxtRecordName, QueryType.TXT)
                          .Answers |>
            Seq.filter (fun x -> x :? TxtRecord) |>
            Seq.cast<TxtRecord> |>
-           Seq.exists (fun txtRecord -> txtRecord.Text |> Seq.contains(dnsTxt)) |>
+           Seq.exists (fun txtRecord -> txtRecord.Text |> Seq.contains(txtRecordInfo.TxtRecordValue)) |>
            not then
             do! Async.Sleep(500)
             do! waitForPropagation()
@@ -55,22 +71,34 @@ let certificateOrder (dns : string) addRecord (acme : AcmeContext) = async {
         match result.Status |> Option.ofNullable with
         | Some ChallengeStatus.Pending
         | Some ChallengeStatus.Processing -> do!     Async.Sleep(500)
-                                             return! dnsChallenge.Resource() |> validationResult
+                                             return! txtRecordInfo.DnsChallenge.Resource() |> validationResult
         | Some ChallengeStatus.Valid      -> return  result.Status.Value
         | _                               -> let error = if result.Error = null then "" else $", {result.Error.Detail}"
                                              return failwith $"Unexpected status {result.Status}{error}"
     }
            
-    do! dnsChallenge.Validate() |>
+    do! txtRecordInfo.DnsChallenge.Validate() |>
         validationResult |>
         Async.Ignore
    
     let privateKey =
         KeyFactory.NewKey(KeyAlgorithm.ES256)
     
-    return! order.Generate(CsrInfo(CommonName = dns), privateKey) |>
+    return! txtRecordInfo.Order.Generate(CsrInfo(CommonName = dns), privateKey) |>
             Async.AwaitTask |>
             Async.map (fun cert -> cert.ToPem())
+}
+
+let certificateOrder (dns : string) addRecord (acme : AcmeContext) = async {
+    let! txtRecordInfo =
+        startCertificateOrder dns acme
+    
+    addRecord txtRecordInfo.TxtRecordName txtRecordInfo.TxtRecordValue
+    
+    let! pem =
+        completeCertificateOrder dns txtRecordInfo
+    
+    return pem
 }
 
 let createAccount server (email : string) = async {
