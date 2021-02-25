@@ -30,6 +30,11 @@ type ParsedSasToken =
     | ExpiredOrInvalid
     | Missing
 
+// TODO: Output.map
+module Output =
+    let map (func : 'a -> 'b) (o : Pulumi.Output<'a>) =
+        o.Apply func
+
 let infra() =
     let group =
         resourceGroup {
@@ -91,6 +96,8 @@ let infra() =
             retentionInDays 90
         }
         
+    // TODO: ComponentResourceBuilder
+        
     let apiManagement =
         service {
             name           "unocashapim"
@@ -136,16 +143,20 @@ let infra() =
             return acme.AccountKey.ToPem()
         }
         
-    let customDomainProxy =
-        customDomainProxy {
-            hostName   config.["CustomDomain"]
-            keyVaultId config.["KeyVaultCertSecretId"]
-        }
-        
     customDomain {
         name            "unocashapimcd"
         apiManagementId apiManagement.Id
-        proxies         customDomainProxy
+        
+        proxies [
+            customDomainProxy {
+                hostName (apiManagement.GatewayUrl |> Output.map (fun x -> Uri(x).Host))
+            }
+            
+            customDomainProxy {
+                hostName   config.["CustomDomain"]
+                keyVaultId config.["KeyVaultCertSecretId"]
+            }
+        ]
     }
     
     logger {
