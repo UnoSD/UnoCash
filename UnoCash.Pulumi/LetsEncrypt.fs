@@ -7,9 +7,6 @@ open System.IO
 open DnsClient
 open Certes
 
-let private map f async' =
-    async.Bind(async', f >> async.Return)
-    
 let certificateOrder (dns : string) addRecord (acme : AcmeContext) = async {
     let! order =
         acme.NewOrder([| dns |]) |>
@@ -40,6 +37,7 @@ let certificateOrder (dns : string) addRecord (acme : AcmeContext) = async {
     let rec waitForPropagation () = async {
         if LookupClient().Query(recordName, QueryType.TXT)
                          .Answers |>
+           Seq.filter (fun x -> x :? TxtRecord) |>
            Seq.cast<TxtRecord> |>
            Seq.exists (fun txtRecord -> txtRecord.Text |> Seq.contains(dnsTxt)) |>
            not then
@@ -72,7 +70,7 @@ let certificateOrder (dns : string) addRecord (acme : AcmeContext) = async {
     
     return! order.Generate(CsrInfo(CommonName = dns), privateKey) |>
             Async.AwaitTask |>
-            map (fun cert -> cert.ToPem())
+            Async.map (fun cert -> cert.ToPem())
 }
 
 let createAccount server (email : string) = async {
