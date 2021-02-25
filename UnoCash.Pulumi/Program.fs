@@ -119,7 +119,6 @@ let infra() =
     let stackOutputs =
         StackReference(Deployment.Instance.StackName).Outputs
         
-    //// TODO: Instead of Context option, just make this a dependee of componentResource
     //let acmeContext =
     //    output {
     //        let! previousOutputs =
@@ -163,6 +162,7 @@ let infra() =
     //        
     //        return pem
     //    }
+    let certificate = ""
     
     customDomain {
         name            "unocashapimcd"
@@ -407,16 +407,17 @@ let infra() =
     
     let apiFunction =
         api {
-            name              "unocashapimapifunction"
-            resourceName      "api"
-            path              "api"
-            resourceGroup     group.Name
-            apiManagementName apiManagement.Name
-            displayName       "API"
-            protocols         [ "https" ]
-            serviceUrl        (app.DefaultHostname.Apply (sprintf "https://%s"))
-            path              ""
-            revision          "1"
+            name                 "unocashapimapifunction"
+            resourceName         "api"
+            path                 "api"
+            resourceGroup        group.Name
+            apiManagementName    apiManagement.Name
+            displayName          "API"
+            protocols            [ "https" ]
+            serviceUrl           (app.DefaultHostname.Apply (sprintf "https://%s"))
+            path                 ""
+            revision             "1"
+            subscriptionRequired false
         }
     
     let apiOperation (httpMethod : string) =
@@ -471,7 +472,7 @@ let infra() =
         "StaticWebsiteApiGetIndexPolicyLink", swApiGetIndexPolicyBlobLink    :> obj
         "FunctionApiPolicyLink",              functionApiPolicyBlobLink      :> obj
         "LetsEncryptAccountKey",              accountKey                     :> obj
-        "Certificate",                        ""(*certificate*)                    :> obj
+        "Certificate",                        certificate                    :> obj
     ] |> Output.unsecret
 
 type bclList<'a> =
