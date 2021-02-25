@@ -97,7 +97,23 @@ let infra() =
             publisherEmail "info@uno.cash"
             publisherName  "UnoSD"
             skuName        "Consumption_0"
+            
+            serviceIdentity {
+                resourceType "SystemAssigned"
+            }
         }
+        
+    let customDomainProxy =
+        customDomainProxy {
+            hostName   config.["CustomDomain"]
+            keyVaultId config.["KeyVaultCertSecretId"]
+        }
+        
+    customDomain {
+        name            "unocashapimcd"
+        apiManagementId apiManagement.Id
+        proxies         customDomainProxy
+    }
     
     logger {
         name              "unocashapimlog"
