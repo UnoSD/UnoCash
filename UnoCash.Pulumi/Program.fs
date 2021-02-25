@@ -465,10 +465,11 @@ let main _ =
                    waitForDebugger ()
         | true  -> printfn " attached"
 
-    match Environment.GetEnvironmentVariable("PULUMI_DEBUG_WAIT") with
-    | "1" -> printf "Awaiting debugger to attach to the process"
-             waitForDebugger ()
-    | _   -> ()
+    match Environment.GetEnvironmentVariable("PULUMI_DEBUG_WAIT").ToLower() with
+    | "true"
+    | "1"    -> printf "Awaiting debugger to attach to the process"
+                waitForDebugger ()
+    | _      -> ()
 
     Deployment.RunAsync(Func<Task<IDictionary<string, obj>>>(infra >> Task.FromResult), stackOptions)
               .GetAwaiter()
