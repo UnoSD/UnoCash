@@ -19,6 +19,8 @@ open System.Diagnostics
 open System.Threading
 open Pulumi.AzureAD
 open Pulumi.FSharp
+open LetsEncrypt
+open Certes.Acme
 open System.IO
 open System
 open Pulumi
@@ -101,6 +103,37 @@ let infra() =
             serviceIdentity {
                 resourceType "SystemAssigned"
             }
+        }
+        
+    let stackOutputs =
+        StackReference(Deployment.Instance.StackName).Outputs
+        
+    let acmeContext =
+        output {
+            let! previousOutputs =
+                stackOutputs
+            
+            // TODO: Helper for previous stack outputs
+            let asyncContext = 
+                match previousOutputs.TryGetValue "LetsEncryptEmail" with
+                | true, (:? string as pem) -> loadAccount   WellKnownServers.LetsEncryptStagingV2
+                                                            pem
+                | _                        -> createAccount WellKnownServers.LetsEncryptStagingV2
+                                                            config.["LetsEncryptEmail"]
+            
+            // TODO: Support return!
+            // TODO: Add let! also for Async
+            let! context =
+                asyncContext |> Async.StartAsTask
+                
+            return context
+        }
+        
+    let accountKey =
+        secretOutput {
+            let! acme = acmeContext
+        
+            return acme.AccountKey.ToPem()
         }
         
     let customDomainProxy =
@@ -204,7 +237,7 @@ let infra() =
     let token =
         secretOutput {
             let! previousOutputs =
-                StackReference(Deployment.Instance.StackName).Outputs
+                stackOutputs
 
             let tokenValidity =
                 let getTokenIfValid (expirationString : string) =
@@ -404,6 +437,7 @@ let infra() =
         "StaticWebsiteApiGetPolicyLink",      swApiGetPolicyBlobLink         :> obj
         "StaticWebsiteApiGetIndexPolicyLink", swApiGetIndexPolicyBlobLink    :> obj
         "FunctionApiPolicyLink",              functionApiPolicyBlobLink      :> obj
+        "LetsEncryptAccountKey",              accountKey                     :> obj
     ]
 
 type bclList<'a> =
