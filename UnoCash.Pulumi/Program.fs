@@ -116,13 +116,15 @@ let infra() =
         
     let stackOutputs =
         StackReference(Deployment.Instance.StackName).Outputs
-        
-    let certificate =
-        LetsEncryptCertificate("unocashcert",
-                               LetsEncryptCertificateArgs(Dns = input config.["CustomDomain"],
-                                                          AccountKey = io secret.["LetsEncryptAccountKey"],
-                                                          CreateAccount = input true,
-                                                          Email = input config.["LetsEncryptEmail"]))
+      
+    // This takes 11 minutes in Pulumi just to fail because we provider both AccountKey and CreateAccount(true)
+    // it's not really usable, try and debug what's going on.  
+    //let certificate =
+    //    LetsEncryptCertificate("unocashcert",
+    //                           LetsEncryptCertificateArgs(Dns = input config.["CustomDomain"],
+    //                                                      AccountKey = io secret.["LetsEncryptAccountKey"],
+    //                                                      CreateAccount = input true,
+    //                                                      Email = input config.["LetsEncryptEmail"]))
     
     customDomain {
         name            "unocashapimcd"
