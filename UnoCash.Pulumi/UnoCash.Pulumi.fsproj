@@ -18,6 +18,8 @@
     <Content Include="Pulumi.dev.yaml" />
     <Compile Include="Async.fs" />
     <Compile Include="LetsEncrypt.fs" />
+    <Compile Include="Output.fs" />
+    <Compile Include="Certificate.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

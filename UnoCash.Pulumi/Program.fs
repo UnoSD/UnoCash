@@ -6,12 +6,11 @@ open Pulumi.FSharp.AzureStorageSasToken
 open Pulumi.FSharp.Azure.ApiManagement
 open Pulumi.FSharp.Azure.AppInsights
 open Pulumi.FSharp.Azure.AppService
-open Pulumi.FSharp.Azure.Dns.Inputs
+open Pulumi.LetsEncrypt.Certificate
 open Pulumi.FSharp.AzureAD.Inputs
 open Pulumi.FSharp.Azure.Storage
 open System.Collections.Generic
 open Pulumi.FSharp.Azure.Core
-open Pulumi.FSharp.Azure.Dns
 open System.Threading.Tasks
 open Pulumi.FSharp.AzureAD
 open Pulumi.FSharp.Output
@@ -31,11 +30,6 @@ type ParsedSasToken =
     | Valid of string * DateTime
     | ExpiredOrInvalid
     | Missing
-
-// TODO: Output.map
-module Output =
-    let map (func : 'a -> 'b) (o : Pulumi.Output<'a>) =
-        o.Apply func
 
 let infra() =
     let group =
@@ -98,8 +92,6 @@ let infra() =
             retentionInDays 90
         }
         
-    // TODO: ComponentResourceBuilder
-        
     let apiManagement =
         service {
             name           "unocashapim"
@@ -112,99 +104,66 @@ let infra() =
             serviceIdentity {
                 resourceType "SystemAssigned"
             }
+            
+            serviceHostnameConfiguration {
+                proxies [
+                    serviceHostnameConfigurationProxy {
+                        defaultSslBinding true
+                        hostName          config.["CustomDomain"]
+                        keyVaultId        config.["KeyVaultCertSecretId"]
+                    }
+                ]
+            }
         }
         
     let stackOutputs =
         StackReference(Deployment.Instance.StackName).Outputs
         
-    let certificateResource =
-        ComponentResource("unosd:certificates:LetsEncrypt", "unocashcert")
-        
-    // TODO: Instead of Context option, just make this a dependee of componentResource
-    let acmeContext =
-        output {
-            let! previousOutputs =
-                stackOutputs
-            
-            // TODO: Helper for previous stack outputs
-            let asyncContext = 
-                match previousOutputs.TryGetValue "LetsEncryptAccountKey" with
-                | true, (:? string as pem) -> loadAccount   WellKnownServers.LetsEncryptStagingV2
-                                                            pem
-                | _                        -> createAccount WellKnownServers.LetsEncryptStagingV2
-                                                            config.["LetsEncryptEmail"]
-            
-            // TODO: Support return!
-            // TODO: Add let! also for Async
-            let! context =
-                if Deployment.Instance.IsDryRun then
-                    async.Return(None) |> Async.StartAsTask
-                else
-                    asyncContext |> Async.map (Some) |> Async.StartAsTask
-                             
-            return context
-        }
-        
-    let accountKey =
-        secretOutput {
-            /// TODO: match!
-            let! acme = acmeContext
-        
-            return match acme with
-                   | Some acme -> acme.AccountKey.ToPem()
-                   // TODO: Can Output be set to: Not available yet? No... Pulumi resolves always Tasks
-                   // Ask on GitHub to get a Output.Create(Task) that resolves the task only in up and not
-                   // when IsDryRun
-                   | None      -> "Unavailable in preview, run up to generate"
-        }
+    //// TODO: Instead of Context option, just make this a dependee of componentResource
+    //let acmeContext =
+    //    output {
+    //        let! previousOutputs =
+    //            stackOutputs
+    //        
+    //        let asyncContext = 
+    //            match previousOutputs.TryGetValue "LetsEncryptAccountKey" with
+    //            | true, (:? string as pem) -> loadAccount   WellKnownServers.LetsEncryptStagingV2
+    //                                                        pem
+    //            | _                        -> createAccount WellKnownServers.LetsEncryptStagingV2
+    //                                                        config.["LetsEncryptEmail"]
+    //        
+    //        let! context =
+    //            if Deployment.Instance.IsDryRun then
+    //                async.Return(None) |> Async.StartAsTask
+    //            else
+    //                asyncContext |> Async.map (Some) |> Async.StartAsTask
+    //                         
+    //        return context
+    //    }
+    //    
+    //let accountKey =
+    //    secretOutput {
+    //        let! acme = acmeContext
+    //    
+    //        return match acme with
+    //               | Some acme -> acme.AccountKey.ToPem()
+    //               | None      -> "Unavailable in preview, run up to generate"
+    //    }
+    let accountKey = ""
+    //let certificate =
+    //    output {
+    //        let! acme = acmeContext
+    //        
+    //        let! pem =
+    //            match acme with
+    //            | None      -> Output.create ""
+    //            | Some acme -> LetsEncryptCertificate("unocashcert",
+    //                                                  LetsEncryptCertificateArgs(Dns = input config.["CustomDomain"],
+    //                                                                             AcmeContext = input acme)).Pem
+    //        
+    //        return pem
+    //    }
     
-    // TODO: Ask on GitHub to get pulumi preview/up --show-secrets
-    
-    let addRecord _ recordName (recordValue : string) =
-        txtRecord {
-            // TODO: Add support for parent (_)
-            zoneName "unocash"
-            name     recordName
-            
-            records [
-                txtRecordRecord {
-                    value recordValue
-                }
-            ]
-        }
-        
-    //// TODO: getFromStackOutputsOrWith "outputName" (fun x -> "")
-    let certificate parent =
-        output {
-            let! previousOutputs =
-                stackOutputs
-            
-            let! acme =
-                acmeContext
-            
-            let createCertificate acme = output {                
-                let! certificate =
-                    certificateOrder config.["CustomDomain"] (addRecord parent) acme |>
-                    Async.StartAsTask
-                    
-                File.WriteAllText("/home/uno/cert.pem", certificate)
-                    
-                return certificate
-            }
-            
-            let certificateOrPreview () =
-                match acme with
-                | None      -> "Unavailable in preview, run up to generate" |> Output.Create
-                | Some acme -> createCertificate acme
-            
-            match previousOutputs.TryGetValue "Certificate" with
-            | true, (:? string as pem) -> return pem
-            | _                        -> return! certificateOrPreview ()      
-        }
-
-    let certificate =
-        output.Bind(certificateResource.Urn, certificate)
-        
     customDomain {
         name            "unocashapimcd"
         apiManagementId apiManagement.Id
@@ -241,15 +200,16 @@ let infra() =
 
     let swApi =
         api {
-            name              "unocashapimapi"
-            resourceName      "staticwebsite"
-            resourceGroup     group.Name
-            apiManagementName apiManagement.Name
-            displayName       "StaticWebsite"
-            protocols         [ "http"; "https" ]
-            serviceUrl        webContainerUrl
-            path              ""
-            revision          "1"
+            name                 "unocashapimapi"
+            resourceName         "staticwebsite"
+            resourceGroup        group.Name
+            apiManagementName    apiManagement.Name
+            displayName          "StaticWebsite"
+            protocols            [ "http"; "https" ]
+            serviceUrl           webContainerUrl
+            path                 ""
+            revision             "1"
+            subscriptionRequired false
         }
 
     let spaAdApplication =
@@ -510,11 +470,9 @@ let infra() =
         "StaticWebsiteApiGetPolicyLink",      swApiGetPolicyBlobLink         :> obj
         "StaticWebsiteApiGetIndexPolicyLink", swApiGetIndexPolicyBlobLink    :> obj
         "FunctionApiPolicyLink",              functionApiPolicyBlobLink      :> obj
-        "LetsEncryptAccountKey",              Output.Unsecret(accountKey)    :> obj
-        "Certificate",                        Output.Unsecret(certificate)   :> obj
-    ]
-    
-    // TODO: dict -> Output.Unsecret for all (for debug)
+        "LetsEncryptAccountKey",              accountKey                     :> obj
+        "Certificate",                        ""(*certificate*)                    :> obj
+    ] |> Output.unsecret
 
 type bclList<'a> =
     List<'a>
