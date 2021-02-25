@@ -115,7 +115,7 @@ let infra() =
             
             // TODO: Helper for previous stack outputs
             let asyncContext = 
-                match previousOutputs.TryGetValue "LetsEncryptEmail" with
+                match previousOutputs.TryGetValue "LetsEncryptAccountKey" with
                 | true, (:? string as pem) -> loadAccount   WellKnownServers.LetsEncryptStagingV2
                                                             pem
                 | _                        -> createAccount WellKnownServers.LetsEncryptStagingV2
