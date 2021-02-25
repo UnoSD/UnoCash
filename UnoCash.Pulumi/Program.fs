@@ -6,10 +6,12 @@ open Pulumi.FSharp.AzureStorageSasToken
 open Pulumi.FSharp.Azure.ApiManagement
 open Pulumi.FSharp.Azure.AppInsights
 open Pulumi.FSharp.Azure.AppService
+open Pulumi.FSharp.Azure.Dns.Inputs
 open Pulumi.FSharp.AzureAD.Inputs
 open Pulumi.FSharp.Azure.Storage
 open System.Collections.Generic
 open Pulumi.FSharp.Azure.Core
+open Pulumi.FSharp.Azure.Dns
 open System.Threading.Tasks
 open Pulumi.FSharp.AzureAD
 open Pulumi.FSharp.Output
@@ -115,6 +117,10 @@ let infra() =
     let stackOutputs =
         StackReference(Deployment.Instance.StackName).Outputs
         
+    let certificateResource =
+        ComponentResource("unosd:certificates:LetsEncrypt", "unocashcert")
+        
+    // TODO: Instead of Context option, just make this a dependee of componentResource
     let acmeContext =
         output {
             let! previousOutputs =
@@ -131,17 +137,73 @@ let infra() =
             // TODO: Support return!
             // TODO: Add let! also for Async
             let! context =
-                asyncContext |> Async.StartAsTask
-                
+                if Deployment.Instance.IsDryRun then
+                    async.Return(None) |> Async.StartAsTask
+                else
+                    asyncContext |> Async.map (Some) |> Async.StartAsTask
+                             
             return context
         }
         
     let accountKey =
         secretOutput {
+            /// TODO: match!
             let! acme = acmeContext
         
-            return acme.AccountKey.ToPem()
+            return match acme with
+                   | Some acme -> acme.AccountKey.ToPem()
+                   // TODO: Can Output be set to: Not available yet? No... Pulumi resolves always Tasks
+                   // Ask on GitHub to get a Output.Create(Task) that resolves the task only in up and not
+                   // when IsDryRun
+                   | None      -> "Unavailable in preview, run up to generate"
         }
+    
+    // TODO: Ask on GitHub to get pulumi preview/up --show-secrets
+    
+    let addRecord _ recordName (recordValue : string) =
+        txtRecord {
+            // TODO: Add support for parent (_)
+            zoneName "unocash"
+            name     recordName
+            
+            records [
+                txtRecordRecord {
+                    value recordValue
+                }
+            ]
+        }
+        
+    //// TODO: getFromStackOutputsOrWith "outputName" (fun x -> "")
+    let certificate parent =
+        output {
+            let! previousOutputs =
+                stackOutputs
+            
+            let! acme =
+                acmeContext
+            
+            let createCertificate acme = output {                
+                let! certificate =
+                    certificateOrder config.["CustomDomain"] (addRecord parent) acme |>
+                    Async.StartAsTask
+                    
+                File.WriteAllText("/home/uno/cert.pem", certificate)
+                    
+                return certificate
+            }
+            
+            let certificateOrPreview () =
+                match acme with
+                | None      -> "Unavailable in preview, run up to generate" |> Output.Create
+                | Some acme -> createCertificate acme
+            
+            match previousOutputs.TryGetValue "Certificate" with
+            | true, (:? string as pem) -> return pem
+            | _                        -> return! certificateOrPreview ()      
+        }
+
+    let certificate =
+        output.Bind(certificateResource.Urn, certificate)
         
     customDomain {
         name            "unocashapimcd"
@@ -448,8 +510,11 @@ let infra() =
         "StaticWebsiteApiGetPolicyLink",      swApiGetPolicyBlobLink         :> obj
         "StaticWebsiteApiGetIndexPolicyLink", swApiGetIndexPolicyBlobLink    :> obj
         "FunctionApiPolicyLink",              functionApiPolicyBlobLink      :> obj
-        "LetsEncryptAccountKey",              accountKey                     :> obj
+        "LetsEncryptAccountKey",              Output.Unsecret(accountKey)    :> obj
+        "Certificate",                        Output.Unsecret(certificate)   :> obj
     ]
+    
+    // TODO: dict -> Output.Unsecret for all (for debug)
 
 type bclList<'a> =
     List<'a>
