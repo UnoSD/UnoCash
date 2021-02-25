@@ -119,50 +119,49 @@ let infra() =
     let stackOutputs =
         StackReference(Deployment.Instance.StackName).Outputs
         
-    //let acmeContext =
-    //    output {
-    //        let! previousOutputs =
-    //            stackOutputs
-    //        
-    //        let asyncContext = 
-    //            match previousOutputs.TryGetValue "LetsEncryptAccountKey" with
-    //            | true, (:? string as pem) -> loadAccount   WellKnownServers.LetsEncryptStagingV2
-    //                                                        pem
-    //            | _                        -> createAccount WellKnownServers.LetsEncryptStagingV2
-    //                                                        config.["LetsEncryptEmail"]
-    //        
-    //        let! context =
-    //            if Deployment.Instance.IsDryRun then
-    //                async.Return(None) |> Async.StartAsTask
-    //            else
-    //                asyncContext |> Async.map (Some) |> Async.StartAsTask
-    //                         
-    //        return context
-    //    }
-    //    
-    //let accountKey =
-    //    secretOutput {
-    //        let! acme = acmeContext
-    //    
-    //        return match acme with
-    //               | Some acme -> acme.AccountKey.ToPem()
-    //               | None      -> "Unavailable in preview, run up to generate"
-    //    }
-    let accountKey = ""
-    //let certificate =
-    //    output {
-    //        let! acme = acmeContext
-    //        
-    //        let! pem =
-    //            match acme with
-    //            | None      -> Output.create ""
-    //            | Some acme -> LetsEncryptCertificate("unocashcert",
-    //                                                  LetsEncryptCertificateArgs(Dns = input config.["CustomDomain"],
-    //                                                                             AcmeContext = input acme)).Pem
-    //        
-    //        return pem
-    //    }
-    let certificate = ""
+    let acmeContext =
+        match Deployment.Instance.IsDryRun with
+        | true  -> None
+        | false -> output {
+                       let! previousOutputs =
+                           stackOutputs
+                       
+                       let asyncContext = 
+                           match previousOutputs.TryGetValue "LetsEncryptAccountKey" with
+                           | true, (:? string as pem) -> loadAccount   WellKnownServers.LetsEncryptStagingV2
+                                                                       pem
+                           | _                        -> createAccount WellKnownServers.LetsEncryptStagingV2
+                                                                       config.["LetsEncryptEmail"]
+                       
+                       let! context =
+                           asyncContext |> Async.StartAsTask
+                                        
+                       return context
+                   } |> Some
+        
+    let accountKey =
+        acmeContext |>
+        Option.map (fun acmeContext -> secretOutput {
+            let! acme = acmeContext
+            
+            return acme.AccountKey.ToPem()
+        }) |>
+        Option.defaultValue (Output.create "Unavailable in preview, run up to generate")
+        
+    let certificate =
+        acmeContext |>
+        Option.map (fun acmeContext -> output {
+            let! acme =
+                acmeContext
+            
+            let! pem =
+                LetsEncryptCertificate("unocashcert",
+                                       LetsEncryptCertificateArgs(Dns = input config.["CustomDomain"],
+                                                                  AcmeContext = input acme)).Pem
+            
+            return pem
+        }) |>
+        Option.defaultValue (Output.create "Unavailable in preview, run up to generate")
     
     customDomain {
         name            "unocashapimcd"
