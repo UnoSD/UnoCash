@@ -20,8 +20,6 @@ open System.Diagnostics
 open System.Threading
 open Pulumi.AzureAD
 open Pulumi.FSharp
-open LetsEncrypt
-open Certes.Acme
 open System.IO
 open System
 open Pulumi
@@ -119,49 +117,12 @@ let infra() =
     let stackOutputs =
         StackReference(Deployment.Instance.StackName).Outputs
         
-    let acmeContext =
-        match Deployment.Instance.IsDryRun with
-        | true  -> None
-        | false -> output {
-                       let! previousOutputs =
-                           stackOutputs
-                       
-                       let asyncContext = 
-                           match previousOutputs.TryGetValue "LetsEncryptAccountKey" with
-                           | true, (:? string as pem) -> loadAccount   WellKnownServers.LetsEncryptStagingV2
-                                                                       pem
-                           | _                        -> createAccount WellKnownServers.LetsEncryptStagingV2
-                                                                       config.["LetsEncryptEmail"]
-                       
-                       let! context =
-                           asyncContext |> Async.StartAsTask
-                                        
-                       return context
-                   } |> Some
-        
-    let accountKey =
-        acmeContext |>
-        Option.map (fun acmeContext -> secretOutput {
-            let! acme = acmeContext
-            
-            return acme.AccountKey.ToPem()
-        }) |>
-        Option.defaultValue (Output.create "Unavailable in preview, run up to generate")
-        
     let certificate =
-        acmeContext |>
-        Option.map (fun acmeContext -> output {
-            let! acme =
-                acmeContext
-            
-            let! pem =
-                LetsEncryptCertificate("unocashcert",
-                                       LetsEncryptCertificateArgs(Dns = input config.["CustomDomain"],
-                                                                  AcmeContext = input acme)).Pem
-            
-            return pem
-        }) |>
-        Option.defaultValue (Output.create "Unavailable in preview, run up to generate")
+        LetsEncryptCertificate("unocashcert",
+                               LetsEncryptCertificateArgs(Dns = input config.["CustomDomain"],
+                                                          AccountKey = io secret.["LetsEncryptAccountKey"],
+                                                          CreateAccount = input true,
+                                                          Email = input config.["LetsEncryptEmail"]))
     
     customDomain {
         name            "unocashapimcd"
@@ -470,8 +431,8 @@ let infra() =
         "StaticWebsiteApiGetPolicyLink",      swApiGetPolicyBlobLink         :> obj
         "StaticWebsiteApiGetIndexPolicyLink", swApiGetIndexPolicyBlobLink    :> obj
         "FunctionApiPolicyLink",              functionApiPolicyBlobLink      :> obj
-        "LetsEncryptAccountKey",              accountKey                     :> obj
-        "Certificate",                        certificate                    :> obj
+        "LetsEncryptAccountKey",              certificate.AccountKey         :> obj
+        "Certificate",                        certificate.Pem                :> obj
     ] |> Output.unsecret
 
 type bclList<'a> =

@@ -70,6 +70,9 @@ module Output =
     let create (value : 'a) =
         Output.Create<'a>(value)
         
+    let createSecret (value : 'a) =
+        Output.CreateSecret<'a>(value)
+        
     let unsecret<'a> (source : IDictionary<string, obj>) =
         source |>
         Seq.map (fun (kvp) -> kvp.Key, match kvp.Value with
