@@ -6,7 +6,6 @@ open Pulumi.FSharp.AzureStorageSasToken
 open Pulumi.FSharp.Azure.ApiManagement
 open Pulumi.FSharp.Azure.AppInsights
 open Pulumi.FSharp.Azure.AppService
-open Pulumi.LetsEncrypt.Certificate
 open Pulumi.FSharp.AzureAD.Inputs
 open Pulumi.FSharp.Azure.Storage
 open System.Collections.Generic
@@ -433,8 +432,8 @@ let infra() =
         "StaticWebsiteApiGetPolicyLink",      swApiGetPolicyBlobLink         :> obj
         "StaticWebsiteApiGetIndexPolicyLink", swApiGetIndexPolicyBlobLink    :> obj
         "FunctionApiPolicyLink",              functionApiPolicyBlobLink      :> obj
-        "LetsEncryptAccountKey",              certificate.AccountKey         :> obj
-        "Certificate",                        certificate.Pem                :> obj
+      //"LetsEncryptAccountKey",              certificate.AccountKey         :> obj
+      //"Certificate",                        certificate.Pem                :> obj
     ] |> Output.unsecret
 
 type bclList<'a> =
