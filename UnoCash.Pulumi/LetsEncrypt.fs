@@ -1,9 +1,9 @@
 module LetsEncrypt
 
 open System.Threading.Tasks
-open Certes.Acme
 open Certes.Acme.Resource
 open DnsClient.Protocol
+open Certes.Acme
 open System.IO
 open DnsClient
 open Certes
