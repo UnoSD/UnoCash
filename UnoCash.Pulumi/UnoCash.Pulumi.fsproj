@@ -15,7 +15,8 @@
     <Content Include="StaticWebsiteApimPostOperationPolicy.xml" />
     <Content Include="APIApimApiPolicy.xml" />
     <Content Include="Pulumi.yaml" />
-    <Content Include="Pulumi.dev.yaml" />
+    <Content Include="Pulumi.test.yaml" />
+    <Content Include="Pulumi.development.yaml" />
     <Compile Include="Async.fs" />
     <Compile Include="LetsEncrypt.fs" />
     <Compile Include="Output.fs" />
