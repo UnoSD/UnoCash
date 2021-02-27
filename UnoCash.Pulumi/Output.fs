@@ -63,6 +63,17 @@ let asyncContext =
 
 (* TODO: Add let! also for Async in OutputBuilder (not only Task, but use Async.StartAsTask) *)
 
+(* TODO: Ignore Output value
+    output {
+        let! url = apiManagement.GatewayUrl
+        
+        blob {
+            source { Text = url + "/api" }.ToPulumiType
+        }
+        
+        return 0 // We don't need this!
+    } *)
+
 module Output =
     let map (func : 'a -> 'b) (o : Pulumi.Output<'a>) =
         o.Apply func
