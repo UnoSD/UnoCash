@@ -345,6 +345,6 @@ healthchecksdb
 /.vscode/tasks.json
 
 .ionide
-/UnoCash.Pulumi/Pulumi.dev.yaml
+/UnoCash.Pulumi/Pulumi.*.yaml
 ignore
 auth.jpg
