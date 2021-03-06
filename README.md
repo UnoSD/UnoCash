@@ -1,5 +1,8 @@
 # UnoCash
 
+#### UnoSD/UnoCash is just for C# end-to-end demo purposes
+#### UnoSD/UnoCash.Fable is F# end-to-end under active development
+
 This tool is an attempt to consolidate and improve several other tools I use for personal finance:
 
 * A desktop application I use to store transactions and get reports with graphs
